@@ -129,6 +129,13 @@ try{
    check(independent.includes("Not affiliated"),"independent educational footer missing "+name);
    await semanticAudit(page,name+"-library");
    check(await page.locator("#g-papers").isEnabled(),"library question picker disabled "+name);
+   check(await page.locator(".paper-marking-summary").count()===1,
+    "Library selected-paper card lost compact marking summary "+name);
+   check(!(await page.locator("#g-exam-rules").evaluate(el=>el.open)),
+    "Exam rules should remain progressively disclosed by default "+name);
+   check(await page.locator("#g-learning").count()===1&&await page.locator("#g-calendar").count()===1&&
+     await page.locator("#g-history").count()===1&&await page.locator("#g-authoring").count()===1,
+    "Library workspace navigation is incomplete "+name);
    if(name==="laptop"){
     const start=await page.getByRole("button",{name:/^Start /}).boundingBox();
     check(start&&start.y+start.height<=viewport.height,"Start not in laptop first fold");
@@ -166,6 +173,10 @@ try{
     "Library summary lost four independent dashboard metrics "+name);
    await page.getByRole("button",{name:/History & insights/}).click();await route(page,"history");
    await inspect(page,name+"-history");
+   check(await page.locator("#g-learning-history").count()===1&&
+     await page.locator("#g-calendar-history").count()===1&&
+     await page.locator("#g-authoring-history").count()===1&&await page.locator("#g-library").count()===1,
+    "History workspace navigation is incomplete "+name);
    check(await page.locator(".history-summary .summary-stat").count()===6&&
     (await page.locator(".history-summary").innerText()).includes("Papers practised")&&
     (await page.locator(".history-summary").innerText()).includes("Best adjusted %"),
@@ -192,10 +203,27 @@ try{
     "Authoring hub missing canonical entry points "+name);
    check((await page.locator(".authoring-bank-row").count())>0,
     "Authoring hub did not expose published editions "+name);
-   await page.locator("#authoring-library").click();await route(page,"library");
-   await page.locator("#g-learning").click();await route(page,"learning");
+   check(await page.locator("#authoring-learning").count()===1&&
+     await page.locator("#authoring-calendar").count()===1&&
+     await page.locator("#authoring-history").count()===1&&await page.locator("#authoring-library").count()===1,
+    "Authoring workspace navigation is incomplete "+name);
+   await page.locator("#authoring-learning-focus").click();await route(page,"learning");
+   await page.waitForFunction(()=>{const el=document.querySelector(".learning-authoring-focus");
+     if(!el)return false;const r=el.getBoundingClientRect();return r.top>=0&&r.top<innerHeight;});
    await inspect(page,name+"-learning");
-   await page.locator("#learning-close").click();await route(page,"library");
+   check(await page.locator(".learning-authoring-focus").isVisible(),
+    "Authoring Brief CTA did not land on its existing tools "+name);
+   check(await page.locator("#learning-calendar").count()===1&&
+     await page.locator("#learning-history").count()===1&&
+     await page.locator("#learning-authoring").count()===1&&await page.locator("#learning-close").count()===1,
+    "Learning workspace navigation is incomplete "+name);
+   await page.locator("#learning-calendar").click();await route(page,"calendar");
+   await inspect(page,name+"-calendar");
+   check(await page.locator("#calendar-learning").count()===1&&
+     await page.locator("#calendar-history").count()===1&&
+     await page.locator("#calendar-authoring").count()===1&&await page.locator("#calendar-library").count()===1,
+    "Calendar workspace navigation is incomplete "+name);
+   await page.locator("#calendar-library").click();await route(page,"library");
    await page.locator('[data-mode="single"]').click();
    await page.locator("#g-single-section").selectOption("0");
    await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");

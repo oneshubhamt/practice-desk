@@ -1,16 +1,10 @@
 import {escapeText} from "./html-escape.ts";
 import {resolvePracticeMode} from "./exam-package.ts";
 import {validateExamPackage} from "../domain/exam-package.ts";
-import {paperEditionLabel} from "./editorial-labels.ts";
+import {paperEditionLabel,paperIdentifierLabel} from "./editorial-labels.ts";
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {AuthoringScreenControllerContext} from "./coordinator-context.ts";
-
-const humanPaperLabel=(value:string):string=>{
-  const raw=value.replace(/^authored:/,"").split(":").at(-1)??value;
-  return raw.replace(/[-_]+/g," ").replace(/\bday\s*(\d+)\b/gi,"Day $1")
-    .replace(/\b(apfc|pfrda|epfo|cgl|cat|upsc)\b/gi,m=>m.toUpperCase())
-    .replace(/\br(\d+)\b/gi,"r$1").replace(/\s+/g," ").trim();
-};
+import {downloadText} from "./download-file.ts";
 
 function packageRows(owner:AuthoringScreenControllerContext):string{
   const rows=[...owner.packages.values()].sort((a,b)=>
@@ -22,7 +16,7 @@ function packageRows(owner:AuthoringScreenControllerContext):string{
     const included=Boolean(family?.includedPaperIds.includes(pkg.paper.id));
     const origin=included?"Repository catalog":"User / imported";
     const title=pkg.title.trim()&&!pkg.title.startsWith("authored:")?
-      pkg.title:(family?.title?family.title+" — "+humanPaperLabel(pkg.paper.paperId):humanPaperLabel(pkg.paper.paperId));
+      pkg.title:(family?.title?family.title+" — "+paperIdentifierLabel(pkg.paper.paperId):paperIdentifierLabel(pkg.paper.paperId));
     return '<article class="authoring-bank-row">'+
       '<div class="authoring-bank-main"><div class="authoring-bank-title"><strong>'+escapeText(title)+'</strong>'+
       '<span class="authoring-bank-badge">'+escapeText(paperEditionLabel(pkg.paper))+'</span></div>'+
@@ -30,8 +24,10 @@ function packageRows(owner:AuthoringScreenControllerContext):string{
       ' · '+pkg.paper.sections.length+' section'+(pkg.paper.sections.length===1?"":"s")+'</p>'+
       '<details class="authoring-technical"><summary>Technical identity</summary><code>'+escapeText(pkg.paper.id)+
       '</code></details></div>'+
+      '<div class="row authoring-bank-actions">'+
+      '<button type="button" class="btn quiet" data-authoring-export-paper="'+escapeText(pkg.paper.id)+'">Export package</button>'+
       '<button type="button" class="btn quiet" data-authoring-open-paper="'+escapeText(pkg.paper.id)+'">Open in library →</button>'+
-      '</article>';
+      '</div></article>';
   }).join("")+'</div>';
 }
 
@@ -61,7 +57,7 @@ export function renderAuthoringScreenHTML(owner:AuthoringScreenControllerContext
     '<p class="fine">Generate a standard Authoring Brief from a self-contained blueprint in Learning Desk. Optional learner focus can add bounded, exam-only evidence without exposing unrestricted History.</p></div>'+
     '<div class="authoring-ai-path"><strong>Continuation of an existing bank</strong>'+
     '<p class="fine">Use the coverage-aware corpus CLI so existing coverage and duplicate context are measured from the authored source. Bring the resulting authoring source here for staging and review; Practice Desk does not maintain a second browser-only continuation engine.</p></div>'+
-    '<button type="button" class="btn primary" id="authoring-learning-focus">Open Learning-directed authoring →</button>'+
+    '<button type="button" class="btn primary" id="authoring-learning-focus">Open Authoring Brief tools →</button>'+
     '</section></div>'+
     '<section class="panel pad authoring-banks"><div class="row between"><div><span class="eyebrow">PUBLISHED CONTENT</span>'+
     '<h2>Question banks & paper editions</h2><p class="fine">Published editions are immutable. Open one in Library to practise it; unpublished drafts remain in the authoring workspace.</p></div>'+
@@ -75,7 +71,9 @@ export function bindAuthoringScreen(owner:AuthoringScreenControllerContext):void
   owner.root.querySelector<HTMLButtonElement>("#authoring-learning")!.onclick=()=>owner.go({screen:"learning"});
   owner.root.querySelector<HTMLButtonElement>("#authoring-calendar")!.onclick=()=>owner.go({screen:"calendar"});
   owner.root.querySelector<HTMLButtonElement>("#authoring-history")!.onclick=()=>owner.go({screen:"history"});
-  owner.root.querySelector<HTMLButtonElement>("#authoring-learning-focus")!.onclick=()=>owner.go({screen:"learning"});
+  owner.root.querySelector<HTMLButtonElement>("#authoring-learning-focus")!.onclick=()=>{
+    owner.learningDesk.focusAuthoringTools();owner.go({screen:"learning"});
+  };
   owner.root.querySelector<HTMLButtonElement>("#authoring-import")!.onclick=()=>
     owner.root.querySelector<HTMLInputElement>("#authoring-import-file")?.click();
   owner.root.querySelector<HTMLButtonElement>("#authoring-image-prep")!.onclick=e=>
@@ -84,6 +82,12 @@ export function bindAuthoringScreen(owner:AuthoringScreenControllerContext):void
     const target=owner.root.querySelector<HTMLElement>("#pd-authoring-container");
     if(target)void owner.authoringStudio.open(target,e.currentTarget as HTMLElement);
   };
+  owner.root.querySelectorAll<HTMLButtonElement>("[data-authoring-export-paper]").forEach(button=>button.onclick=()=>{
+    const id=button.dataset.authoringExportPaper??"",pkg=owner.packages.get(id);
+    if(!pkg)return;
+    const stem=pkg.paper.paperId.replace(/[^a-z0-9._-]+/gi,"-").replace(/^-+|-+$/g,"").slice(0,100)||"practice-desk-paper";
+    downloadText(stem+"-"+pkg.paper.edition+"-r"+pkg.paper.revision+".exam.json",JSON.stringify(pkg,null,2),"application/json;charset=utf-8");
+  });
   owner.root.querySelectorAll<HTMLButtonElement>("[data-authoring-open-paper]").forEach(button=>button.onclick=()=>{
     const id=button.dataset.authoringOpenPaper??"",pkg=owner.packages.get(id);
     if(!pkg)return;

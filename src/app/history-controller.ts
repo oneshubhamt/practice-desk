@@ -15,9 +15,10 @@ export const changeHistoryFilters=(owner:HistoryControllerContext,next:HistoryQu
   };
 
 export function bindHistoryScreen(owner:HistoryControllerContext):void{
+   owner.root.querySelector<HTMLButtonElement>("#g-learning-history")!.onclick=()=>owner.go({screen:"learning"});
    owner.root.querySelector<HTMLButtonElement>("#g-calendar-history")!.onclick=()=>owner.go({screen:"calendar"});
-
-     owner.root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>owner.go({screen:"library"});
+   owner.root.querySelector<HTMLButtonElement>("#g-authoring-history")!.onclick=()=>owner.go({screen:"authoring"});
+   owner.root.querySelector<HTMLButtonElement>("#g-library")!.onclick=()=>owner.go({screen:"library"});
      // Filter edits keep #app, controls, and all-time metrics mounted.
      const bindHistoryRows=():void=>{
        owner.root.querySelectorAll<HTMLButtonElement>("[data-delete]").forEach(b=>b.onclick=()=>{void owner.removeSavedAttempt(b.dataset.delete??"","completed");});

@@ -90,8 +90,11 @@ export function historyHTML(attempts:readonly GenericAttempt[],packages:Readonly
  const pCount=attempts.length;
  return '<div class="generic-heading page-heading"><div><span class="eyebrow">ATTEMPT ARCHIVE</span>'+
   '<h1>History & insights</h1><p class="muted">Review your work, compare like-for-like papers and safeguard offline records.</p></div>'+
-  '<div class="row"><button class="btn quiet" id="g-calendar-history">Calendar</button>'+
-  '<button class="btn quiet" id="g-library">← Test library</button></div></div>'+
+  '<nav class="row workspace-nav" aria-label="Practice Desk sections">'+
+  '<button class="btn quiet" id="g-learning-history">Learning desk</button>'+
+  '<button class="btn quiet" id="g-calendar-history">Calendar</button>'+
+  '<button class="btn quiet" id="g-authoring-history">Authoring</button>'+
+  '<button class="btn quiet" id="g-library">← Test library</button></nav></div>'+
   (warning?'<p role="status" class="generic-warning">'+esc(warning)+'</p>':"")+
   // Primary History task first: keep archive filters, records and backups together.
   '<section class="panel pad history-archive"><div class="row between"><div><h2>Saved attempts</h2><p class="fine" id="g-history-count" role="status" aria-live="polite">'+

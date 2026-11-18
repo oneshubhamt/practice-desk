@@ -22,24 +22,19 @@ import {frozenScoreSummary} from "./history-score.ts";
 
 
 import {examPreflight,preflightHTML,examRulesHTML} from "./exam-preflight.ts";
-import {paperEditionLabel} from "./editorial-labels.ts";
+import {paperEditionLabel,paperIdentifierLabel} from "./editorial-labels.ts";
 
 import {writePracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {pairedCounterpart,pairedEdition} from "./exam-families.ts";
 
 import type {LibraryControllerContext} from "./coordinator-context.ts";
 
-const humanPaperId=(id:string):string=>(id.replace(/^authored:/,"").split(":").at(-1)??id)
-  .replace(/[-_]+/g," ").replace(/\bday\s*(\d+)\b/gi,"Day $1")
-  .replace(/\b(apfc|pfrda|epfo|cgl|cat|upsc)\b/gi,m=>m.toUpperCase())
-  .replace(/\s+/g," ").trim();
-
 const recentAttemptTitle=(owner:LibraryControllerContext,a:GenericAttempt):string=>{
   const direct=owner.packages.get(a.packageId)?.title?.trim();
   if(direct&&!direct.startsWith("authored:"))return direct;
   const family=owner.families().find(f=>f.papers.some(p=>
     p.examId===a.frozen.snapshot.examId&&p.paper.paperId===a.frozen.paper.paperId));
-  const paper=humanPaperId(a.frozen.paper.paperId);
+  const paper=paperIdentifierLabel(a.frozen.paper.paperId);
   return family?.title?family.title+" — "+paper:paper;
 };
 
@@ -218,6 +213,8 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       '<div><b>'+escapeText(time)+'</b><small>Time</small></div><div><b>'+escapeText(previewStructure)+'</b><small>'+previewStructureLabel+'</small></div>'+
       '<div><b>'+escapeText(previewNavigation)+
       '</b><small>Navigation</small></div></div>'+
+      (preflight?'<p class="paper-marking-summary"><b>Marking:</b> '+
+        escapeText(preflight.hasVariableRules?'Variable by question · see details':preflight.ruleSummary)+'</p>':"")+
       '<p class="fine">Scoring and timer rules are frozen when you start; later paper edits cannot change a saved result.</p>'+
       (preflight?'<details class="paper-detail-disclosure"><summary>Source & scoring details</summary>'+
         preflightHTML(preflight)+'<p class="fine technical-paper-id"><b>Technical paper ID:</b> <code>'+
@@ -225,12 +222,13 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
       '<section class="panel pad recent-panel"><div class="row between"><h2>Recent completed results</h2>'+
       '<button class="textlink" id="g-history-recent">View all →</button></div>'+
       (latest.length?latest.map(a=>'<button class="recent-attempt" data-attempt="'+escapeText(a.id)+'">'+
-       '<b>'+escapeText(owner.packages.get(a.packageId)?.title??a.frozen.paper.paperId)+'</b>'+
+       '<b>'+escapeText(recentAttemptTitle(owner,a))+'</b>'+
        '<small>'+new Date(a.finishedAt??a.startedAt).toLocaleDateString()+' · '+
          escapeText(a.frozen.snapshot.mode.replaceAll("-"," "))+' · '+
          escapeText(frozenScoreSummary(a)?.text??"Score unavailable")+'</small></button>').join(""):
        '<p class="fine">Your three most recent completed results will appear here; unfinished attempts stay in their own Resume area.</p>')+
       '</section></aside></div>'+
+      (preflight?examRulesHTML(preflight):"")+
       '<section class="panel pad backup-home home-backup-compact"><div><span class="eyebrow">YOUR DATA</span><h2>Data & backup</h2>'+
        '<p class="fine">Attempts, notes and preferences live in this browser. Export a checksum-verified backup to protect them.</p></div>'+
        '<div class="row generic-actions"><button class="btn" id="g-export-history"'+(owner.loading?" disabled":"")+'>Export backup</button>'+
@@ -240,8 +238,7 @@ export function renderLibraryHTML(owner:LibraryControllerContext):string {
      '<div class="home-stats home-status-strip">'+
        [['Paper editions',owner.packages.size],['Completed tests',complete.length],['Attempts in progress',pending.length],['Notebook cards',[...owner.records.values()].filter(isLearning).length]]
          .map(([name,value])=>'<div class="home-stat"><small>'+escapeText(name)+'</small><b>'+escapeText(value)+'</b></div>').join("")+
-     '</div>'+
-       (preflight?examRulesHTML(preflight):"");
+     '</div>';
  }
 
 export const applyLibraryFamily=(owner:LibraryControllerContext,id:string):void=>{

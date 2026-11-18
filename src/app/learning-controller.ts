@@ -58,6 +58,8 @@ export function createWorkspaceLearningDesk(owner:LearningControllerContext):Ret
      }catch(error){owner.notice(error instanceof Error?error.message:"Cannot create revision test");return false;}
    },
    openCalendar:()=>owner.go({screen:"calendar"}),
+   openHistory:()=>owner.go({screen:"history"}),
+   openAuthoring:()=>owner.go({screen:"authoring"}),
    calendarChanged:()=>owner.calendarController.invalidate(),
    close:()=>owner.go({screen:"library"})
  });}

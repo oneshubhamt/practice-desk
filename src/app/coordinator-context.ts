@@ -79,7 +79,7 @@ export interface WorkspaceContext{
  lastCommittedAt:number | null;
  lastStorageFailure:string | null;
  lastTimerSave:number;
- readonly learningDesk:{ show(): void; hide(): void; select(id: string): void; dispose(): void; };
+ readonly learningDesk:{ show(): void; hide(): void; select(id: string): void; focusAuthoringTools(): void; dispose(): void; };
  readonly calendarController:{ show(): void; hide(): void; refresh(): Promise<void>; dispose(): void; invalidate(): void; };
  readonly listHTML:() => string;
  loading:boolean;
@@ -177,7 +177,7 @@ export type LibraryControllerContext=Slice<
 >;
 
 export type AuthoringScreenControllerContext=Slice<
- "applyFamily"|"authoringStudio"|"choice"|"editionView"|"fallbackConflict"|"families"|
+ "applyFamily"|"authoringStudio"|"choice"|"editionView"|"fallbackConflict"|"families"|"learningDesk"|
  "go"|"imagePreparation"|"loading"|"notice"|"packages"|"practiceMode"|"root"|"save"|
  "saveSelection"|"singleSection"|"storageFault"|"warning"
 >;

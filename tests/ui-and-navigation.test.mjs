@@ -14,7 +14,7 @@ import {filteredHistory} from "../src/app/history-query.ts";
 import {reviewMatch,resultTabsHTML,reviewFiltersHTML,timingLedgerHTML,resultPacingHTML} from "../src/app/result-presentation.ts";
 import {answerRevisionEvidence} from "../src/learning/answer-revisions.ts";
 import {readFile} from "node:fs/promises";
-import {editorialStatusLabel,paperEditionLabel} from "../src/app/editorial-labels.ts";
+import {editorialStatusLabel,paperEditionLabel,paperIdentifierLabel} from "../src/app/editorial-labels.ts";
 import {startSession,transition} from "../src/engine/session.ts";
 import {paperRevisionHash} from "../src/domain/integrity.ts";
 import {multipleDraftMessage,duplicateMatchingTargets} from "../src/app/response-drafts.ts";
@@ -173,6 +173,8 @@ test("human-facing paper edition wording distinguishes custom revision from Sour
  assert.equal(paperEditionLabel({edition:"source",revision:1}),"Source edition r1");
  assert.equal(paperEditionLabel({edition:"reviewed",revision:2,sourcePaperRevisionId:"source-id"}),
   "Reviewed edition r2 · exact Source lineage pinned");
+ assert.equal(paperIdentifierLabel("pfrda-grade-a-2026-day-1"),"PFRDA grade a 2026 Day 1");
+ assert.equal(paperIdentifierLabel("authored:apfc-2026:labour-day-3"),"labour Day 3");
 });
 
 test("F08: all eight statuses have explicit meaningful labels; change types avoid false key-correction claims",()=>{
@@ -392,7 +394,7 @@ async function registerNativeNavigationTests(){
 const file="file:///tmp/Practice_Desk_Offline_Mock_Tests.html";
 test("native-only query codec round-trips every routable screen on file URL",()=>{
   const cases=[
-   {screen:"library"},{screen:"history"},{screen:"learning"},{screen:"authoring"},{screen:"authoring"},
+   {screen:"library"},{screen:"history"},{screen:"learning"},{screen:"calendar"},{screen:"authoring"},{screen:"calendar"},{screen:"authoring"},
    {screen:"exam",attemptId:"attempt-1"},
    {screen:"result",attemptId:"attempt-1",tab:"overview"},
    {screen:"result",attemptId:"imported:é/& +",tab:"review"},
