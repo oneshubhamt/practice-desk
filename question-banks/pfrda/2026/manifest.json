@@ -13,6 +13,22 @@
     {
       "id": "pfrda-grade-a-2026-day-02",
       "path": "mocks/day-02/manifest.json"
+    },
+    {
+      "id": "pfrda-grade-a-2026-day3-bank-a",
+      "path": "mocks/day-03-bank-a/manifest.json"
+    },
+    {
+      "id": "pfrda-grade-a-2026-day3-bank-b",
+      "path": "mocks/day-03-bank-b/manifest.json"
+    },
+    {
+      "id": "pfrda-grade-a-2026-day3-english",
+      "path": "mocks/day-03-english/manifest.json"
+    },
+    {
+      "id": "pfrda-grade-a-2026-ps17",
+      "path": "mocks/ps17/manifest.json"
     }
   ],
   "pyqs": [],

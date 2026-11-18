@@ -1,0 +1,1373 @@
+{
+  "format": "practice-desk-exam",
+  "version": 1,
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — Day 3 — Initial MCQ Bank",
+  "questions": [
+    {
+      "id": "pfrda:day3-bank-a:q:01:r1",
+      "questionId": "pfrda:day3-bank-a:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A business sells goods worth ₹80,000 on credit. Ignoring GST and cost of goods sold, which journal entry records the sale?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Sales; Credit Trade Receivables"
+          },
+          {
+            "id": "B",
+            "text": "Debit Trade Receivables; Credit Sales"
+          },
+          {
+            "id": "C",
+            "text": "Debit Bank; Credit Sales"
+          },
+          {
+            "id": "D",
+            "text": "Debit Trade Receivables; Credit Bank"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "245bfcc5bdcdb8616a8637ee071ca306421b7ac2b64869f4f5efb5d2726a91fc"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:02:r1",
+      "questionId": "pfrda:day3-bank-a:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A share has beta 1.25. The risk-free rate is 4% and the market risk premium is 6%. According to the Capital Asset Pricing Model, the required return is:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "7.5%"
+          },
+          {
+            "id": "B",
+            "text": "10%"
+          },
+          {
+            "id": "C",
+            "text": "11.5%"
+          },
+          {
+            "id": "D",
+            "text": "13.5%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "c114ba1471426a791607d93c4002fd880e733552fb9ceeb6efaffcf0d03a1adf"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:03:r1",
+      "questionId": "pfrda:day3-bank-a:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which section of the PFRDA Act broadly sets out the Authority's duties and powers, including protection of subscribers' interests?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Section 14"
+          },
+          {
+            "id": "B",
+            "text": "Section 20"
+          },
+          {
+            "id": "C",
+            "text": "Section 27"
+          },
+          {
+            "id": "D",
+            "text": "Section 36"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "50b2e798d8303c86d1cb4d4962eb06b01468f52446bd1f286872c26078e6def1"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:04:r1",
+      "questionId": "pfrda:day3-bank-a:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under the National Pension System, which intermediary primarily maintains individual subscriber records, accounts and unit balances?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Pension Fund"
+          },
+          {
+            "id": "B",
+            "text": "Trustee Bank"
+          },
+          {
+            "id": "C",
+            "text": "Custodian"
+          },
+          {
+            "id": "D",
+            "text": "Central Recordkeeping Agency"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "0aa238340db60baf2e0ef260bb96648bde14096d219c1850afe707ecad4229a7"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:05:r1",
+      "questionId": "pfrda:day3-bank-a:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 63 of the Companies Act, 2013, which reserve cannot be capitalised for issuing fully paid-up bonus shares?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Eligible free reserves"
+          },
+          {
+            "id": "B",
+            "text": "Reserve created by revaluation of assets"
+          },
+          {
+            "id": "C",
+            "text": "Securities premium account"
+          },
+          {
+            "id": "D",
+            "text": "Capital redemption reserve account"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "85487a3392657101c471d1f99242994dbab647936d475ca1e54a76f38d02704c"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:06:r1",
+      "questionId": "pfrda:day3-bank-a:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Union Budget 2026–27 Budget Estimates placed direct capital expenditure at about ₹12.22 lakh crore and effective capital expenditure at about ₹17.15 lakh crore. The ₹4.93 lakh crore difference principally represents:",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Interest payments"
+          },
+          {
+            "id": "B",
+            "text": "Revenue deficit"
+          },
+          {
+            "id": "C",
+            "text": "Grants for creation of capital assets"
+          },
+          {
+            "id": "D",
+            "text": "Tax devolution"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "a942af95b34c5d0805b5ddb28cad8d9fa8b4fa26f38ee929abc365e82c8a84c1"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:07:r1",
+      "questionId": "pfrda:day3-bank-a:q:07",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A product sells for ₹150 per unit, variable cost is ₹90 per unit and total fixed cost is ₹1,80,000. What is the break-even sales volume?",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "3,000 units"
+          },
+          {
+            "id": "B",
+            "text": "2,000 units"
+          },
+          {
+            "id": "C",
+            "text": "2,500 units"
+          },
+          {
+            "id": "D",
+            "text": "3,500 units"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "19f5851d6ca381a7001206b559180e2bae0d5d5a62e52c51a144576126f68cf8"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:08:r1",
+      "questionId": "pfrda:day3-bank-a:q:08",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Using initial values, price rises by 10% and quantity demanded falls by 5%. What is the absolute value and classification of price elasticity of demand?",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "2; elastic"
+          },
+          {
+            "id": "B",
+            "text": "0.5; inelastic"
+          },
+          {
+            "id": "C",
+            "text": "0.5; elastic"
+          },
+          {
+            "id": "D",
+            "text": "2; inelastic"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "fc4e4c3802419f76779254e1fb0e634a0b7db6e54ccaff816322a3b4d7d518e2"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:09:r1",
+      "questionId": "pfrda:day3-bank-a:q:09",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which of the following is a motivator rather than a hygiene factor in Herzberg's two-factor theory?",
+        "topicIds": [
+          "topic:Management"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Organisational policies"
+          },
+          {
+            "id": "B",
+            "text": "Salary"
+          },
+          {
+            "id": "C",
+            "text": "Physical working conditions"
+          },
+          {
+            "id": "D",
+            "text": "Recognition for achievement"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "45b3c560b3b4e4d9e5ae25dcef09f7185d3b46e98b55256e418a69a5e58fcf19"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:10:r1",
+      "questionId": "pfrda:day3-bank-a:q:10",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A project requires an initial outlay of ₹1,000 and yields ₹550 after one year and ₹726 after two years. At a 10% discount rate, its net present value is:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "+₹1,100"
+          },
+          {
+            "id": "B",
+            "text": "+₹200"
+          },
+          {
+            "id": "C",
+            "text": "+₹100"
+          },
+          {
+            "id": "D",
+            "text": "−₹100"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "951f5a5f02b6bcbb9caa9784511bc879ca465b7c2e0150e77dada0920ea1b3b5"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:11:r1",
+      "questionId": "pfrda:day3-bank-a:q:11",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A customer pays ₹20,000 into the business bank account toward an existing trade receivable. Which entry is correct?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Bank; Credit Trade Receivables"
+          },
+          {
+            "id": "B",
+            "text": "Debit Sales; Credit Bank"
+          },
+          {
+            "id": "C",
+            "text": "Debit Trade Receivables; Credit Bank"
+          },
+          {
+            "id": "D",
+            "text": "Debit Bank; Credit Sales"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d45fe15bd6e87e6da5aa01f828b14d986260aefeb9868ef672252d041df19dda"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:12:r1",
+      "questionId": "pfrda:day3-bank-a:q:12",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which section of the PFRDA Act principally governs registration of pension intermediaries?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Section 14"
+          },
+          {
+            "id": "B",
+            "text": "Section 27"
+          },
+          {
+            "id": "C",
+            "text": "Section 20"
+          },
+          {
+            "id": "D",
+            "text": "Section 36"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "daeba98dee23c9a53aaaa8c42f5ad6319bf22433adc7bc39831e02020e7c3787"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:13:r1",
+      "questionId": "pfrda:day3-bank-a:q:13",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A model is trained on loan applications where each historical example is already labelled 'default' or 'no default'. This is primarily:",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Unsupervised learning"
+          },
+          {
+            "id": "B",
+            "text": "Reinforcement learning"
+          },
+          {
+            "id": "C",
+            "text": "Unlabelled association-rule learning"
+          },
+          {
+            "id": "D",
+            "text": "Supervised learning"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "7d7b0fa5e5d15b8e90e58c8bda89c53e542207076f7918f84dc7ecaa3b7dc323"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:14:r1",
+      "questionId": "pfrda:day3-bank-a:q:14",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 173(1) of the Companies Act, 2013, the first meeting of the Board of Directors must ordinarily be held within how many days of incorporation?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "15 days"
+          },
+          {
+            "id": "B",
+            "text": "60 days"
+          },
+          {
+            "id": "C",
+            "text": "30 days"
+          },
+          {
+            "id": "D",
+            "text": "90 days"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "c2b04ef02b137a18d0d88dcf7ba989e2da32da23c234c137d8b2e86f68eaadf7"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:15:r1",
+      "questionId": "pfrda:day3-bank-a:q:15",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The risk-free rate is 5%, beta is 0.8 and the expected total market return is 15%. According to CAPM, the required return is:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "13%"
+          },
+          {
+            "id": "B",
+            "text": "8%"
+          },
+          {
+            "id": "C",
+            "text": "17%"
+          },
+          {
+            "id": "D",
+            "text": "12%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "da69b2983aa72e3211010e86e961f7953650ab7030b44ba04235936c9ba2430a"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:16:r1",
+      "questionId": "pfrda:day3-bank-a:q:16",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In digital-media discussions, a 'filter bubble' most closely refers to:",
+        "topicIds": [
+          "topic:Media"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Mandatory filtering of all messages by law"
+          },
+          {
+            "id": "B",
+            "text": "Personalised algorithms repeatedly exposing users to perspectives similar to their existing preferences"
+          },
+          {
+            "id": "C",
+            "text": "A paywall around news content"
+          },
+          {
+            "id": "D",
+            "text": "Complete removal of misinformation from a platform"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "e7d9a61b285b7fc0c88178808133994c0a5516e65d6a7d29552ba2a8d18a339b"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:17:r1",
+      "questionId": "pfrda:day3-bank-a:q:17",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Standard material price is ₹40 per kg, actual price is ₹38 per kg and actual quantity purchased and used is 500 kg. If favourable variances are stated as positive, the material price variance is:",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹1,000 adverse"
+          },
+          {
+            "id": "B",
+            "text": "₹500 favourable"
+          },
+          {
+            "id": "C",
+            "text": "₹2,000 favourable"
+          },
+          {
+            "id": "D",
+            "text": "₹1,000 favourable"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "479b8f06399979619a27c62588b8ed7088d75a9303e4489063767eae75ffe4f4"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:18:r1",
+      "questionId": "pfrda:day3-bank-a:q:18",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which pair correctly identifies the NPS entity principally handling fund-transfer operations and the entity principally holding securities for NPS Trust?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Trustee Bank; Custodian"
+          },
+          {
+            "id": "B",
+            "text": "Central Recordkeeping Agency; Point of Presence"
+          },
+          {
+            "id": "C",
+            "text": "Custodian; Trustee Bank"
+          },
+          {
+            "id": "D",
+            "text": "Pension Fund; Central Recordkeeping Agency"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "0a1e839af1bb6fbf84cf1bff7f78ff3bcda5fb896e84975e33aec7fcdd7f2174"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:19:r1",
+      "questionId": "pfrda:day3-bank-a:q:19",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under a perpetual inventory system, a business purchases inventory worth ₹45,000 on credit. Which journal entry is correct?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Trade Payables; Credit Inventory"
+          },
+          {
+            "id": "B",
+            "text": "Debit Bank; Credit Inventory"
+          },
+          {
+            "id": "C",
+            "text": "Debit Inventory; Credit Trade Payables"
+          },
+          {
+            "id": "D",
+            "text": "Debit Trade Receivables; Credit Sales"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "ae6e187cba492612d226c48542013fb175b02c949df0a9041d5239907e13dd4e"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:20:r1",
+      "questionId": "pfrda:day3-bank-a:q:20",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The Economic Survey 2025–26 projected India's real GDP growth for FY 2026–27 in which range?",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "5.0–5.5%"
+          },
+          {
+            "id": "B",
+            "text": "6.8–7.2%"
+          },
+          {
+            "id": "C",
+            "text": "7.4–7.8%"
+          },
+          {
+            "id": "D",
+            "text": "8.1–8.5%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "8e7fc2ce54674bab5347ad8d7c17b4aaa2b2fcaea3efee8b6b1aa870145b0e82"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:21:r1",
+      "questionId": "pfrda:day3-bank-a:q:21",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A company's cost of equity under CAPM is 13%, the risk-free rate is 4%, and the market risk premium is 6%. What beta is implied?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "0.67"
+          },
+          {
+            "id": "B",
+            "text": "1.0"
+          },
+          {
+            "id": "C",
+            "text": "1.5"
+          },
+          {
+            "id": "D",
+            "text": "2.17"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d1db4d6108089b8a8edb6b275d8007a230d0e37ff831ed760d3362d532a6d2d6"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:22:r1",
+      "questionId": "pfrda:day3-bank-a:q:22",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which option correctly states the ordinary appellate route and filing periods under Sections 36 and 38 of the PFRDA Act?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Section 36: NCLAT within 45 days; Section 38: Supreme Court within 60 days"
+          },
+          {
+            "id": "B",
+            "text": "Section 36: Securities Appellate Tribunal within 60 days; Supreme Court within 45 days"
+          },
+          {
+            "id": "C",
+            "text": "Section 36: Supreme Court within 45 days; Section 38: Securities Appellate Tribunal within 60 days"
+          },
+          {
+            "id": "D",
+            "text": "Section 36: Securities Appellate Tribunal within 45 days; Section 38: Supreme Court, on a question of law, within 60 days"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "9e622a2e364cec313748b5f048e222d80b8e620a5493275ebf118e961c8542d0"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:23:r1",
+      "questionId": "pfrda:day3-bank-a:q:23",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In marketing, STP stands for:",
+        "topicIds": [
+          "topic:Marketing/Communication"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Segmentation → Targeting → Positioning"
+          },
+          {
+            "id": "B",
+            "text": "Strategy → Testing → Promotion"
+          },
+          {
+            "id": "C",
+            "text": "Targeting → Segmentation → Positioning"
+          },
+          {
+            "id": "D",
+            "text": "Segmentation → Promotion → Targeting"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "84df80aa50fd8898af875a262bc141fecf7d49b474b2718c77a06026c142a04e"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:24:r1",
+      "questionId": "pfrda:day3-bank-a:q:24",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A setup-cost pool of ₹90,000 is driven by 300 setups. Product X uses 12 setups. Under activity-based costing, how much setup overhead is assigned to Product X?",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹3,000"
+          },
+          {
+            "id": "B",
+            "text": "₹900"
+          },
+          {
+            "id": "C",
+            "text": "₹3,600"
+          },
+          {
+            "id": "D",
+            "text": "₹7,500"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "a44632ce703d288b4bd9bd20bfb27255fc4bb0625ac46ea18afad6079ad361f2"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:25:r1",
+      "questionId": "pfrda:day3-bank-a:q:25",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A project costs ₹1,200 initially and generates ₹660 after one year and ₹605 after two years. At a 10% discount rate, which result is correct?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "+₹100; accept"
+          },
+          {
+            "id": "B",
+            "text": "−₹100; reject"
+          },
+          {
+            "id": "C",
+            "text": "+₹1,100; accept"
+          },
+          {
+            "id": "D",
+            "text": "−₹1,200; reject"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d52821729f5eb60817d18b3a33094b51d6da80711864401cc12f9fa6ebc6a2e2"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:26:r1",
+      "questionId": "pfrda:day3-bank-a:q:26",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a simple Keynesian economy with no taxes or imports, the marginal propensity to consume is 0.75. What is the expenditure multiplier?",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "4"
+          },
+          {
+            "id": "B",
+            "text": "1.33"
+          },
+          {
+            "id": "C",
+            "text": "0.75"
+          },
+          {
+            "id": "D",
+            "text": "3"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "52b6b59d7aa771e94a1c6ea64803236ea4abe252c2f742a964301a341f5618d1"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:27:r1",
+      "questionId": "pfrda:day3-bank-a:q:27",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement best describes a private placement under Section 42 of the Companies Act, 2013?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "It may be advertised freely to the public"
+          },
+          {
+            "id": "B",
+            "text": "It can be offered to an unlimited number of persons without restriction"
+          },
+          {
+            "id": "C",
+            "text": "It automatically carries a right of renunciation"
+          },
+          {
+            "id": "D",
+            "text": "It is made to identified persons through the prescribed process and cannot be publicly advertised"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "a9520f0609361082d8621abe69883cbb8fa286ba982db1a9d711da49405d584f"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:28:r1",
+      "questionId": "pfrda:day3-bank-a:q:28",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A classifier achieves 99% accuracy on its training data but only 63% on an independent test set. This most strongly suggests:",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Underfitting"
+          },
+          {
+            "id": "B",
+            "text": "Overfitting and poor generalisation"
+          },
+          {
+            "id": "C",
+            "text": "Guaranteed reliability"
+          },
+          {
+            "id": "D",
+            "text": "That labels are unnecessary"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "402ebcc6731f1f741304091a6b1663fee99751af50b6f07faa86daa5595ae72c"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:29:r1",
+      "questionId": "pfrda:day3-bank-a:q:29",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Section 4 of the PFRDA Act provides for which maximum composition of the Authority?",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Chairperson + 4 whole-time + 4 part-time members"
+          },
+          {
+            "id": "B",
+            "text": "Chairperson + 3 whole-time + 4 part-time members"
+          },
+          {
+            "id": "C",
+            "text": "Chairperson + up to 3 whole-time + up to 3 part-time members"
+          },
+          {
+            "id": "D",
+            "text": "Chairperson + 2 whole-time + 3 part-time members"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "44f74c0a619f13ade0306de5a953c5e4b657aa0671ca98e867f2c09e1e22a487"
+    },
+    {
+      "id": "pfrda:day3-bank-a:q:30:r1",
+      "questionId": "pfrda:day3-bank-a:q:30",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Current assets are ₹6,00,000 and current liabilities ₹3,00,000. The business settles ₹1,00,000 of trade payables using cash. What is the new current ratio?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "2.00:1"
+          },
+          {
+            "id": "B",
+            "text": "1.67:1"
+          },
+          {
+            "id": "C",
+            "text": "3.00:1"
+          },
+          {
+            "id": "D",
+            "text": "2.50:1"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "be99104f07f37117d642394b0438c1be7269b89c394ad0b018feb288907e856a"
+    }
+  ],
+  "answerKey": {
+    "id": "pfrda-grade-a-2026-day3-bank-a:r1:key",
+    "paperId": "pfrda-grade-a-2026-day3-bank-a",
+    "revision": 1,
+    "entries": [
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:01:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:02:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:03:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:04:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:05:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:06:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:07:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:08:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:09:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:10:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:11:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:12:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:13:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:14:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:15:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:16:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:17:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:18:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:19:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:20:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:21:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:22:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:23:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:24:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:25:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:26:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:27:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:28:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:29:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-a:q:30:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      }
+    ],
+    "contentHash": "0f07583be8b5dcbafb4d7058bc6deac4273b091b6002b8375110b7d60ab5ac6b"
+  },
+  "paper": {
+    "id": "pfrda-grade-a-2026-day3-bank-a:r1:custom",
+    "paperId": "pfrda-grade-a-2026-day3-bank-a",
+    "revision": 1,
+    "edition": "custom",
+    "sections": [
+      {
+        "id": "pfrda-grade-a-2026-day3-bank-a:section:main",
+        "title": "PFRDA Grade A 2026 — Day 3 — Initial MCQ Bank",
+        "questionRevisionIds": [
+          "pfrda:day3-bank-a:q:01:r1",
+          "pfrda:day3-bank-a:q:02:r1",
+          "pfrda:day3-bank-a:q:03:r1",
+          "pfrda:day3-bank-a:q:04:r1",
+          "pfrda:day3-bank-a:q:05:r1",
+          "pfrda:day3-bank-a:q:06:r1",
+          "pfrda:day3-bank-a:q:07:r1",
+          "pfrda:day3-bank-a:q:08:r1",
+          "pfrda:day3-bank-a:q:09:r1",
+          "pfrda:day3-bank-a:q:10:r1",
+          "pfrda:day3-bank-a:q:11:r1",
+          "pfrda:day3-bank-a:q:12:r1",
+          "pfrda:day3-bank-a:q:13:r1",
+          "pfrda:day3-bank-a:q:14:r1",
+          "pfrda:day3-bank-a:q:15:r1",
+          "pfrda:day3-bank-a:q:16:r1",
+          "pfrda:day3-bank-a:q:17:r1",
+          "pfrda:day3-bank-a:q:18:r1",
+          "pfrda:day3-bank-a:q:19:r1",
+          "pfrda:day3-bank-a:q:20:r1",
+          "pfrda:day3-bank-a:q:21:r1",
+          "pfrda:day3-bank-a:q:22:r1",
+          "pfrda:day3-bank-a:q:23:r1",
+          "pfrda:day3-bank-a:q:24:r1",
+          "pfrda:day3-bank-a:q:25:r1",
+          "pfrda:day3-bank-a:q:26:r1",
+          "pfrda:day3-bank-a:q:27:r1",
+          "pfrda:day3-bank-a:q:28:r1",
+          "pfrda:day3-bank-a:q:29:r1",
+          "pfrda:day3-bank-a:q:30:r1"
+        ]
+      }
+    ],
+    "answerKeyRevisionId": "pfrda-grade-a-2026-day3-bank-a:r1:key",
+    "timing": {
+      "kind": "whole-paper",
+      "durationMs": 1440000,
+      "pausePolicy": "forbidden"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "free",
+      "allowFlagging": true,
+      "allowReview": true
+    },
+    "scoring": {
+      "defaultRule": {
+        "correctMarks": 2,
+        "incorrectMarks": -0.5,
+        "unansweredMarks": 0
+      },
+      "decimalPlaces": 2
+    },
+    "contentHash": "e24951d1038b16ad81f5cb1a49f75df82dc293cce27dc7bed7f53b1f03de73fd"
+  },
+  "explanations": {
+    "pfrda:day3-bank-a:q:01:r1": "A credit sale creates an asset (Trade Receivables) and revenue. Debit Trade Receivables ₹80,000; credit Sales ₹80,000.",
+    "pfrda:day3-bank-a:q:02:r1": "Required return = 4% + 1.25×6% = 11.5%.",
+    "pfrda:day3-bank-a:q:03:r1": "Section 14 sets out the duties, powers and functions of the Pension Fund Regulatory and Development Authority (PFRDA), including protection of subscribers' interests.",
+    "pfrda:day3-bank-a:q:04:r1": "The Central Recordkeeping Agency (CRA) maintains central subscriber records and account information. Pension Funds manage investments; the Trustee Bank handles fund flows; the Custodian holds securities.",
+    "pfrda:day3-bank-a:q:05:r1": "Section 63 permits specified free reserves, securities premium and capital redemption reserve, but excludes reserves created by revaluation of assets.",
+    "pfrda:day3-bank-a:q:06:r1": "Effective capital expenditure adds grants-in-aid for creation of capital assets (about ₹4.93 lakh crore) to direct capital expenditure.",
+    "pfrda:day3-bank-a:q:07:r1": "Contribution per unit = ₹60. Break-even units = ₹1,80,000/₹60 = 3,000.",
+    "pfrda:day3-bank-a:q:08:r1": "Absolute price elasticity = 5%/10% = 0.5, which is inelastic because it is below 1.",
+    "pfrda:day3-bank-a:q:09:r1": "Recognition and achievement are motivators; salary, policy and working conditions are hygiene factors.",
+    "pfrda:day3-bank-a:q:10:r1": "Present values are ₹550/1.1 = ₹500 and ₹726/1.1² = ₹600. Total inflows ₹1,100 less ₹1,000 outlay gives NPV +₹100.",
+    "pfrda:day3-bank-a:q:11:r1": "Bank, an asset, increases and the receivable asset falls. Debit Bank; credit Trade Receivables.",
+    "pfrda:day3-bank-a:q:12:r1": "Section 27 deals with registration of intermediaries.",
+    "pfrda:day3-bank-a:q:13:r1": "Supervised learning uses labelled input-output examples.",
+    "pfrda:day3-bank-a:q:14:r1": "Section 173(1) requires the first Board meeting within 30 days of incorporation.",
+    "pfrda:day3-bank-a:q:15:r1": "Market risk premium = 15%−5%=10%. Required return = 5% + 0.8×10% = 13%.",
+    "pfrda:day3-bank-a:q:16:r1": "A filter bubble is an information environment shaped by personalisation that can repeatedly reinforce similar views and reduce exposure to alternatives.",
+    "pfrda:day3-bank-a:q:17:r1": "Material price variance = (Standard Price − Actual Price)×Actual Quantity = (40−38)×500 = ₹1,000 favourable.",
+    "pfrda:day3-bank-a:q:18:r1": "The Trustee Bank handles fund flows; the Custodian holds securities/assets in custody.",
+    "pfrda:day3-bank-a:q:19:r1": "Inventory, an asset, increases and a liability to the supplier arises. Debit Inventory; credit Trade Payables.",
+    "pfrda:day3-bank-a:q:20:r1": "The Economic Survey 2025–26 projected real GDP growth for FY 2026–27 at 6.8–7.2%.",
+    "pfrda:day3-bank-a:q:21:r1": "13 = 4 + β×6, so β = 9/6 = 1.5.",
+    "pfrda:day3-bank-a:q:22:r1": "Section 36 provides an appeal to the Securities Appellate Tribunal ordinarily within 45 days. Section 38 provides a further appeal to the Supreme Court on a question of law ordinarily within 60 days, subject to statutory provisions for delay.",
+    "pfrda:day3-bank-a:q:23:r1": "STP means Segmentation, Targeting and Positioning.",
+    "pfrda:day3-bank-a:q:24:r1": "Cost per setup = ₹90,000/300 = ₹300. For 12 setups: ₹3,600.",
+    "pfrda:day3-bank-a:q:25:r1": "PV of inflows = ₹660/1.1 + ₹605/1.1² = ₹600+₹500=₹1,100. NPV = −₹100, so reject.",
+    "pfrda:day3-bank-a:q:26:r1": "Multiplier = 1/(1−MPC) = 1/0.25 = 4. MPC means Marginal Propensity to Consume.",
+    "pfrda:day3-bank-a:q:27:r1": "Private placement is an offer to identified persons through the statutory process; public advertising is not permitted.",
+    "pfrda:day3-bank-a:q:28:r1": "Very high training performance with much weaker independent-test performance is a classic sign of overfitting.",
+    "pfrda:day3-bank-a:q:29:r1": "Section 4 provides one Chairperson, not more than three whole-time members and not more than three part-time members. The maxima are important: it is not a requirement that all six non-chair seats always be filled.",
+    "pfrda:day3-bank-a:q:30:r1": "New current assets = ₹5,00,000 and current liabilities = ₹2,00,000; ratio = 2.5:1."
+  }
+}

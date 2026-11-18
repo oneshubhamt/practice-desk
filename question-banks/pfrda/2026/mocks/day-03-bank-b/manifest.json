@@ -1,0 +1,15 @@
+{
+  "format": "practice-desk-paper-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day3-bank-b",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day3-bank-b",
+  "kind": "mock",
+  "title": "PFRDA Grade A 2026 — Day 3 — Final Replacement MCQ Bank",
+  "canonicalEdition": "original",
+  "editions": {
+    "original": {
+      "package": "original/package.exam.json"
+    }
+  }
+}

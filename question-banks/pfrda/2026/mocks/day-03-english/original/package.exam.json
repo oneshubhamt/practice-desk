@@ -1,0 +1,252 @@
+{
+  "format": "practice-desk-exam",
+  "version": 1,
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — Day 3 — Descriptive English",
+  "questions": [
+    {
+      "id": "pfrda:day3-english:q:01:r1",
+      "questionId": "pfrda:day3-english:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Write a balanced essay on: “Public trust is as important as technology in expanding digital financial services in India. Discuss.”",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {
+          "minWords": 250,
+          "maxWords": 300,
+          "wordLimit": 300
+        }
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Original descriptive-English practice task; manually assessed. Not an official PFRDA question."
+      },
+      "contentHash": "9cdd13c559ad3af127348f42d7dc32735388ba2929f7eebfa9e28aa9e06b5c7e"
+    },
+    {
+      "id": "pfrda:day3-english:q:02:r1",
+      "questionId": "pfrda:day3-english:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Urban Water Security\n\nWater scarcity in cities is often described as a consequence of insufficient rainfall. Yet the availability of rainfall alone does not determine whether residents receive dependable water supplies. Urban water security depends equally on infrastructure, institutions, distribution practices and the condition of surrounding ecosystems.\n\nMany cities draw water from distant rivers and reservoirs while losing a substantial portion through leaking pipes, unauthorised connections and inaccurate metering. Expanding supply without addressing these losses can increase financial and environmental costs. New pipelines and reservoirs may temporarily relieve shortages, but they do little to correct inefficient management. Consequently, cities may experience simultaneous infrastructure expansion and persistent water insecurity.\n\nDemand is also distributed unequally. Well-served neighbourhoods may consume large quantities of treated water, whereas informal settlements often rely on expensive private suppliers or irregular communal sources. Such differences show that water security concerns not merely the total volume available but also affordability, reliability and equitable access.\n\nGroundwater adds another complication. It provides an important buffer during interruptions in municipal supply, but excessive extraction can lower water tables and damage aquifers. Urban construction that covers permeable land with concrete further restricts natural recharge. Rainwater harvesting and the restoration of lakes, wetlands and drainage channels can therefore support long-term resilience, although their effectiveness depends on maintenance and local conditions.\n\nA more sustainable strategy combines reliable measurement, leakage reduction, appropriate pricing, targeted support for vulnerable households, wastewater treatment and reuse, groundwater regulation and protection of local ecosystems. Pricing can encourage conservation, but poorly designed tariffs may burden poorer residents. Similarly, technological tools such as sensors and digital meters can improve monitoring, but they cannot substitute for accountable institutions.\n\nUltimately, urban water security is a governance challenge as much as an engineering challenge. Success should be judged not simply by the quantity of water supplied or the number of projects completed, but by whether residents receive safe, affordable and dependable water without compromising the resources needed by future generations.\n\nQuestion 1: Why does the passage argue that increasing water supply alone may not resolve urban water insecurity?",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {}
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Original descriptive-English practice task; manually assessed. Not an official PFRDA question."
+      },
+      "contentHash": "331feb068464a79e329e0e28258e82ab876faea5447e994744414b621d33dc89"
+    },
+    {
+      "id": "pfrda:day3-english:q:03:r1",
+      "questionId": "pfrda:day3-english:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Urban Water Security\n\nWater scarcity in cities is often described as a consequence of insufficient rainfall. Yet the availability of rainfall alone does not determine whether residents receive dependable water supplies. Urban water security depends equally on infrastructure, institutions, distribution practices and the condition of surrounding ecosystems.\n\nMany cities draw water from distant rivers and reservoirs while losing a substantial portion through leaking pipes, unauthorised connections and inaccurate metering. Expanding supply without addressing these losses can increase financial and environmental costs. New pipelines and reservoirs may temporarily relieve shortages, but they do little to correct inefficient management. Consequently, cities may experience simultaneous infrastructure expansion and persistent water insecurity.\n\nDemand is also distributed unequally. Well-served neighbourhoods may consume large quantities of treated water, whereas informal settlements often rely on expensive private suppliers or irregular communal sources. Such differences show that water security concerns not merely the total volume available but also affordability, reliability and equitable access.\n\nGroundwater adds another complication. It provides an important buffer during interruptions in municipal supply, but excessive extraction can lower water tables and damage aquifers. Urban construction that covers permeable land with concrete further restricts natural recharge. Rainwater harvesting and the restoration of lakes, wetlands and drainage channels can therefore support long-term resilience, although their effectiveness depends on maintenance and local conditions.\n\nA more sustainable strategy combines reliable measurement, leakage reduction, appropriate pricing, targeted support for vulnerable households, wastewater treatment and reuse, groundwater regulation and protection of local ecosystems. Pricing can encourage conservation, but poorly designed tariffs may burden poorer residents. Similarly, technological tools such as sensors and digital meters can improve monitoring, but they cannot substitute for accountable institutions.\n\nUltimately, urban water security is a governance challenge as much as an engineering challenge. Success should be judged not simply by the quantity of water supplied or the number of projects completed, but by whether residents receive safe, affordable and dependable water without compromising the resources needed by future generations.\n\nQuestion 2: Explain how unequal access makes urban water security a question of social equity.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {}
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Original descriptive-English practice task; manually assessed. Not an official PFRDA question."
+      },
+      "contentHash": "d773c77fddb5f5557dfc35c64e32b50be2dff93d46930b69e82b6ca8dd261e9a"
+    },
+    {
+      "id": "pfrda:day3-english:q:04:r1",
+      "questionId": "pfrda:day3-english:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Urban Water Security\n\nWater scarcity in cities is often described as a consequence of insufficient rainfall. Yet the availability of rainfall alone does not determine whether residents receive dependable water supplies. Urban water security depends equally on infrastructure, institutions, distribution practices and the condition of surrounding ecosystems.\n\nMany cities draw water from distant rivers and reservoirs while losing a substantial portion through leaking pipes, unauthorised connections and inaccurate metering. Expanding supply without addressing these losses can increase financial and environmental costs. New pipelines and reservoirs may temporarily relieve shortages, but they do little to correct inefficient management. Consequently, cities may experience simultaneous infrastructure expansion and persistent water insecurity.\n\nDemand is also distributed unequally. Well-served neighbourhoods may consume large quantities of treated water, whereas informal settlements often rely on expensive private suppliers or irregular communal sources. Such differences show that water security concerns not merely the total volume available but also affordability, reliability and equitable access.\n\nGroundwater adds another complication. It provides an important buffer during interruptions in municipal supply, but excessive extraction can lower water tables and damage aquifers. Urban construction that covers permeable land with concrete further restricts natural recharge. Rainwater harvesting and the restoration of lakes, wetlands and drainage channels can therefore support long-term resilience, although their effectiveness depends on maintenance and local conditions.\n\nA more sustainable strategy combines reliable measurement, leakage reduction, appropriate pricing, targeted support for vulnerable households, wastewater treatment and reuse, groundwater regulation and protection of local ecosystems. Pricing can encourage conservation, but poorly designed tariffs may burden poorer residents. Similarly, technological tools such as sensors and digital meters can improve monitoring, but they cannot substitute for accountable institutions.\n\nUltimately, urban water security is a governance challenge as much as an engineering challenge. Success should be judged not simply by the quantity of water supplied or the number of projects completed, but by whether residents receive safe, affordable and dependable water without compromising the resources needed by future generations.\n\nQuestion 3: Identify two ways urban development can weaken groundwater sustainability.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {}
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Original descriptive-English practice task; manually assessed. Not an official PFRDA question."
+      },
+      "contentHash": "fb112cfacf6f7dcc31598668a98483b4e2f6511be3fc0f9726da45d5250c6b4d"
+    },
+    {
+      "id": "pfrda:day3-english:q:05:r1",
+      "questionId": "pfrda:day3-english:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Urban Water Security\n\nWater scarcity in cities is often described as a consequence of insufficient rainfall. Yet the availability of rainfall alone does not determine whether residents receive dependable water supplies. Urban water security depends equally on infrastructure, institutions, distribution practices and the condition of surrounding ecosystems.\n\nMany cities draw water from distant rivers and reservoirs while losing a substantial portion through leaking pipes, unauthorised connections and inaccurate metering. Expanding supply without addressing these losses can increase financial and environmental costs. New pipelines and reservoirs may temporarily relieve shortages, but they do little to correct inefficient management. Consequently, cities may experience simultaneous infrastructure expansion and persistent water insecurity.\n\nDemand is also distributed unequally. Well-served neighbourhoods may consume large quantities of treated water, whereas informal settlements often rely on expensive private suppliers or irregular communal sources. Such differences show that water security concerns not merely the total volume available but also affordability, reliability and equitable access.\n\nGroundwater adds another complication. It provides an important buffer during interruptions in municipal supply, but excessive extraction can lower water tables and damage aquifers. Urban construction that covers permeable land with concrete further restricts natural recharge. Rainwater harvesting and the restoration of lakes, wetlands and drainage channels can therefore support long-term resilience, although their effectiveness depends on maintenance and local conditions.\n\nA more sustainable strategy combines reliable measurement, leakage reduction, appropriate pricing, targeted support for vulnerable households, wastewater treatment and reuse, groundwater regulation and protection of local ecosystems. Pricing can encourage conservation, but poorly designed tariffs may burden poorer residents. Similarly, technological tools such as sensors and digital meters can improve monitoring, but they cannot substitute for accountable institutions.\n\nUltimately, urban water security is a governance challenge as much as an engineering challenge. Success should be judged not simply by the quantity of water supplied or the number of projects completed, but by whether residents receive safe, affordable and dependable water without compromising the resources needed by future generations.\n\nQuestion 4: Why does the author caution against relying exclusively on either water pricing or technology?",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {}
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Original descriptive-English practice task; manually assessed. Not an official PFRDA question."
+      },
+      "contentHash": "735d7e36fb618dc3f51927ed93b3a2c39125043d46a222810da83e85b05224d8"
+    },
+    {
+      "id": "pfrda:day3-english:q:06:r1",
+      "questionId": "pfrda:day3-english:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "free-response",
+        "prompt": "Urban Water Security\n\nWater scarcity in cities is often described as a consequence of insufficient rainfall. Yet the availability of rainfall alone does not determine whether residents receive dependable water supplies. Urban water security depends equally on infrastructure, institutions, distribution practices and the condition of surrounding ecosystems.\n\nMany cities draw water from distant rivers and reservoirs while losing a substantial portion through leaking pipes, unauthorised connections and inaccurate metering. Expanding supply without addressing these losses can increase financial and environmental costs. New pipelines and reservoirs may temporarily relieve shortages, but they do little to correct inefficient management. Consequently, cities may experience simultaneous infrastructure expansion and persistent water insecurity.\n\nDemand is also distributed unequally. Well-served neighbourhoods may consume large quantities of treated water, whereas informal settlements often rely on expensive private suppliers or irregular communal sources. Such differences show that water security concerns not merely the total volume available but also affordability, reliability and equitable access.\n\nGroundwater adds another complication. It provides an important buffer during interruptions in municipal supply, but excessive extraction can lower water tables and damage aquifers. Urban construction that covers permeable land with concrete further restricts natural recharge. Rainwater harvesting and the restoration of lakes, wetlands and drainage channels can therefore support long-term resilience, although their effectiveness depends on maintenance and local conditions.\n\nA more sustainable strategy combines reliable measurement, leakage reduction, appropriate pricing, targeted support for vulnerable households, wastewater treatment and reuse, groundwater regulation and protection of local ecosystems. Pricing can encourage conservation, but poorly designed tariffs may burden poorer residents. Similarly, technological tools such as sensors and digital meters can improve monitoring, but they cannot substitute for accountable institutions.\n\nUltimately, urban water security is a governance challenge as much as an engineering challenge. Success should be judged not simply by the quantity of water supplied or the number of projects completed, but by whether residents receive safe, affordable and dependable water without compromising the resources needed by future generations.\n\nQuestion 5: State the central argument of the passage and explain how the success of urban water policy should be assessed.",
+        "topicIds": [
+          "topic:Descriptive English"
+        ],
+        "responseRules": {}
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "Original descriptive-English practice task; manually assessed. Not an official PFRDA question."
+      },
+      "contentHash": "796584885b2784f004da83ac17d8805fe038cf8379320cbb5b001e705d891d75"
+    }
+  ],
+  "answerKey": {
+    "id": "pfrda-grade-a-2026-day3-english:r1:key",
+    "paperId": "pfrda-grade-a-2026-day3-english",
+    "revision": 1,
+    "entries": [
+      {
+        "questionRevisionId": "pfrda:day3-english:q:01:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 20,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-english:q:02:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-english:q:03:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-english:q:04:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-english:q:05:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-english:q:06:r1",
+        "answer": {
+          "kind": "free-response",
+          "evaluation": "manual"
+        },
+        "scoringOverride": {
+          "correctMarks": 4,
+          "incorrectMarks": 0,
+          "unansweredMarks": 0
+        }
+      }
+    ],
+    "contentHash": "f0ab9893022c47a8a91ae4e4ec82261bb24cd24e22ebc4906a1d0dd13077bb30"
+  },
+  "paper": {
+    "id": "pfrda-grade-a-2026-day3-english:r1:custom",
+    "paperId": "pfrda-grade-a-2026-day3-english",
+    "revision": 1,
+    "edition": "custom",
+    "sections": [
+      {
+        "id": "pfrda-grade-a-2026-day3-english:section:main",
+        "title": "PFRDA Grade A 2026 — Day 3 — Descriptive English",
+        "questionRevisionIds": [
+          "pfrda:day3-english:q:01:r1",
+          "pfrda:day3-english:q:02:r1",
+          "pfrda:day3-english:q:03:r1",
+          "pfrda:day3-english:q:04:r1",
+          "pfrda:day3-english:q:05:r1",
+          "pfrda:day3-english:q:06:r1"
+        ]
+      }
+    ],
+    "answerKeyRevisionId": "pfrda-grade-a-2026-day3-english:r1:key",
+    "timing": {
+      "kind": "whole-paper",
+      "durationMs": 2460000,
+      "pausePolicy": "forbidden"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "free",
+      "allowFlagging": true,
+      "allowReview": true
+    },
+    "candidateTools": {
+      "wordCount": "show"
+    },
+    "scoring": {
+      "defaultRule": {
+        "correctMarks": 0,
+        "incorrectMarks": 0,
+        "unansweredMarks": 0
+      },
+      "decimalPlaces": 2
+    },
+    "contentHash": "5087974b9d550ead136379fcaeafd31cdf2672a927a2cb6aae742d4c8e2f9f61"
+  },
+  "explanations": {
+    "pfrda:day3-english:q:01:r1": "Manual marking guide (/20): relevance and balanced argument; logical structure; accurate India-specific examples; language and grammar; concision and word discipline. A strong response should show that technology expands access while trust, fraud prevention, grievance redressal, privacy, literacy and accountable institutions sustain adoption.",
+    "pfrda:day3-english:q:02:r1": "Supply alone cannot fix leakages, inefficient distribution, weak institutions or ecological degradation. Without fixing these, cities can expand infrastructure yet retain unreliable or unequal access.",
+    "pfrda:day3-english:q:03:r1": "Well-served neighbourhoods may receive abundant reliable water while poorer or informal settlements depend on costly or irregular sources. Therefore affordability, reliability and equitable access matter, not only total volume.",
+    "pfrda:day3-english:q:04:r1": "Excessive extraction lowers water tables and can damage aquifers; construction that covers permeable land with concrete restricts natural recharge.",
+    "pfrda:day3-english:q:05:r1": "Pricing can promote conservation but may burden poorer households if badly designed. Sensors and digital meters improve monitoring but cannot substitute for accountable institutions.",
+    "pfrda:day3-english:q:06:r1": "Urban water security requires integrated governance, efficient infrastructure, equitable distribution and ecological protection. Success should be judged by safe, affordable, dependable access without compromising future resources—not merely by supply volumes or projects completed."
+  }
+}

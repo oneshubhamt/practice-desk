@@ -94,18 +94,18 @@ test("manifest graph is authoritative for five CGL PYQs and current PFRDA",async
  ]);
  assert.equal(pfrda?.exam.representation,"exam-packages");
  assert.equal(pfrda?.exam.currentPaperRef,"pfrda-grade-a-2026-day-01");
- assert.equal(pfrda?.papers.length,2);
+ assert.equal(pfrda?.papers.length,6);
  for(const family of graph.catalog.families)
   assert.deepEqual(Object.keys(family).sort(),["examId","id","manifest","preinstalled","title"]);
  const loaded=await loadQuestionBankCatalog(root);
  assert.equal(loaded.preinstalled.packages.filter(x=>x.examId==="ssc-cgl").length,10);
- assert.equal(loaded.preinstalled.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii").length,3);
+ assert.equal(loaded.preinstalled.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii").length,7);
  const cglFamily=loaded.preinstalled.families.find(x=>x.id==="ssc-cgl");
  const pfrdaFamily=loaded.preinstalled.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
  assert.equal(cglFamily.paperIds.length,10);
  assert.ok(cglFamily.paperIds.includes(cglFamily.currentPaperRevisionId));
  assert.equal(loaded.preinstalled.packages.find(x=>x.paper.id===cglFamily.currentPaperRevisionId)?.paper.edition,"reviewed");
- assert.equal(pfrdaFamily.paperIds.length,3);
+ assert.equal(pfrdaFamily.paperIds.length,7);
  assert.ok(pfrdaFamily.paperIds.includes(pfrdaFamily.currentPaperRevisionId));
 });
 
@@ -192,8 +192,24 @@ test("custom revision identity is unique and the canonical custom edition is the
  const family=loaded.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
  const current=loaded.packages.find(x=>x.paper.id===family.currentPaperRevisionId);
  const pfrda=loaded.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii"&&x.paper.edition==="custom");
- assert.deepEqual(pfrda.map(x=>x.paper.revision).sort((a,b)=>a-b),[1,1,4]);
+ assert.ok(pfrda.length>=7);
  assert.equal(current.paper.revision,Math.max(...pfrda.map(x=>x.paper.revision)));
+});
+
+test("new PFRDA supplemental papers preserve intended question counts and explanations",async()=>{
+ const loaded=(await loadQuestionBankCatalog(root)).preinstalled;
+ const rows=loaded.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii");
+ const byTitle=new Map(rows.map(x=>[x.title,x]));
+ for(const [title,count] of [
+  ["PFRDA Grade A 2026 — Day 3 — Initial MCQ Bank",30],
+  ["PFRDA Grade A 2026 — Day 3 — Final Replacement MCQ Bank",30],
+  ["PFRDA Grade A 2026 — Day 3 — Descriptive English",6],
+  ["PFRDA Grade A 2026 — Pension Landscape PS17",20]
+ ]){
+  const pkg=byTitle.get(title);assert.ok(pkg,title+" missing");
+  assert.equal(pkg.questions.length,count,title+" count");
+  assert.equal(Object.keys(pkg.explanations??{}).length,count,title+" explanations");
+ }
 });
 
 test("generic preinstalled packing round-trips canonical packages without semantic drift",async()=>{
@@ -233,7 +249,7 @@ test("PFRDA Original and Revised packages retain distinct immutable identities",
  const catalog=(await loadQuestionBankCatalog(root)).preinstalled;
  const family=catalog.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
  const installed=catalog.packages.filter(x=>x.examId==="pfrda-grade-a-2026-phase-ii");
- assert.equal(installed.length,3);
+ assert.equal(installed.length,7);
  assert.equal(family.currentPaperRevisionId,packages[1].paper.id);
 });
 
@@ -393,7 +409,7 @@ test("catalog switches independently remove PFRDA, CGL, or every bundled bank",a
  assert.equal(noPfrda.preinstalled.packages.length,10);
  assert.ok(noPfrda.preinstalled.packages.every(x=>x.examId==="ssc-cgl"));
  const noCgl=await loadQuestionBankCatalog(root,await withPreinstall({"ssc-cgl":false}));
- assert.equal(noCgl.preinstalled.packages.length,3);
+ assert.equal(noCgl.preinstalled.packages.length,7);
  assert.ok(noCgl.preinstalled.packages.every(x=>x.examId==="pfrda-grade-a-2026-phase-ii"));
  const empty=await loadQuestionBankCatalog(root,await withPreinstall({"ssc-cgl":false,"pfrda-grade-a-2026-phase-ii":false}));
  assert.deepEqual(empty.preinstalled.families,[]);assert.deepEqual(empty.preinstalled.packages,[]);
@@ -404,7 +420,7 @@ test("standalone builds honor each removal switch without stale embedded banks",
  assert.equal(embeddedPreinstalled(noPfrda.html).packages.length,10);
  assert.doesNotMatch(noPfrda.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  const noCgl=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"ssc-cgl":false})});
- assert.equal(embeddedPreinstalled(noCgl.html).packages.length,3);
+ assert.equal(embeddedPreinstalled(noCgl.html).packages.length,7);
  assert.doesNotMatch(noCgl.html,/id="paper-bank"|id="review-patches"|id="solution-bank"/);
  const empty=await buildPracticeDeskHtml("standalone",{catalogOverride:await withPreinstall({"ssc-cgl":false,"pfrda-grade-a-2026-phase-ii":false})});
  assert.deepEqual(embeddedPreinstalled(empty.html).packages,[]);

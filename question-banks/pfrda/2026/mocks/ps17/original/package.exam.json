@@ -1,0 +1,1013 @@
+{
+  "format": "practice-desk-exam",
+  "version": 1,
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — Pension Landscape PS17",
+  "questions": [
+    {
+      "id": "pfrda:ps17:q:01:r1",
+      "questionId": "pfrda:ps17:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Two subscribers have ₹24 lakh each at ordinary retirement: one under the NPS All Citizen Model and one under the government-sector NPS. Ignoring other choices or special circumstances, what are their respective maximum lump-sum portions under the current exit rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Both may take ₹19.2 lakh."
+          },
+          {
+            "id": "B",
+            "text": "Non-government ₹19.2 lakh; government-sector ₹14.4 lakh."
+          },
+          {
+            "id": "C",
+            "text": "Non-government ₹14.4 lakh; government-sector ₹19.2 lakh."
+          },
+          {
+            "id": "D",
+            "text": "Non-government ₹24 lakh; government-sector ₹14.4 lakh."
+          },
+          {
+            "id": "E",
+            "text": "Both may take ₹14.4 lakh."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "ce2ebcab14fd4b48a9d099990dec030f7c4e8aa8e74180469256e23cdd61a562"
+    },
+    {
+      "id": "pfrda:ps17:q:02:r1",
+      "questionId": "pfrda:ps17:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A self-employed NPS All Citizen subscriber is 52 years old and has completed 16 years of subscription. Her accumulated wealth is ₹18 lakh. Which statement best describes her eligibility to exit?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Every subscriber must reach 60 irrespective of years subscribed."
+          },
+          {
+            "id": "B",
+            "text": "She must withdraw the entire corpus in cash."
+          },
+          {
+            "id": "C",
+            "text": "Any exit before 60 is premature and requires at least 80% annuitisation."
+          },
+          {
+            "id": "D",
+            "text": "The 15-year subscription route can permit normal exit, subject to the applicable rules."
+          },
+          {
+            "id": "E",
+            "text": "Only her Tier II account can be closed before age 65."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "b91b7609d887eb2e231245685c41c3c0ea2ed37f43ce8ba991325430c6738c96"
+    },
+    {
+      "id": "pfrda:ps17:q:03:r1",
+      "questionId": "pfrda:ps17:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A non-government NPS subscriber qualifies for normal exit with accumulated wealth of ₹10 lakh. Which special distribution option is expressly available in addition to the ordinary lump-sum-plus-annuity route?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "At least 40% must be used for annuity in every option."
+          },
+          {
+            "id": "B",
+            "text": "All ₹10 lakh must be paid out immediately in cash."
+          },
+          {
+            "id": "C",
+            "text": "Up to ₹6 lakh can be taken upfront and the balance placed into systematic unit redemption for at least six years."
+          },
+          {
+            "id": "D",
+            "text": "The remainder must be held permanently in Tier II."
+          },
+          {
+            "id": "E",
+            "text": "The account cannot be closed unless its balance exceeds ₹12 lakh."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "04352ff2ca3041bbd5233c6520f2d65f69a1739119d2e85c4a74eb70a9bb5bee"
+    },
+    {
+      "id": "pfrda:ps17:q:04:r1",
+      "questionId": "pfrda:ps17:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An eligible government-sector NPS subscriber retires normally with ₹7.8 lakh accumulated wealth. Which option is available under the small-corpus rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "No amount can be taken as cash."
+          },
+          {
+            "id": "B",
+            "text": "At least 20% must always be annuitised."
+          },
+          {
+            "id": "C",
+            "text": "The entire amount may be withdrawn as a lump sum."
+          },
+          {
+            "id": "D",
+            "text": "The subscriber must wait until age 85 to withdraw."
+          },
+          {
+            "id": "E",
+            "text": "The account can close only after 15 years, irrespective of retirement."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "36e3917ece0a74e5c3912b3c98645c530d2e085ffa0c6db06b20b25b292e0725"
+    },
+    {
+      "id": "pfrda:ps17:q:05:r1",
+      "questionId": "pfrda:ps17:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A government-sector NPS subscriber is permitted to resign before the normal retirement event. The corpus is ₹9 lakh. Assuming the ordinary premature-exit rules apply, what is the minimum amount to be used to purchase an annuity?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹7.2 lakh"
+          },
+          {
+            "id": "B",
+            "text": "₹5.4 lakh"
+          },
+          {
+            "id": "C",
+            "text": "₹3.6 lakh"
+          },
+          {
+            "id": "D",
+            "text": "₹1.8 lakh"
+          },
+          {
+            "id": "E",
+            "text": "No annuity is required."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "bf12e1b197a5f64f77f2834b7538afdd1fa6912d3488db13ddf3669760b70712"
+    },
+    {
+      "id": "pfrda:ps17:q:06:r1",
+      "questionId": "pfrda:ps17:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS All Citizen subscriber dies before exit, leaving ₹14 lakh of accumulated pension wealth. Which statement most accurately describes the entitlement of the nominee or legal heir?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "At least 80% must be used to purchase an annuity."
+          },
+          {
+            "id": "B",
+            "text": "Only 20% may be received as a lump sum."
+          },
+          {
+            "id": "C",
+            "text": "The corpus is forfeited because the subscriber died before 60."
+          },
+          {
+            "id": "D",
+            "text": "The funds must compulsorily be transferred to a Tier II account."
+          },
+          {
+            "id": "E",
+            "text": "The entire wealth may be paid out, with other approved payout choices also available."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "3019b5bc9ae033a9ebf20322cd8c659db4adba7c7f6997c5ea29634ab497fd11"
+    },
+    {
+      "id": "pfrda:ps17:q:07:r1",
+      "questionId": "pfrda:ps17:q:07",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An eligible All Citizen NPS subscriber aged 62 made a partial withdrawal exactly two years ago. She now seeks another partial withdrawal for an eligible purpose. What is the key timing restriction?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "No interval is required after age 60."
+          },
+          {
+            "id": "B",
+            "text": "Ordinarily, she must wait until three years have elapsed since the last partial withdrawal."
+          },
+          {
+            "id": "C",
+            "text": "Partial withdrawal is never allowed after age 60."
+          },
+          {
+            "id": "D",
+            "text": "She can withdraw again only if her previous withdrawal occurred before age 40."
+          },
+          {
+            "id": "E",
+            "text": "One-year spacing is sufficient, but the lifetime limit is three withdrawals."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "51ab162ff0177397fa1ffb6040a7e0f0d797399bd035f0f34764604ac244edee"
+    },
+    {
+      "id": "pfrda:ps17:q:08:r1",
+      "questionId": "pfrda:ps17:q:08",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A subscriber has an active NPS Tier I account and ₹3 lakh in an ordinary Tier II account. She needs ₹1 lakh for an emergency. Which statement is correct?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Tier II money can be accessed only when Tier I reaches its normal exit age."
+          },
+          {
+            "id": "B",
+            "text": "A mandatory 20% Tier II annuity must be purchased before any withdrawal."
+          },
+          {
+            "id": "C",
+            "text": "Tier II withdrawals require a minimum three-year lock-in for every subscriber."
+          },
+          {
+            "id": "D",
+            "text": "She can ordinarily withdraw ₹1 lakh from Tier II while Tier I remains active; Tier II generally closes on Tier I exit."
+          },
+          {
+            "id": "E",
+            "text": "Every Tier II withdrawal requires an approved medical purpose."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "88b14d0b9da676fa15d3b4049cbeeac395fcf94dd194e50e1e76f276270eccde"
+    },
+    {
+      "id": "pfrda:ps17:q:09:r1",
+      "questionId": "pfrda:ps17:q:09",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which feature distinguishes the NPS Tier II Tax Saver Scheme from an ordinary Tier II account?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Any Indian citizen may open it without Tier I."
+          },
+          {
+            "id": "B",
+            "text": "It carries a mandatory 20% annuity on each withdrawal."
+          },
+          {
+            "id": "C",
+            "text": "It is available only to Atal Pension Yojana subscribers."
+          },
+          {
+            "id": "D",
+            "text": "It is open only to minors."
+          },
+          {
+            "id": "E",
+            "text": "It is limited to eligible Central Government NPS subscribers and has a three-year lock-in."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "670659edc1ec0f6e98f1bdc0f1b80676d5c7a1c2017360351891a1db43cbe237"
+    },
+    {
+      "id": "pfrda:ps17:q:10:r1",
+      "questionId": "pfrda:ps17:q:10",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS Vatsalya account was opened when the child was eight. Two permitted partial withdrawals were already made before age 18. At age 19, the subscriber has completed the required fresh identity verification. How many additional partial withdrawals may be available between ages 18 and 21, subject to the other conditions?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "None"
+          },
+          {
+            "id": "B",
+            "text": "One"
+          },
+          {
+            "id": "C",
+            "text": "Two"
+          },
+          {
+            "id": "D",
+            "text": "Three"
+          },
+          {
+            "id": "E",
+            "text": "Unlimited"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "e1238fdb9cad46f854287f7678043a1ba366bd7f635ae382ab73c40c623525ce"
+    },
+    {
+      "id": "pfrda:ps17:q:11:r1",
+      "questionId": "pfrda:ps17:q:11",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS Vatsalya subscriber is 19, has completed the required identity verification, and wants to exit with ₹7.5 lakh accumulated wealth. Which option is provided under the applicable Vatsalya guidelines?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "A compulsory 60% lump sum and 40% annuity."
+          },
+          {
+            "id": "B",
+            "text": "Full lump-sum withdrawal may be chosen because the corpus is below ₹8 lakh."
+          },
+          {
+            "id": "C",
+            "text": "Only 20% may be received in cash."
+          },
+          {
+            "id": "D",
+            "text": "The money must remain locked until age 60."
+          },
+          {
+            "id": "E",
+            "text": "Only 25% of contributions can be received on exit."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d87cc2b2fbb493209e98a4bddd60ab2a6d1d620a08a66de2c4981a6c96bbebd8"
+    },
+    {
+      "id": "pfrda:ps17:q:12:r1",
+      "questionId": "pfrda:ps17:q:12",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS Vatsalya subscriber reaches age 21 without choosing exit or a shift to another NPS model during the 18–21 option period. What is the prescribed default transition?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The full corpus is automatically transferred to the subscriber's bank account."
+          },
+          {
+            "id": "B",
+            "text": "The account converts to Atal Pension Yojana."
+          },
+          {
+            "id": "C",
+            "text": "The corpus is invested exclusively in government securities."
+          },
+          {
+            "id": "D",
+            "text": "The account shifts to a higher-equity variant under the Multiple Scheme Framework of the same pension fund."
+          },
+          {
+            "id": "E",
+            "text": "The account is permanently frozen with no further investment."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "63ff75b44e03aa7e57219cf76911a088a70ae7df7e3d8dc7d080857929f5a886"
+    },
+    {
+      "id": "pfrda:ps17:q:13:r1",
+      "questionId": "pfrda:ps17:q:13",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A 14-year-old NPS Vatsalya subscriber dies with ₹5 lakh in the account. Which treatment matches the scheme rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The entire accumulated wealth is payable to the guardian, nominee or legal heir, as applicable, with an option to transfer proceeds to an eligible NPS account."
+          },
+          {
+            "id": "B",
+            "text": "At least 40% must be annuitised for the guardian."
+          },
+          {
+            "id": "C",
+            "text": "The entire balance goes to the Central Government."
+          },
+          {
+            "id": "D",
+            "text": "The account must remain open until the deceased child would have turned 18."
+          },
+          {
+            "id": "E",
+            "text": "Only the original deposits, without investment gains, can be returned."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "9ca6f56074bc50a310602825d9acdb9a5770215a59e38492de17bb6ae1ddec06"
+    },
+    {
+      "id": "pfrda:ps17:q:14:r1",
+      "questionId": "pfrda:ps17:q:14",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement correctly applies the income-taxpayer eligibility change under the Atal Pension Yojana (APY)?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Anyone below 40 may join, even if an income-taxpayer."
+          },
+          {
+            "id": "B",
+            "text": "An existing NPS subscriber is automatically barred from APY."
+          },
+          {
+            "id": "C",
+            "text": "An income-taxpayer who joined APY in 2021 can ordinarily continue, but someone who is or has been an income-taxpayer cannot open a new APY account in 2026."
+          },
+          {
+            "id": "D",
+            "text": "Income-taxpayers may enter APY after retirement."
+          },
+          {
+            "id": "E",
+            "text": "APY is restricted to Central Government employees."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "3f606b33982ebe372c1cf70323ba1ef8803a151c29849cca77b9691010a4e73b"
+    },
+    {
+      "id": "pfrda:ps17:q:15:r1",
+      "questionId": "pfrda:ps17:q:15",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An APY subscriber receives a guaranteed minimum pension of ₹3,000 per month after age 60 and subsequently dies. The spouse survives and later dies. Which benefit sequence is correct?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The spouse receives 60% of the monthly pension and no corpus is returned."
+          },
+          {
+            "id": "B",
+            "text": "The spouse receives only a one-time lump sum."
+          },
+          {
+            "id": "C",
+            "text": "Both subscriber and spouse receive ₹3,000, but the nominee has no corpus entitlement."
+          },
+          {
+            "id": "D",
+            "text": "The spouse receives the same ₹3,000 minimum monthly pension until death; the nominee then receives the prescribed accumulated pension wealth."
+          },
+          {
+            "id": "E",
+            "text": "The nominee receives the entire corpus immediately upon the subscriber's death, replacing the spouse's pension."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "22c0b1e6354907d737bb77215e608672bbd5f135e28a6b7c57c6f177275c8229"
+    },
+    {
+      "id": "pfrda:ps17:q:16:r1",
+      "questionId": "pfrda:ps17:q:16",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An eligible Unified Pension Scheme (UPS) subscriber retires on superannuation with 15 years (180 months) of qualifying service. The average basic pay over the final 12 months is ₹80,000 per month. Assuming all conditions for the standard proportionate payout are satisfied and ignoring dearness relief or withdrawal reductions, what is the monthly assured payout?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹24,000"
+          },
+          {
+            "id": "B",
+            "text": "₹40,000"
+          },
+          {
+            "id": "C",
+            "text": "₹10,000"
+          },
+          {
+            "id": "D",
+            "text": "₹20,000"
+          },
+          {
+            "id": "E",
+            "text": "₹30,000"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "39c452c4e279ce6ff3b0b678d166ab039cc014da6e8f47efaaa78c33922e7f48"
+    },
+    {
+      "id": "pfrda:ps17:q:17:r1",
+      "questionId": "pfrda:ps17:q:17",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under UPS, an eligible retiree has an individual corpus of ₹25 lakh and a benchmark corpus of ₹20 lakh. What is the maximum final withdrawal under the 60%-of-lower-corpus rule, and what is its effect on assured payout?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹15 lakh; no reduction in assured payout."
+          },
+          {
+            "id": "B",
+            "text": "₹12 lakh; assured payout is proportionately reduced."
+          },
+          {
+            "id": "C",
+            "text": "₹12 lakh; assured payout is unaffected."
+          },
+          {
+            "id": "D",
+            "text": "₹20 lakh; the entire benchmark corpus may be withdrawn."
+          },
+          {
+            "id": "E",
+            "text": "₹15 lakh; assured payout is proportionately reduced."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "7737a35c5a74482c893764809f0f918c5bc75b9a4974b5ecdfe1ce63274d5e5c"
+    },
+    {
+      "id": "pfrda:ps17:q:18:r1",
+      "questionId": "pfrda:ps17:q:18",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A UPS subscriber takes permitted voluntary retirement after 25 years of qualifying service, two years before the date on which normal superannuation would have occurred. What happens to the assured periodic payout under the UPS rules?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "It necessarily starts the day after voluntary retirement."
+          },
+          {
+            "id": "B",
+            "text": "It is available only after 30 years of qualifying service."
+          },
+          {
+            "id": "C",
+            "text": "The one-time lump-sum payment and final withdrawal may be available at voluntary retirement, while assured payout starts from the date of notional normal superannuation."
+          },
+          {
+            "id": "D",
+            "text": "All UPS benefits are forfeited on voluntary retirement."
+          },
+          {
+            "id": "E",
+            "text": "The subscriber is automatically transferred to APY."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "e8c5435816de9d56eac522f267ac9b9e9a2a8118ffe3db3d89cef269cdb8c19c"
+    },
+    {
+      "id": "pfrda:ps17:q:19:r1",
+      "questionId": "pfrda:ps17:q:19",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An NPS-Lite/Swavalamban subscriber attains age 60 with accumulated pension wealth of ₹1.9 lakh. Which special option is available under the applicable exit schedule?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "An 80% lump-sum withdrawal with mandatory 20% annuity is the only option."
+          },
+          {
+            "id": "B",
+            "text": "Only 20% may be paid in cash."
+          },
+          {
+            "id": "C",
+            "text": "The account cannot be closed before age 85."
+          },
+          {
+            "id": "D",
+            "text": "The government-sector ₹8-lakh rule automatically governs this account."
+          },
+          {
+            "id": "E",
+            "text": "The entire ₹1.9 lakh may be taken as a lump sum under the relevant small-corpus option."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d788fa77cec27a7936be69c2352b97465a96855d5075d1a9189f0cbc86ecb2d8"
+    },
+    {
+      "id": "pfrda:ps17:q:20:r1",
+      "questionId": "pfrda:ps17:q:20",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A parent compares NPS Vatsalya with the Sukanya Samriddhi Account (a girl-child savings scheme, not an NPS pension tier). Which comparison is accurate?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Both schemes are restricted to girls and guarantee a ₹5,000 monthly pension."
+          },
+          {
+            "id": "B",
+            "text": "NPS Vatsalya always permits education withdrawals of 50% of the previous year-end account balance."
+          },
+          {
+            "id": "C",
+            "text": "Sukanya education withdrawals can be up to 50% of the preceding financial year-end balance after the girl turns 18 or passes Class 10, whichever is earlier; Vatsalya has a separate contribution-based partial-withdrawal limit."
+          },
+          {
+            "id": "D",
+            "text": "Both schemes automatically become APY accounts at age 18."
+          },
+          {
+            "id": "E",
+            "text": "Sukanya is a PFRDA-regulated Tier II pension account."
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "1d15e1f00ea964e74180ae7f1ac0926178c5a39ee37a2455cbbb0e82815723f9"
+    }
+  ],
+  "answerKey": {
+    "id": "pfrda-grade-a-2026-ps17:r1:key",
+    "paperId": "pfrda-grade-a-2026-ps17",
+    "revision": 1,
+    "entries": [
+      {
+        "questionRevisionId": "pfrda:ps17:q:01:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:02:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:03:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:04:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:05:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:06:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:07:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:08:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:09:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:10:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:11:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:12:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:13:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:14:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:15:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:16:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:17:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:18:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:19:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:ps17:q:20:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      }
+    ],
+    "contentHash": "142b5aada3254c073eeed470641f153e86744f5e4f96ebbf2167872fddc186e7"
+  },
+  "paper": {
+    "id": "pfrda-grade-a-2026-ps17:r1:custom",
+    "paperId": "pfrda-grade-a-2026-ps17",
+    "revision": 1,
+    "edition": "custom",
+    "sections": [
+      {
+        "id": "pfrda-grade-a-2026-ps17:section:main",
+        "title": "PFRDA Grade A 2026 — Pension Landscape PS17",
+        "questionRevisionIds": [
+          "pfrda:ps17:q:01:r1",
+          "pfrda:ps17:q:02:r1",
+          "pfrda:ps17:q:03:r1",
+          "pfrda:ps17:q:04:r1",
+          "pfrda:ps17:q:05:r1",
+          "pfrda:ps17:q:06:r1",
+          "pfrda:ps17:q:07:r1",
+          "pfrda:ps17:q:08:r1",
+          "pfrda:ps17:q:09:r1",
+          "pfrda:ps17:q:10:r1",
+          "pfrda:ps17:q:11:r1",
+          "pfrda:ps17:q:12:r1",
+          "pfrda:ps17:q:13:r1",
+          "pfrda:ps17:q:14:r1",
+          "pfrda:ps17:q:15:r1",
+          "pfrda:ps17:q:16:r1",
+          "pfrda:ps17:q:17:r1",
+          "pfrda:ps17:q:18:r1",
+          "pfrda:ps17:q:19:r1",
+          "pfrda:ps17:q:20:r1"
+        ]
+      }
+    ],
+    "answerKeyRevisionId": "pfrda-grade-a-2026-ps17:r1:key",
+    "timing": {
+      "kind": "whole-paper",
+      "durationMs": 960000,
+      "pausePolicy": "forbidden"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "free",
+      "allowFlagging": true,
+      "allowReview": true
+    },
+    "scoring": {
+      "defaultRule": {
+        "correctMarks": 2,
+        "incorrectMarks": -0.5,
+        "unansweredMarks": 0
+      },
+      "decimalPlaces": 2
+    },
+    "contentHash": "3d40ed295c4b2ca6bbeef741bd8c1fdf4863ce2f63a46f0741b819a97403298a"
+  },
+  "explanations": {
+    "pfrda:ps17:q:01:r1": "For a large corpus at normal exit under the current rules, a non-government subscriber may ordinarily take up to 80% as lump sum (₹19.2 lakh of ₹24 lakh), while a government-sector subscriber may ordinarily take up to 60% (₹14.4 lakh), subject to applicable conditions.",
+    "pfrda:ps17:q:02:r1": "Under the current All Citizen exit framework, completion of the prescribed 15-year subscription route can permit normal exit before age 60, subject to the applicable conditions.",
+    "pfrda:ps17:q:03:r1": "For the applicable ₹8–12 lakh band, the current exit framework provides a special route allowing up to ₹6 lakh upfront and the balance through systematic unit redemption for at least six years, subject to the regulation.",
+    "pfrda:ps17:q:04:r1": "At normal government-sector exit, the small-corpus rule permits full lump-sum withdrawal where the accumulated pension wealth is within the prescribed threshold; ₹7.8 lakh falls within that band.",
+    "pfrda:ps17:q:05:r1": "Ordinary premature exit generally requires at least 80% of the corpus for annuity. 80% of ₹9 lakh = ₹7.2 lakh.",
+    "pfrda:ps17:q:06:r1": "Death is governed by a separate exit treatment; the nominee/legal heir can receive the entire accumulated wealth, with other approved payout options also available under the applicable framework.",
+    "pfrda:ps17:q:07:r1": "The current rule ordinarily requires a three-year interval between partial withdrawals, subject to the applicable conditions.",
+    "pfrda:ps17:q:08:r1": "Ordinary Tier II is a voluntary, relatively liquid account. It ordinarily permits withdrawal while Tier I remains active; it is distinct from Tier I exit/annuity restrictions.",
+    "pfrda:ps17:q:09:r1": "The Tier II Tax Saver variant is a special arrangement for eligible Central Government NPS subscribers and carries a three-year lock-in, unlike ordinary Tier II liquidity.",
+    "pfrda:ps17:q:10:r1": "Under the 2026 NPS Vatsalya guidelines, up to two partial withdrawals are permitted before age 18 and up to two additional withdrawals between 18 and 21 after the prescribed fresh identity verification and subject to other conditions.",
+    "pfrda:ps17:q:11:r1": "For the applicable Vatsalya exit after majority, a corpus below ₹8 lakh may be withdrawn fully, subject to the prescribed conditions.",
+    "pfrda:ps17:q:12:r1": "If no choice is exercised by age 21, the current Vatsalya guidelines prescribe transition to the specified higher-equity Multiple Scheme Framework variant of the same pension fund rather than an automatic cash payout.",
+    "pfrda:ps17:q:13:r1": "On death of the minor subscriber, the accumulated wealth is payable to the appropriate guardian/nominee/legal heir, with the applicable option to transfer to an eligible NPS account.",
+    "pfrda:ps17:q:14:r1": "The post-1 October 2022 restriction applies to opening a new APY account by a person who is or has been an income-tax payer; it does not automatically cancel a qualifying earlier account.",
+    "pfrda:ps17:q:15:r1": "Under APY, the spouse receives the same guaranteed minimum pension after the subscriber's death; after both subscriber and spouse die, the nominee receives the prescribed pension wealth. The 60% family-payout rule belongs to UPS, not APY.",
+    "pfrda:ps17:q:16:r1": "Full assured payout benchmark = 50% of ₹80,000 = ₹40,000 for 25 years (300 months). Proportionate payout = ₹40,000×180/300 = ₹24,000.",
+    "pfrda:ps17:q:17:r1": "The lower corpus is ₹20 lakh; 60% is ₹12 lakh. A final withdrawal reduces the assured payout proportionately under the UPS framework.",
+    "pfrda:ps17:q:18:r1": "For the stated qualifying voluntary-retirement case, the UPS assured periodic payout begins from the date of notional normal superannuation, while specified lump-sum/final-withdrawal benefits may be available at voluntary retirement.",
+    "pfrda:ps17:q:19:r1": "The applicable NPS-Lite/Swavalamban small-corpus schedule permits full lump-sum withdrawal at normal exit where accumulated pension wealth does not exceed the specified ₹2 lakh threshold.",
+    "pfrda:ps17:q:20:r1": "Sukanya Samriddhi uses a balance-based education-withdrawal rule (up to 50% of the preceding financial year-end balance under the stated age/Class 10 condition). NPS Vatsalya uses a distinct contribution-based partial-withdrawal rule, currently up to 25% of contributions excluding returns for permitted purposes and subject to conditions."
+  }
+}

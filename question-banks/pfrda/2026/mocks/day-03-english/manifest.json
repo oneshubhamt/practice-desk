@@ -1,0 +1,15 @@
+{
+  "format": "practice-desk-paper-manifest",
+  "version": 1,
+  "id": "pfrda-grade-a-2026-day3-english",
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "paperId": "pfrda-grade-a-2026-day3-english",
+  "kind": "mock",
+  "title": "PFRDA Grade A 2026 — Day 3 — Descriptive English",
+  "canonicalEdition": "original",
+  "editions": {
+    "original": {
+      "package": "original/package.exam.json"
+    }
+  }
+}

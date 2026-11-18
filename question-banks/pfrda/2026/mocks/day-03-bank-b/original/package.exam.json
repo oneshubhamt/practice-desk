@@ -1,0 +1,1493 @@
+{
+  "format": "practice-desk-exam",
+  "version": 1,
+  "examId": "pfrda-grade-a-2026-phase-ii",
+  "title": "PFRDA Grade A 2026 — Day 3 — Final Replacement MCQ Bank",
+  "questions": [
+    {
+      "id": "pfrda:day3-bank-b:q:01:r1",
+      "questionId": "pfrda:day3-bank-b:q:01",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which National Pension System entity is constituted to hold pension assets in trust and protect subscribers' interests?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Central Recordkeeping Agency"
+          },
+          {
+            "id": "B",
+            "text": "Trustee Bank"
+          },
+          {
+            "id": "C",
+            "text": "NPS Trust"
+          },
+          {
+            "id": "D",
+            "text": "Pension Fund"
+          },
+          {
+            "id": "E",
+            "text": "Custodian"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "ba14e2a2603231e69de4c40354c9e2f7605de55f90fd7c81ed675c142b911ee3"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:02:r1",
+      "questionId": "pfrda:day3-bank-b:q:02",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 36 of the PFRDA Act, an appeal to the Securities Appellate Tribunal is ordinarily to be filed within:",
+        "topicIds": [
+          "topic:PFRDA Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "30 days"
+          },
+          {
+            "id": "B",
+            "text": "60 days"
+          },
+          {
+            "id": "C",
+            "text": "45 days"
+          },
+          {
+            "id": "D",
+            "text": "90 days"
+          },
+          {
+            "id": "E",
+            "text": "120 days"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "57ae5c2175b2e132360125ef3595381825a49ae26a842843dc047a35c6866b1e"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:03:r1",
+      "questionId": "pfrda:day3-bank-b:q:03",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under the Union Government's debt-consolidation path announced in Budget 2026–27, the Central Government debt-to-GDP objective for FY 2030–31 is approximately:",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "40% ±1%"
+          },
+          {
+            "id": "B",
+            "text": "45% ±1%"
+          },
+          {
+            "id": "C",
+            "text": "55% ±1%"
+          },
+          {
+            "id": "D",
+            "text": "50% ±1%"
+          },
+          {
+            "id": "E",
+            "text": "60% ±1%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "8cad9241d40c1d2ecd9e0b26ab25e7c1dd073716d9d96bcf30742ab2984dab59"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:04:r1",
+      "questionId": "pfrda:day3-bank-b:q:04",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "According to the Economic Survey 2025–26, the gross non-performing asset ratio of scheduled commercial banks was about what level in September 2025?",
+        "topicIds": [
+          "topic:Budget/Survey"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "2.2%"
+          },
+          {
+            "id": "B",
+            "text": "2.8%"
+          },
+          {
+            "id": "C",
+            "text": "3.1%"
+          },
+          {
+            "id": "D",
+            "text": "1.5%"
+          },
+          {
+            "id": "E",
+            "text": "4.0%"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "4b48e1ac8cf698b99d5ea0878aa592f13424fb44762d0e5d495ba203e418d2d4"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:05:r1",
+      "questionId": "pfrda:day3-bank-b:q:05",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under a periodic inventory system, goods worth ₹12,000 previously purchased on credit are returned to the supplier. Which entry is correct?",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Debit Purchase Returns; Credit Trade Payables"
+          },
+          {
+            "id": "B",
+            "text": "Debit Purchases; Credit Trade Payables"
+          },
+          {
+            "id": "C",
+            "text": "Debit Inventory; Credit Trade Payables"
+          },
+          {
+            "id": "D",
+            "text": "Debit Trade Payables; Credit Purchase Returns"
+          },
+          {
+            "id": "E",
+            "text": "Debit Bank; Credit Purchase Returns"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "1e56a1718e25646e39f0f9a01423b60c619cc1d0614e9c678b372302fc687ebb"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:06:r1",
+      "questionId": "pfrda:day3-bank-b:q:06",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Cash received from the sale of an item of property, plant and equipment is ordinarily classified in the cash-flow statement as:",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Operating cash inflow"
+          },
+          {
+            "id": "B",
+            "text": "Investing cash inflow"
+          },
+          {
+            "id": "C",
+            "text": "Financing cash inflow"
+          },
+          {
+            "id": "D",
+            "text": "Non-cash transaction"
+          },
+          {
+            "id": "E",
+            "text": "Extraordinary cash inflow"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "ac9cfd6b7aa558722309dfae7f4a7d07c69b04777573a0c0bb7c8649b55ea430"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:07:r1",
+      "questionId": "pfrda:day3-bank-b:q:07",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A customer pays a company in advance for a service that will be provided next month. Until the service is provided, the amount is ordinarily recognised as:",
+        "topicIds": [
+          "topic:Commerce & Accountancy"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "An expense"
+          },
+          {
+            "id": "B",
+            "text": "An asset"
+          },
+          {
+            "id": "C",
+            "text": "Equity"
+          },
+          {
+            "id": "D",
+            "text": "A trade receivable"
+          },
+          {
+            "id": "E",
+            "text": "Unearned revenue / contract liability"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "6b88bd539b62b689dbabe93df7c5f928dc7ee57fc2b4e306c13890e1ebe0598e"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:08:r1",
+      "questionId": "pfrda:day3-bank-b:q:08",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Vroom's expectancy theory explains motivation primarily through the interaction of:",
+        "topicIds": [
+          "topic:Management"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Expectancy, instrumentality and valence"
+          },
+          {
+            "id": "B",
+            "text": "Hygiene, motivation and equity"
+          },
+          {
+            "id": "C",
+            "text": "Need hierarchy, reinforcement and control"
+          },
+          {
+            "id": "D",
+            "text": "Authority, responsibility and accountability"
+          },
+          {
+            "id": "E",
+            "text": "Job rotation, enrichment and enlargement"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d27e6c144b51fea57f7e34e9a632f1f67bbcee5b17a0797136db6eca7b5e6a32"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:09:r1",
+      "questionId": "pfrda:day3-bank-b:q:09",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement best reflects the principle of delegation in management?",
+        "topicIds": [
+          "topic:Management"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "A manager transfers all accountability permanently to the subordinate"
+          },
+          {
+            "id": "B",
+            "text": "Delegation eliminates the need for supervision"
+          },
+          {
+            "id": "C",
+            "text": "Authority may be delegated, but ultimate accountability of the superior remains"
+          },
+          {
+            "id": "D",
+            "text": "Only routine tasks can ever be delegated"
+          },
+          {
+            "id": "E",
+            "text": "Delegation and abdication are identical"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "e29fc011239289863b07fa1b34a97703722d72288bb4c7cb4388bfce8f4b6769"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:10:r1",
+      "questionId": "pfrda:day3-bank-b:q:10",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "For a conventional fixed-coupon bond, other things equal, what normally happens to its market price when the required yield rises?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Price rises proportionately"
+          },
+          {
+            "id": "B",
+            "text": "Price is unchanged"
+          },
+          {
+            "id": "C",
+            "text": "Coupon rate automatically rises"
+          },
+          {
+            "id": "D",
+            "text": "Price falls"
+          },
+          {
+            "id": "E",
+            "text": "Face value changes"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "965941d86ef04b0a7ee70b93e1b85da07a307de60fea3cc76d896d4688856c49"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:11:r1",
+      "questionId": "pfrda:day3-bank-b:q:11",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "An Indian importer must pay US dollars after three months and wants to hedge against the rupee depreciating. Which forward position directly hedges this exposure?",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Sell US dollars forward"
+          },
+          {
+            "id": "B",
+            "text": "Buy US dollars forward"
+          },
+          {
+            "id": "C",
+            "text": "Sell rupees only in the spot market today"
+          },
+          {
+            "id": "D",
+            "text": "Buy an equity-index future"
+          },
+          {
+            "id": "E",
+            "text": "Receive-fixed interest-rate swap"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "c63dbf4ba62eb33b2c7a8cf1823f6befbddb5cbf1311914403cb5cf61f736fe2"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:12:r1",
+      "questionId": "pfrda:day3-bank-b:q:12",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "A transaction in which existing listed shares are bought from another investor rather than issued by the company occurs in the:",
+        "topicIds": [
+          "topic:Finance"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Primary market"
+          },
+          {
+            "id": "B",
+            "text": "Money market only"
+          },
+          {
+            "id": "C",
+            "text": "Secondary market"
+          },
+          {
+            "id": "D",
+            "text": "Foreign-exchange market"
+          },
+          {
+            "id": "E",
+            "text": "Derivatives clearing market"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "e14b8e0cc3af156e3ea42cae45cc859e61f0ec3ee21a4335125f83a528b4962a"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:13:r1",
+      "questionId": "pfrda:day3-bank-b:q:13",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In a process-costing department, 800 units are completed and transferred out. Another 200 units remain in closing work-in-progress and are 50% complete for conversion costs. Conversion equivalent units are:",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "800"
+          },
+          {
+            "id": "B",
+            "text": "850"
+          },
+          {
+            "id": "C",
+            "text": "900"
+          },
+          {
+            "id": "D",
+            "text": "1,000"
+          },
+          {
+            "id": "E",
+            "text": "1,100"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "c4e8671a7e0050b4c6486e2569fff39fdc5a0c6bdd14c2363283595f423b1864"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:14:r1",
+      "questionId": "pfrda:day3-bank-b:q:14",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Variable overhead is budgeted at ₹40 per unit of activity. Actual activity is 1,200 units. The flexible-budget amount for variable overhead is:",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "₹40,000"
+          },
+          {
+            "id": "B",
+            "text": "₹44,000"
+          },
+          {
+            "id": "C",
+            "text": "₹48,000"
+          },
+          {
+            "id": "D",
+            "text": "₹52,000"
+          },
+          {
+            "id": "E",
+            "text": "₹60,000"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "2217142f9e08ce23b708f398a27f3f9563f9524b8622635707027cff623c553f"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:15:r1",
+      "questionId": "pfrda:day3-bank-b:q:15",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which risk becomes especially important in a just-in-time inventory system with very low buffer stocks?",
+        "topicIds": [
+          "topic:Costing"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Permanent overproduction"
+          },
+          {
+            "id": "B",
+            "text": "Automatic increase in holding cost"
+          },
+          {
+            "id": "C",
+            "text": "Guaranteed obsolescence"
+          },
+          {
+            "id": "D",
+            "text": "Supply interruption can stop production quickly"
+          },
+          {
+            "id": "E",
+            "text": "Standard costing becomes impossible"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "421ba4bc4479376ad8399ef45df03900a9a3fbfe4f8e2eb90ea429aec336d737"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:16:r1",
+      "questionId": "pfrda:day3-bank-b:q:16",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Subject to Section 123 of the Companies Act, 2013, dividend may ordinarily be declared out of:",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Profits of the company after providing for depreciation as required"
+          },
+          {
+            "id": "B",
+            "text": "Share capital without restriction"
+          },
+          {
+            "id": "C",
+            "text": "Revaluation reserve only"
+          },
+          {
+            "id": "D",
+            "text": "Borrowed funds merely because cash is available"
+          },
+          {
+            "id": "E",
+            "text": "Securities premium for any purpose"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "63a0d6c5f69c34542222f686718cb6e91ca920c9ddd02c8d51bb598f0f37d79f"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:17:r1",
+      "questionId": "pfrda:day3-bank-b:q:17",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which service is specifically prohibited to a company's statutory auditor under Section 144 of the Companies Act, 2013?",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Tax compliance advice in every circumstance"
+          },
+          {
+            "id": "B",
+            "text": "Secretarial audit by an unrelated professional"
+          },
+          {
+            "id": "C",
+            "text": "Valuation by any external expert"
+          },
+          {
+            "id": "D",
+            "text": "Routine audit evidence collection"
+          },
+          {
+            "id": "E",
+            "text": "Internal audit"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "cbb6da187b1828a7536c2a98082ebf63f8e83abf49007bb09edcd6c063cf7c91"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:18:r1",
+      "questionId": "pfrda:day3-bank-b:q:18",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 149 of the Companies Act, an independent director may generally hold office for at most:",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "One five-year term only"
+          },
+          {
+            "id": "B",
+            "text": "Two consecutive terms of up to five years each, followed by the prescribed cooling-off"
+          },
+          {
+            "id": "C",
+            "text": "Three consecutive five-year terms"
+          },
+          {
+            "id": "D",
+            "text": "Ten years with no break requirement"
+          },
+          {
+            "id": "E",
+            "text": "An unlimited number of consecutive terms"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "0a79f8abcf2c708f68202c23310e656535185df8bff08f76a6091cda894a2160"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:19:r1",
+      "questionId": "pfrda:day3-bank-b:q:19",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Under Section 174 of the Companies Act, the quorum for a Board meeting is ordinarily:",
+        "topicIds": [
+          "topic:Companies Act"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "One-fourth of total strength or one director, whichever is higher"
+          },
+          {
+            "id": "B",
+            "text": "Half of total strength"
+          },
+          {
+            "id": "C",
+            "text": "One-third of total strength or two directors, whichever is higher"
+          },
+          {
+            "id": "D",
+            "text": "Exactly three directors"
+          },
+          {
+            "id": "E",
+            "text": "All directors in office"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "3add05249de30d9152d6aca328d02a7cf14e59fbf4889b379449f7ab1feb5451"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:20:r1",
+      "questionId": "pfrda:day3-bank-b:q:20",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If nominal GDP is 1,100 and real GDP is 1,000 in the same base framework, the GDP deflator is:",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "90"
+          },
+          {
+            "id": "B",
+            "text": "100"
+          },
+          {
+            "id": "C",
+            "text": "105"
+          },
+          {
+            "id": "D",
+            "text": "110"
+          },
+          {
+            "id": "E",
+            "text": "120"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "3ebf0af9f56d72da56950f961ac49a60a0f43c27ae88e0915d1e648d1b651e42"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:21:r1",
+      "questionId": "pfrda:day3-bank-b:q:21",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Workers' remittances received from abroad are ordinarily recorded in India's balance of payments under the:",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Capital account as foreign direct investment"
+          },
+          {
+            "id": "B",
+            "text": "Financial account as portfolio investment"
+          },
+          {
+            "id": "C",
+            "text": "Official reserves account only"
+          },
+          {
+            "id": "D",
+            "text": "Current account as secondary income/transfers"
+          },
+          {
+            "id": "E",
+            "text": "Errors and omissions account"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "c5138c30c46b417e3b7a34796c958050bc5dbec27824ea408fd845fb0e6b8168"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:22:r1",
+      "questionId": "pfrda:day3-bank-b:q:22",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "If the Reserve Bank of India cuts the repo rate and transmission is effective, the most likely broad effect is:",
+        "topicIds": [
+          "topic:Economics"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Borrowing costs must rise"
+          },
+          {
+            "id": "B",
+            "text": "Borrowing conditions may ease and interest-sensitive demand may be supported"
+          },
+          {
+            "id": "C",
+            "text": "Every bank lending rate falls by exactly the same percentage immediately"
+          },
+          {
+            "id": "D",
+            "text": "Money supply necessarily contracts"
+          },
+          {
+            "id": "E",
+            "text": "Bond prices must fall"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "589fe91e0219df266237b6f770948f3c756c5cefe69ee05f3a7e8ca4125e1f99"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:23:r1",
+      "questionId": "pfrda:day3-bank-b:q:23",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement best describes an ordinary National Pension System Tier II account?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "It is a voluntary account with ordinarily flexible withdrawals, linked to an active Tier I account"
+          },
+          {
+            "id": "B",
+            "text": "It always has the same exit restrictions as Tier I"
+          },
+          {
+            "id": "C",
+            "text": "Every withdrawal requires annuitisation"
+          },
+          {
+            "id": "D",
+            "text": "It is available only to minors"
+          },
+          {
+            "id": "E",
+            "text": "It is the same as the Atal Pension Yojana"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "ddb16920eec2cb3341469367077558b4e9398b59f5255a9d3a5d4e26babc2eb3"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:24:r1",
+      "questionId": "pfrda:day3-bank-b:q:24",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which statement correctly reflects the Atal Pension Yojana eligibility change effective from 1 October 2022?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "All existing subscribers became ineligible"
+          },
+          {
+            "id": "B",
+            "text": "Only Central Government employees may join"
+          },
+          {
+            "id": "C",
+            "text": "A person who is or has been an income-tax payer cannot open a new APY account, subject to the notified rule"
+          },
+          {
+            "id": "D",
+            "text": "Every NPS subscriber is barred from APY"
+          },
+          {
+            "id": "E",
+            "text": "The minimum entry age became 40"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "c52532bb7d4c7705af8a0a047ab6639b8040830b173238a2aa8e8953f243ea67"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:25:r1",
+      "questionId": "pfrda:day3-bank-b:q:25",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which distinction between an immediate annuity and a deferred annuity is correct?",
+        "topicIds": [
+          "topic:Pension Sector"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Both begin only at age 80"
+          },
+          {
+            "id": "B",
+            "text": "An immediate annuity has no periodic payments"
+          },
+          {
+            "id": "C",
+            "text": "A deferred annuity must be purchased only through NPS"
+          },
+          {
+            "id": "D",
+            "text": "Immediate and deferred annuities are legally identical terms"
+          },
+          {
+            "id": "E",
+            "text": "An immediate annuity starts periodic payments soon after purchase; a deferred annuity starts after a chosen deferment period"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "d8fe665c4d154f4b0298c09302403ba676c863723d58858301918e333c156088"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:26:r1",
+      "questionId": "pfrda:day3-bank-b:q:26",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In binary classification, recall (also called sensitivity) is:",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "True Positives / (True Positives + False Positives)"
+          },
+          {
+            "id": "B",
+            "text": "True Positives / (True Positives + False Negatives)"
+          },
+          {
+            "id": "C",
+            "text": "True Negatives / (True Negatives + False Positives)"
+          },
+          {
+            "id": "D",
+            "text": "(True Positives + True Negatives) / All observations"
+          },
+          {
+            "id": "E",
+            "text": "False Positives / (False Positives + True Negatives)"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "8e2c2a02667023adb7b59ffd088b1776e39f5d813bb85edbc14992dd7e7cacf6"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:27:r1",
+      "questionId": "pfrda:day3-bank-b:q:27",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Which example is the clearest case of data leakage in a model intended to predict loan default at the time a loan is approved?",
+        "topicIds": [
+          "topic:AI/ML"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Using the borrower's credit history available before approval"
+          },
+          {
+            "id": "B",
+            "text": "Using income documented at application"
+          },
+          {
+            "id": "C",
+            "text": "Using repayment history from older completed loans"
+          },
+          {
+            "id": "D",
+            "text": "Using a variable recorded only after the future default or repayment outcome has occurred"
+          },
+          {
+            "id": "E",
+            "text": "Using the loan amount requested at application"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "307a33f31dcfaea014b0c88ed7dce45aa2ed1993311a113963ad6270c1ee597c"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:28:r1",
+      "questionId": "pfrda:day3-bank-b:q:28",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "Agenda-setting theory in media studies primarily proposes that media can influence:",
+        "topicIds": [
+          "topic:Media"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "The exact opinion every audience member must hold"
+          },
+          {
+            "id": "B",
+            "text": "Which issues audiences perceive as important or salient"
+          },
+          {
+            "id": "C",
+            "text": "Only entertainment preferences"
+          },
+          {
+            "id": "D",
+            "text": "The legal validity of public policy"
+          },
+          {
+            "id": "E",
+            "text": "Whether all misinformation disappears"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "9705a000a6f0ceaa81121a3b6421928f28481acc64e13538a887e9fca6f5358f"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:29:r1",
+      "questionId": "pfrda:day3-bank-b:q:29",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "The three elements commonly added to the traditional 4Ps in the services-marketing 7Ps framework are:",
+        "topicIds": [
+          "topic:Marketing/Communication"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Policy, Performance, Partnership"
+          },
+          {
+            "id": "B",
+            "text": "Planning, Packaging, Publicity"
+          },
+          {
+            "id": "C",
+            "text": "People, Process, Physical Evidence"
+          },
+          {
+            "id": "D",
+            "text": "Purpose, Position, Pricing"
+          },
+          {
+            "id": "E",
+            "text": "Personnel, Profit, Procurement"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "1db1e0626ed3063adddf7e1f65f5d649653e088759d6eda803c96655a16d6144"
+    },
+    {
+      "id": "pfrda:day3-bank-b:q:30:r1",
+      "questionId": "pfrda:day3-bank-b:q:30",
+      "revision": 1,
+      "content": {
+        "kind": "single-choice",
+        "prompt": "In the Shannon-Weaver communication model, 'noise' refers to:",
+        "topicIds": [
+          "topic:Marketing/Communication"
+        ],
+        "options": [
+          {
+            "id": "A",
+            "text": "Only deliberate censorship"
+          },
+          {
+            "id": "B",
+            "text": "Feedback from the receiver"
+          },
+          {
+            "id": "C",
+            "text": "The original idea in the sender's mind"
+          },
+          {
+            "id": "D",
+            "text": "The communication channel itself"
+          },
+          {
+            "id": "E",
+            "text": "Interference or disturbance that can distort the transmitted message"
+          }
+        ]
+      },
+      "editorial": {
+        "status": "caution",
+        "notes": "AI-original PFRDA Grade A 2026 practice item. Key and explanation reviewed against the governing concept/current official rule where applicable; not an official PYQ."
+      },
+      "contentHash": "5bc2b51b839829aeb40e3f2dfbe5b96d8d21a72c06a9daf1f19e7f77ebea0619"
+    }
+  ],
+  "answerKey": {
+    "id": "pfrda-grade-a-2026-day3-bank-b:r1:key",
+    "paperId": "pfrda-grade-a-2026-day3-bank-b",
+    "revision": 1,
+    "entries": [
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:01:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:02:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:03:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:04:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:05:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:06:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:07:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:08:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:09:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:10:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:11:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:12:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:13:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:14:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:15:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:16:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:17:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:18:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:19:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:20:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:21:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:22:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:23:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "A"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:24:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:25:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:26:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:27:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "D"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:28:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "B"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:29:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "C"
+        }
+      },
+      {
+        "questionRevisionId": "pfrda:day3-bank-b:q:30:r1",
+        "answer": {
+          "kind": "single-choice",
+          "optionId": "E"
+        }
+      }
+    ],
+    "contentHash": "697e2698d2cef79f5a29b9464aeeb81c969f06a7c6627e9bc16c0377308a1d3f"
+  },
+  "paper": {
+    "id": "pfrda-grade-a-2026-day3-bank-b:r1:custom",
+    "paperId": "pfrda-grade-a-2026-day3-bank-b",
+    "revision": 1,
+    "edition": "custom",
+    "sections": [
+      {
+        "id": "pfrda-grade-a-2026-day3-bank-b:section:main",
+        "title": "PFRDA Grade A 2026 — Day 3 — Final Replacement MCQ Bank",
+        "questionRevisionIds": [
+          "pfrda:day3-bank-b:q:01:r1",
+          "pfrda:day3-bank-b:q:02:r1",
+          "pfrda:day3-bank-b:q:03:r1",
+          "pfrda:day3-bank-b:q:04:r1",
+          "pfrda:day3-bank-b:q:05:r1",
+          "pfrda:day3-bank-b:q:06:r1",
+          "pfrda:day3-bank-b:q:07:r1",
+          "pfrda:day3-bank-b:q:08:r1",
+          "pfrda:day3-bank-b:q:09:r1",
+          "pfrda:day3-bank-b:q:10:r1",
+          "pfrda:day3-bank-b:q:11:r1",
+          "pfrda:day3-bank-b:q:12:r1",
+          "pfrda:day3-bank-b:q:13:r1",
+          "pfrda:day3-bank-b:q:14:r1",
+          "pfrda:day3-bank-b:q:15:r1",
+          "pfrda:day3-bank-b:q:16:r1",
+          "pfrda:day3-bank-b:q:17:r1",
+          "pfrda:day3-bank-b:q:18:r1",
+          "pfrda:day3-bank-b:q:19:r1",
+          "pfrda:day3-bank-b:q:20:r1",
+          "pfrda:day3-bank-b:q:21:r1",
+          "pfrda:day3-bank-b:q:22:r1",
+          "pfrda:day3-bank-b:q:23:r1",
+          "pfrda:day3-bank-b:q:24:r1",
+          "pfrda:day3-bank-b:q:25:r1",
+          "pfrda:day3-bank-b:q:26:r1",
+          "pfrda:day3-bank-b:q:27:r1",
+          "pfrda:day3-bank-b:q:28:r1",
+          "pfrda:day3-bank-b:q:29:r1",
+          "pfrda:day3-bank-b:q:30:r1"
+        ]
+      }
+    ],
+    "answerKeyRevisionId": "pfrda-grade-a-2026-day3-bank-b:r1:key",
+    "timing": {
+      "kind": "whole-paper",
+      "durationMs": 1440000,
+      "pausePolicy": "forbidden"
+    },
+    "navigation": {
+      "questionNavigation": "free",
+      "sectionNavigation": "free",
+      "allowFlagging": true,
+      "allowReview": true
+    },
+    "scoring": {
+      "defaultRule": {
+        "correctMarks": 2,
+        "incorrectMarks": -0.5,
+        "unansweredMarks": 0
+      },
+      "decimalPlaces": 2
+    },
+    "contentHash": "a98e21bfc86302a0996c60e9275a6cddc51a72b141e7b847aff9f81a4a870848"
+  },
+  "explanations": {
+    "pfrda:day3-bank-b:q:01:r1": "NPS Trust holds pension assets in trust for subscribers and protects their interests. The other intermediaries perform recordkeeping, banking, investment-management or custody functions.",
+    "pfrda:day3-bank-b:q:02:r1": "Section 36 provides an ordinary 45-day period, with statutory scope to condone delay on sufficient cause.",
+    "pfrda:day3-bank-b:q:03:r1": "The stated FY 2030–31 objective is 50% of GDP with a ±1 percentage-point range.",
+    "pfrda:day3-bank-b:q:04:r1": "The Survey reported scheduled commercial bank gross non-performing assets at about 2.2% in September 2025.",
+    "pfrda:day3-bank-b:q:05:r1": "Returning goods reduces the liability to the supplier, so Trade Payables is debited. Under the periodic system, Purchase Returns is credited.",
+    "pfrda:day3-bank-b:q:06:r1": "Purchase and disposal of long-term assets such as property, plant and equipment are ordinarily investing activities.",
+    "pfrda:day3-bank-b:q:07:r1": "The company has received cash but still owes the service; that obligation is a liability commonly called unearned revenue or a contract liability.",
+    "pfrda:day3-bank-b:q:08:r1": "Vroom links motivation to expectancy (effort→performance), instrumentality (performance→outcome) and valence (value of outcome).",
+    "pfrda:day3-bank-b:q:09:r1": "A superior can delegate authority and responsibility for work, but cannot fully abdicate ultimate accountability.",
+    "pfrda:day3-bank-b:q:10:r1": "Bond price and required yield move inversely because the fixed future cash flows are discounted at a higher rate when yield rises.",
+    "pfrda:day3-bank-b:q:11:r1": "The importer will need dollars later, so buying (going long) US dollars forward locks in the future exchange rate.",
+    "pfrda:day3-bank-b:q:12:r1": "The secondary market facilitates trading of securities that have already been issued.",
+    "pfrda:day3-bank-b:q:13:r1": "Equivalent units for conversion = 800 completed + 200×50% = 900.",
+    "pfrda:day3-bank-b:q:14:r1": "Flexible variable overhead = 1,200×₹40 = ₹48,000.",
+    "pfrda:day3-bank-b:q:15:r1": "Just-in-time systems minimise inventory buffers, so supplier or logistics disruption can halt production rapidly.",
+    "pfrda:day3-bank-b:q:16:r1": "Section 123 permits dividend from eligible profits subject to statutory conditions, including the depreciation requirement.",
+    "pfrda:day3-bank-b:q:17:r1": "Section 144 lists internal audit among services that the statutory auditor must not provide to the audited company, subject to the statutory framework.",
+    "pfrda:day3-bank-b:q:18:r1": "An independent director can generally serve up to two consecutive terms, each up to five years, followed by the statutory cooling-off period.",
+    "pfrda:day3-bank-b:q:19:r1": "The ordinary quorum is one-third of total strength or two directors, whichever is higher, subject to the Act's qualifications.",
+    "pfrda:day3-bank-b:q:20:r1": "GDP deflator = (Nominal GDP / Real GDP)×100 = 110.",
+    "pfrda:day3-bank-b:q:21:r1": "Personal remittances are current-account secondary income/transfers, not capital or portfolio investment flows.",
+    "pfrda:day3-bank-b:q:22:r1": "A repo-rate cut generally eases monetary conditions and can reduce borrowing costs, though transmission is not mechanically one-for-one.",
+    "pfrda:day3-bank-b:q:23:r1": "Ordinary Tier II is a voluntary savings account with flexible access, distinct from Tier I retirement-exit restrictions.",
+    "pfrda:day3-bank-b:q:24:r1": "From 1 October 2022, a person who is or has been an income-tax payer cannot open a new Atal Pension Yojana account under the notified eligibility rule; earlier qualifying accounts are not automatically cancelled.",
+    "pfrda:day3-bank-b:q:25:r1": "The defining difference is when periodic annuity payments commence.",
+    "pfrda:day3-bank-b:q:26:r1": "Recall asks: of all actual positives, how many were found? Hence TP/(TP+FN), where TP = True Positive and FN = False Negative.",
+    "pfrda:day3-bank-b:q:27:r1": "A post-outcome variable contains information unavailable at real prediction time and leaks the target/future into model development.",
+    "pfrda:day3-bank-b:q:28:r1": "Agenda-setting is about issue salience—what people think about—not deterministic control of what they think.",
+    "pfrda:day3-bank-b:q:29:r1": "The services-marketing additions are People, Process and Physical Evidence.",
+    "pfrda:day3-bank-b:q:30:r1": "Noise is any interference that distorts or disrupts the signal/message between sender and receiver."
+  }
+}
