@@ -142,7 +142,7 @@ test("Pass 5 learner focus is exam-scoped, opt-in, evidence-only and detailed mo
  const family=loaded.families.find(x=>x.id==="pfrda-grade-a-2026-phase-ii");
  const source=loaded.packages.find(x=>x.paper.id===family.currentPaperRevisionId);
  const topicId="taxonomy:"+source.taxonomy.id+":pfrda-act";
- const bundle=composePracticeSet(source,{count:1,seed:"learner-focus",filters:{topicId}}).bundle;
+ const bundle=composePracticeSet(source,{count:2,seed:"learner-focus",filters:{topicId}}).bundle;
  const a1=finishedAttempt(bundle,"focus-a1",Date.parse("2026-11-10T10:00:00Z"));
  const a2=finishedAttempt(bundle,"focus-a2",Date.parse("2026-11-12T10:00:00Z"));
  const q=bundle.questions[0];
@@ -158,8 +158,10 @@ test("Pass 5 learner focus is exam-scoped, opt-in, evidence-only and detailed mo
  const checked=validateLearnerFocusPacket(focused);
  assert.equal(checked.mode,"focused");assert.equal(checked.compositionPolicy,"focus-first-with-blueprint-guardrails");
  const obs=checked.observations.find(x=>x.nodeId==="pfrda-act");
- assert.ok(obs);assert.equal(obs.attempts,2);assert.equal(obs.incorrect,2);
+ assert.ok(obs);assert.equal(obs.attempts,4);assert.equal(obs.sessions,2);
+ assert.equal(obs.incorrect,2);assert.equal(obs.unanswered,2);
  assert.equal(obs.repeatedMisses,1);assert.equal(obs.bookmarkedQuestions,1);assert.equal(obs.dueQuestions,1);
+ assert.equal(obs.recent.attempts,4);assert.equal(obs.recent.sessions,2);
  assert.ok(obs.signals.includes("repeated-misses"));assert.ok(obs.signals.includes("fsrs-due"));
  const focusedText=JSON.stringify(checked);
  assert.equal(focusedText.includes(q.content.prompt),false,"Focused mode must not expose prior question bodies");
@@ -170,8 +172,9 @@ test("Pass 5 learner focus is exam-scoped, opt-in, evidence-only and detailed mo
  const detailed=validateLearnerFocusPacket(buildLearnerFocusPacket([a1,a2],[card],due,{
   examId:source.examId,mode:"detailed",intent:"exam-simulation",asOf}));
  assert.equal(detailed.compositionPolicy,"blueprint-first");
- assert.equal(detailed.questionEvidence.length,1);
+ assert.equal(detailed.questionEvidence.length,2);
  assert.equal(detailed.questionEvidence[0].prompt,q.content.prompt);
+ assert.equal(detailed.questionEvidence[0].kind,q.content.kind);
  assert.equal(detailed.questionEvidence[0].wrongAttempts,2);
  assert.equal(detailed.questionEvidence[0].selfReportedErrorLabel,"knowledge-gap");
  assert.ok(detailed.questionEvidence[0].selectedResponse);
