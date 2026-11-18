@@ -11,7 +11,7 @@ export function createWorkspaceAuthoringStudio(owner:AuthoringControllerContext)
  let studio!:ReturnType<typeof createQuestionAuthoringStudio>;
  studio=createQuestionAuthoringStudio({
    existing:()=>[...owner.packages.values()],
-   onClose:()=>{if(!owner.disposed&&owner.view==="library")owner.draw();},
+   onClose:()=>{if(!owner.disposed&&owner.view==="authoring")owner.draw();},
    publish:async bundle=>{
      const signed=validateExamPackage(bundle);
      if(owner.loading||owner.fallbackConflict||owner.storageFault)
