@@ -415,6 +415,9 @@ try{
  await page.locator("#pd-author-accept-warnings").check();
  await page.locator("#pd-author-publish").click();
  const revised="authored:"+apfc.examId+":"+apfc.paperId+":r2:custom";
+ await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
+   .some(x=>x.dataset.authoringOpenPaper===id),revised);
+ await page.locator('[data-authoring-open-paper="'+revised+'"]').click();await route(page,"library");
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,revised);
  const revision2=(await records(page)).find(r=>r.recordType==="generic-package"&&r.bundle?.paper.id===revised);
  check(Boolean(revision2)&&revision2.bundle.questions.length===5,
