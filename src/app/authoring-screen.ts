@@ -68,7 +68,9 @@ export function bindAuthoringScreen(owner:AuthoringScreenControllerContext):void
   owner.root.querySelector<HTMLButtonElement>("#authoring-learning")!.onclick=()=>owner.go({screen:"learning"});
   owner.root.querySelector<HTMLButtonElement>("#authoring-calendar")!.onclick=()=>owner.go({screen:"calendar"});
   owner.root.querySelector<HTMLButtonElement>("#authoring-history")!.onclick=()=>owner.go({screen:"history"});
-  owner.root.querySelector<HTMLButtonElement>("#authoring-learning-focus")!.onclick=()=>owner.go({screen:"learning"});
+  owner.root.querySelector<HTMLButtonElement>("#authoring-learning-focus")!.onclick=()=>{
+    owner.learningDesk.focusAuthoringTools();owner.go({screen:"learning"});
+  };
   owner.root.querySelector<HTMLButtonElement>("#authoring-import")!.onclick=()=>
     owner.root.querySelector<HTMLInputElement>("#authoring-import-file")?.click();
   owner.root.querySelector<HTMLButtonElement>("#authoring-image-prep")!.onclick=e=>
