@@ -224,22 +224,38 @@ export async function addPaper(options){
     "mocks/"+paperSlug+"/"+edition+"/package.exam.json","mocks/"+paperSlug+"/"+edition+"/quality-review.json",
     "mocks/"+paperSlug+"/"+edition+"/blueprint.json"],setCurrent:Boolean(options.setCurrent)};
   if(options.dryRun)return operationResult("add-paper",fields,true);
-  return await withLock(root,async()=>{
+  return await withLock(root,async({operationId})=>{
    await ensureUnchanged(yearAbs,yearRaw);
    if(options.setCurrent)await ensureUnchanged(examAbs,examRaw);
    const actualPaperDir=join(root,dirname(yearManifestPath),"mocks",paperSlug);
    const stagedPaperDir=join(stage,dirname(yearManifestPath),"mocks",paperSlug);
    let folderCreated=false,yearChanged=false,examChanged=false;
+   const journal={format:"practice-desk-corpus-journal",version:1,operationId,operation:"add-paper",phase:"prepared",
+    createdPath:relPath(root,actualPaperDir),manifests:[
+     journalManifest(root,yearAbs,yearRaw,stageYear),
+     ...(options.setCurrent?[journalManifest(root,examAbs,examRaw,examNext)]:[])
+    ]};
+   await writeJournal(root,journal);
    try{
     await copyCreateDirectory(stagedPaperDir,actualPaperDir);folderCreated=true;
+    journal.phase="folder-created";await writeJournal(root,journal);
     await atomicJson(yearAbs,stageYear);yearChanged=true;
-    if(options.setCurrent){await atomicJson(examAbs,examNext);examChanged=true;}
+    journal.phase="year-manifest-written";await writeJournal(root,journal);
+    if(options.setCurrent){
+     await atomicJson(examAbs,examNext);examChanged=true;
+     journal.phase="exam-manifest-written";await writeJournal(root,journal);
+    }
     await loadQuestionBankCatalog(root);
+    await clearJournal(root);
     return operationResult("add-paper",fields,false);
    }catch(error){
-    if(examChanged)await atomicText(examAbs,examRaw).catch(()=>{});
-    if(yearChanged)await atomicText(yearAbs,yearRaw).catch(()=>{});
-    if(folderCreated)await rm(actualPaperDir,{recursive:true,force:true}).catch(()=>{});
+    let rollbackFailed=false;
+    if(examChanged)try{await atomicText(examAbs,examRaw);}catch{rollbackFailed=true;}
+    if(yearChanged)try{await atomicText(yearAbs,yearRaw);}catch{rollbackFailed=true;}
+    if(folderCreated)try{await rm(actualPaperDir,{recursive:true,force:true});}catch{rollbackFailed=true;}
+    if(!rollbackFailed)await clearJournal(root);
+    if(rollbackFailed)throw Error("Corpus add-paper failed and rollback was incomplete; recovery journal retained. "+
+     (error instanceof Error?error.message:String(error)));
     throw error;
    }
   });
@@ -292,19 +308,29 @@ export async function appendRevision(options){
     entry.path.replace(/manifest\.json$/u,edition+"/blueprint.json")
    ]};
   if(options.dryRun)return operationResult("append-revision",fields,true);
-  return await withLock(root,async()=>{
+  return await withLock(root,async({operationId})=>{
    await ensureUnchanged(paperAbs,paperRaw);
    const actualEdition=join(root,dirname(paperManifestPath),edition);
    const stagedEdition=join(stage,dirname(paperManifestPath),edition);
    let folderCreated=false,manifestChanged=false;
+   const journal={format:"practice-desk-corpus-journal",version:1,operationId,operation:"append-revision",phase:"prepared",
+    createdPath:relPath(root,actualEdition),manifests:[journalManifest(root,paperAbs,paperRaw,nextManifest)]};
+   await writeJournal(root,journal);
    try{
     await copyCreateDirectory(stagedEdition,actualEdition);folderCreated=true;
+    journal.phase="folder-created";await writeJournal(root,journal);
     await atomicJson(paperAbs,nextManifest);manifestChanged=true;
+    journal.phase="paper-manifest-written";await writeJournal(root,journal);
     await loadQuestionBankCatalog(root);
+    await clearJournal(root);
     return operationResult("append-revision",fields,false);
    }catch(error){
-    if(manifestChanged)await atomicText(paperAbs,paperRaw).catch(()=>{});
-    if(folderCreated)await rm(actualEdition,{recursive:true,force:true}).catch(()=>{});
+    let rollbackFailed=false;
+    if(manifestChanged)try{await atomicText(paperAbs,paperRaw);}catch{rollbackFailed=true;}
+    if(folderCreated)try{await rm(actualEdition,{recursive:true,force:true});}catch{rollbackFailed=true;}
+    if(!rollbackFailed)await clearJournal(root);
+    if(rollbackFailed)throw Error("Corpus append-revision failed and rollback was incomplete; recovery journal retained. "+
+     (error instanceof Error?error.message:String(error)));
     throw error;
    }
   });
