@@ -545,7 +545,12 @@ try{
    focusPacket.intent==="targeted-practice"&&focusPacket.privacy?.scope==="exam-only"&&
    !("questionEvidence" in focusPacket)&&!JSON.stringify(focusPacket).includes("answerKey"),
    engine+" Pass 5 Focused learner packet leaked detailed/key data or lost exam scope");
- const blueprintRaw=await readFile(new URL("../../../question-banks/pfrda/2026/mocks/day-01/revised/blueprint.json",import.meta.url),"utf8");
+ const baseBlueprint=JSON.parse(await readFile(new URL("../../../question-banks/pfrda/2026/mocks/day-01/revised/blueprint.json",import.meta.url),"utf8"));
+ const sourceForRules=JSON.parse(await readFile(new URL("../../../question-banks/pfrda/2026/mocks/day-01/revised/bank.authoring.json",import.meta.url),"utf8"));
+ const nativeBlueprint={...baseBlueprint,paperRules:{scoring:sourceForRules.scoring,timing:sourceForRules.timing,
+   navigation:sourceForRules.navigation,sections:sourceForRules.sections,...(sourceForRules.tools?{tools:sourceForRules.tools}:{}),
+   ...(sourceForRules.practiceModes?{practiceModes:sourceForRules.practiceModes}:{})}};
+ const blueprintRaw=JSON.stringify(nativeBlueprint,null,2)+"\n";
  const taxonomyRaw=await readFile(new URL("../../../question-banks/pfrda/2026/taxonomy.json",import.meta.url),"utf8");
  await page.locator("#learning-blueprint-file").setInputFiles({
    name:"blueprint.json",mimeType:"application/json",buffer:Buffer.from(blueprintRaw)
