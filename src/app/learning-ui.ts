@@ -29,6 +29,8 @@ export interface LearningDeskHost {
   remove:(id:string)=>Promise<void>;
   startRevision:(cards:readonly LearningCard[],selection?:RevisionSelectionProvenance)=>Promise<boolean>;
   openCalendar:()=>void;
+  openHistory:()=>void;
+  openAuthoring:()=>void;
   calendarChanged:()=>void;
   close:()=>void;
 }
@@ -286,8 +288,11 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   const candidates=visible.filter(c=>c.examId===exam&&
     ["verified","corrected","caution"].includes(c.question.editorial.status)).slice(0,REVISION_MAX_QUESTIONS);
   const html='<div class="generic-heading"><div><h1>Learning & revision</h1><p class="muted">Error notebook · FSRS-7 spaced review · Topic evidence</p></div>'+
-    '<div class="row"><button class="btn quiet" id="learning-calendar">Calendar</button>'+
-    '<button class="btn" id="learning-close">← Test library</button></div></div>'+
+    '<nav class="row workspace-nav" aria-label="Practice Desk sections">'+
+    '<button class="btn quiet" id="learning-calendar">Calendar</button>'+
+    '<button class="btn quiet" id="learning-history">History & insights</button>'+
+    '<button class="btn quiet" id="learning-authoring">Authoring</button>'+
+    '<button class="btn quiet" id="learning-close">← Test library</button></nav></div>'+
     '<p class="generic-warning" role="status" id="learning-message"'+
       (message?'':' hidden')+'>'+esc(message)+'</p>'+
     '<div class="learning-summary">'+
@@ -787,6 +792,8 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
   };
   root.querySelector<HTMLButtonElement>("#learning-close")!.onclick=host.close;
   root.querySelector<HTMLButtonElement>("#learning-calendar")!.onclick=host.openCalendar;
+  root.querySelector<HTMLButtonElement>("#learning-history")!.onclick=host.openHistory;
+  root.querySelector<HTMLButtonElement>("#learning-authoring")!.onclick=host.openAuthoring;
   root.querySelector<HTMLButtonElement>("#learning-test")!.onclick=async()=>{
     const button=root.querySelector<HTMLButtonElement>("#learning-test");
     if(button)button.disabled=true;
