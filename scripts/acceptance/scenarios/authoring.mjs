@@ -6,6 +6,7 @@ export async function authoringPublication(){
  * Captures focused, user-facing screenshots, not historical parity images.
  */
 const {captureVisualEvidence}=await import("../../browser/visual-evidence.mjs");
+const {readFile}=await import("node:fs/promises");
 const {openHarness,route,check,assertNoOverflow,records}=await import("../../browser/fixtures.mjs");
 const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
@@ -84,6 +85,13 @@ try{
  const paperId="authored:cat-practice:local-math-quiz:r1:custom";
  await page.waitForFunction(id=>[...document.querySelectorAll("[data-authoring-open-paper]")]
    .some(x=>x.dataset.authoringOpenPaper===id),paperId);
+ const exportedDownload=page.waitForEvent("download");
+ await page.locator('[data-authoring-export-paper="'+paperId+'"]').click();
+ const exported=await exportedDownload,exportedPath=await exported.path();
+ check(Boolean(exportedPath),"Published package export did not produce a local file");
+ const exportedPackage=JSON.parse(await readFile(exportedPath,"utf8"));
+ check(exportedPackage.paper?.id===paperId&&exportedPackage.questions?.length===1,
+  "Published package export did not preserve the immutable package");
  await page.locator('[data-authoring-open-paper="'+paperId+'"]').click();await route(page,"library");
  await page.waitForFunction(id=>document.querySelector("#g-papers")?.value===id,paperId);
  const record=(await records(page)).find(x=>x.recordType==="generic-package"&&x.bundle?.paper?.id===paperId);
