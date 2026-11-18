@@ -5,6 +5,8 @@ import {parseTopicPathId} from "./syllabus-taxonomy.ts";
 import {questionSpeed,questionTimingPhases} from "./question-analytics.ts";
 import {isRevisionAttempt} from "./revision-selection.ts";
 import {taxonomyPathNodes} from "../domain/taxonomy.ts";
+import {validateStandardAuthoringBrief} from "../authoring/authoring-brief.ts";
+export {validateStandardAuthoringBrief} from "../authoring/authoring-brief.ts";
 
 export type LearnerFocusMode="focused"|"detailed";
 export type AuthoringIntent="exam-simulation"|"targeted-practice";
@@ -20,6 +22,7 @@ export interface LearnerFocusObservation{
  readonly topic?:string;
  readonly subtopic?:string;
  readonly attempts:number;
+ readonly sessions:number;
  readonly answered:number;
  readonly correct:number;
  readonly incorrect:number;
@@ -32,7 +35,7 @@ export interface LearnerFocusObservation{
  readonly bookmarkedQuestions:number;
  readonly dueQuestions:number;
  readonly observedAccuracy:number|null;
- readonly recent?:{readonly windowDays:30;readonly attempts:number;readonly correct:number;readonly incorrect:number;readonly unanswered:number};
+ readonly recent?:{readonly windowDays:30;readonly attempts:number;readonly sessions:number;readonly correct:number;readonly incorrect:number;readonly unanswered:number};
  readonly signals:readonly LearnerFocusSignal[];
 }
 export interface LearnerFocusQuestionEvidence{
@@ -40,6 +43,8 @@ export interface LearnerFocusQuestionEvidence{
  readonly questionId:string;
  readonly questionHash:string;
  readonly prompt:string;
+ readonly kind:QuestionRevision["content"]["kind"];
+ readonly difficulty?:"easy"|"medium"|"hard";
  readonly classification?:{
   readonly classificationSource:"exam-taxonomy"|"authored-path"|"learner-annotation";
   readonly taxonomyId?:string;readonly nodeId?:string;
@@ -102,7 +107,7 @@ interface MutableObservation{
 }
 interface MutableQuestion{
  questionRevisionId:string;questionId:string;questionHash:string;prompt:string;
- classification?:Classification;observedAttemptIds:Set<string>;wrongAttemptIds:Set<string>;
+ kind:QuestionRevision["content"]["kind"];difficulty?:"easy"|"medium"|"hard";classification?:Classification;observedAttemptIds:Set<string>;wrongAttemptIds:Set<string>;
  lastFinishedAt:number;lastVerdict:"correct"|"incorrect"|"unanswered";
  selectedResponse?:CandidateResponse;selectedResponseText?:string;foregroundMs:number|null;visits:number|null;
  revisited:boolean|null;flagged:boolean;slow:boolean;
@@ -153,6 +158,14 @@ function responseText(q:QuestionRevision,response:CandidateResponse|undefined):s
   }).join("; ");
  return undefined;
 }
+const questionDifficulty=(q:QuestionRevision):"easy"|"medium"|"hard"|undefined=>{
+ for(const tag of q.content.tags??[]){
+  if(tag==="difficulty:easy")return "easy";
+  if(tag==="difficulty:medium")return "medium";
+  if(tag==="difficulty:hard")return "hard";
+ }
+ return undefined;
+};
 
 function attemptClassification(a:GenericAttempt,q:QuestionRevision):Classification|undefined{
  const nodeId=a.frozen.taxonomyAssignments?.[q.id];
@@ -203,7 +216,7 @@ function signals(row:MutableObservation):LearnerFocusSignal[]{
 const priority=(row:MutableObservation)=>[
  [...row.wrongByRevision.values()].filter(ids=>ids.size>=2).length,
  row.dueQuestions.size,row.incorrect,row.unanswered,row.slowObservations,row.flaggedAttemptIds.size,
- row.revisitedAttemptIds.size,row.bookmarkedQuestions.size,row.attemptIds.size
+ row.revisitedAttemptIds.size,row.bookmarkedQuestions.size,row.correct+row.incorrect+row.unanswered
 ] as const;
 function comparePriority(a:MutableObservation,b:MutableObservation):number{
  const aa=priority(a),bb=priority(b);
@@ -216,6 +229,8 @@ const guidance=(intent:AuthoringIntent):readonly string[]=>intent==="exam-simula
  "Use fresh wording and transfer where useful; do not reproduce previously attempted questions."
 ]:[
  "Prioritize observed weak, due and repeated-error areas while remaining within the declared syllabus/blueprint guardrails.",
+ "For repeated misses, prefer fresh transfer items whose distractors discriminate the relevant misconception without reproducing the prior question.",
+ "For slower-than-usual evidence, prefer concise fluency/application practice before escalating complexity; timing is an observation, not a diagnosis.",
  "Use fresh transfer questions: same concept may use a different framing and realistic distractors rather than near-duplicates.",
  "Treat timing, flags, revisits and errors as observations, not diagnoses of why the learner struggled.",
  "Do not reproduce previously attempted questions."
@@ -274,7 +289,7 @@ export function buildLearnerFocusPacket(
    let detail=questions.get(signature);
    if(!detail){
     detail={questionRevisionId:q.id,questionId:q.questionId,questionHash:q.contentHash,prompt:q.content.prompt,
-     ...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
+     kind:q.content.kind,...(questionDifficulty(q)?{difficulty:questionDifficulty(q)}:{}),...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
      lastFinishedAt:-Infinity,lastVerdict:verdict,foregroundMs:null,visits:null,revisited:null,flagged:false,
      slow:false,bookmarked:false,fsrsDue:false,fsrsReviewCount:0};
     questions.set(signature,detail);
@@ -313,8 +328,8 @@ export function buildLearnerFocusPacket(
   let detail=questions.get(signature);
   if(!detail){
    detail={questionRevisionId:card.question.id,questionId:card.question.questionId,
-    questionHash:card.question.contentHash,prompt:card.question.content.prompt,
-    ...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
+    questionHash:card.question.contentHash,prompt:card.question.content.prompt,kind:card.question.content.kind,
+    ...(questionDifficulty(card.question)?{difficulty:questionDifficulty(card.question)}:{}),...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
     lastFinishedAt:Date.parse(card.updatedAt),lastVerdict:"unanswered",foregroundMs:null,visits:null,
     revisited:null,flagged:false,slow:false,bookmarked:false,fsrsDue:false,fsrsReviewCount:0};
    questions.set(signature,detail);
@@ -331,12 +346,13 @@ export function buildLearnerFocusPacket(
   const repeatedMisses=[...row.wrongByRevision.values()].filter(ids=>ids.size>=2).length;
   const answered=row.correct+row.incorrect;
   const recentCount=row.recentCorrect+row.recentIncorrect+row.recentUnanswered;
-  return {...row.classification,attempts:row.attemptIds.size,answered,correct:row.correct,incorrect:row.incorrect,
+  const attempts=answered+row.unanswered;
+  return {...row.classification,attempts,sessions:row.attemptIds.size,answered,correct:row.correct,incorrect:row.incorrect,
    unanswered:row.unanswered,distinctQuestions:row.questionIds.size,repeatedMisses,
    slowObservations:row.slowObservations,revisitedAttempts:row.revisitedAttemptIds.size,
    flaggedAttempts:row.flaggedAttemptIds.size,bookmarkedQuestions:row.bookmarkedQuestions.size,
    dueQuestions:row.dueQuestions.size,observedAccuracy:answered?row.correct/answered:null,
-   ...(recentCount?{recent:{windowDays:30 as const,attempts:row.recentAttemptIds.size,correct:row.recentCorrect,
+   ...(recentCount?{recent:{windowDays:30 as const,attempts:recentCount,sessions:row.recentAttemptIds.size,correct:row.recentCorrect,
     incorrect:row.recentIncorrect,unanswered:row.recentUnanswered}}:{}),signals:signals(row)};
  });
  const relevantKeys=new Set(selected.map(row=>classificationKey(row.classification)));
@@ -358,7 +374,7 @@ export function buildLearnerFocusPacket(
    if(row.bookmarked)reasons.push("bookmarked");
    if(row.fsrsDue)reasons.push("fsrs-due");
    return {questionRevisionId:row.questionRevisionId,questionId:row.questionId,questionHash:row.questionHash,
-    prompt:row.prompt,...(row.classification?{classification:row.classification}:{}),
+    prompt:row.prompt,kind:row.kind,...(row.difficulty?{difficulty:row.difficulty}:{}),...(row.classification?{classification:row.classification}:{}),
     observedAttempts:row.observedAttemptIds.size,wrongAttempts:row.wrongAttemptIds.size,
     lastVerdict:row.lastVerdict,...(row.selectedResponse?{selectedResponse:row.selectedResponse}:{}),
     ...(row.selectedResponseText?{selectedResponseText:row.selectedResponseText}:{}),
@@ -444,7 +460,7 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
  if(!Array.isArray(raw.observations)||raw.observations.length>30)throw Error("Invalid learner-focus observations");
  const observations=raw.observations.map((value,index)=>{
   const row=plain(value,"observation "+index);
-  only(row,["classificationSource","taxonomyId","nodeId","subject","topic","subtopic","attempts","answered",
+  only(row,["classificationSource","taxonomyId","nodeId","subject","topic","subtopic","attempts","sessions","answered",
    "correct","incorrect","unanswered","distinctQuestions","repeatedMisses","slowObservations","revisitedAttempts",
    "flaggedAttempts","bookmarkedQuestions","dueQuestions","observedAccuracy","recent","signals"],"observation "+index);
   const c=validateClassification({
@@ -455,24 +471,29 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
    ...(row.topic===undefined?{}:{topic:row.topic}),
    ...(row.subtopic===undefined?{}:{subtopic:row.subtopic})
   },"observation "+index);
-  const attempts=boundedInt(row.attempts,"attempts",0,100000),answered=boundedInt(row.answered,"answered",0,100000);
+  const attempts=boundedInt(row.attempts,"attempts",0,100000),sessions=boundedInt(row.sessions,"sessions",0,100000),answered=boundedInt(row.answered,"answered",0,100000);
   const correct=boundedInt(row.correct,"correct",0,100000),incorrect=boundedInt(row.incorrect,"incorrect",0,100000);
   const unanswered=boundedInt(row.unanswered,"unanswered",0,100000);
-  if(correct+incorrect!==answered)throw Error("Learner-focus answered count mismatch");
+  if(correct+incorrect!==answered||answered+unanswered!==attempts||sessions>attempts)throw Error("Learner-focus observation count mismatch");
   const observedAccuracy=row.observedAccuracy===null?null:
    typeof row.observedAccuracy==="number"&&Number.isFinite(row.observedAccuracy)&&row.observedAccuracy>=0&&row.observedAccuracy<=1?row.observedAccuracy:
    (()=>{throw Error("Invalid observedAccuracy");})();
   if((answered===0)!==(observedAccuracy===null))throw Error("Learner-focus accuracy evidence mismatch");
   let recent;
   if(row.recent!==undefined){
-   const r=plain(row.recent,"recent");only(r,["windowDays","attempts","correct","incorrect","unanswered"],"recent");
+   const r=plain(row.recent,"recent");only(r,["windowDays","attempts","sessions","correct","incorrect","unanswered"],"recent");
    if(r.windowDays!==30)throw Error("Learner-focus recent window must be 30 days");
-   recent={windowDays:30 as const,attempts:boundedInt(r.attempts,"recent.attempts",0,100000),
-    correct:boundedInt(r.correct,"recent.correct",0,100000),
-    incorrect:boundedInt(r.incorrect,"recent.incorrect",0,100000),
-    unanswered:boundedInt(r.unanswered,"recent.unanswered",0,100000)};
+   const recentAttempts=boundedInt(r.attempts,"recent.attempts",0,100000),
+    recentSessions=boundedInt(r.sessions,"recent.sessions",0,100000),
+    recentCorrect=boundedInt(r.correct,"recent.correct",0,100000),
+    recentIncorrect=boundedInt(r.incorrect,"recent.incorrect",0,100000),
+    recentUnanswered=boundedInt(r.unanswered,"recent.unanswered",0,100000);
+   if(recentCorrect+recentIncorrect+recentUnanswered!==recentAttempts||recentSessions>recentAttempts)
+    throw Error("Learner-focus recent count mismatch");
+   recent={windowDays:30 as const,attempts:recentAttempts,sessions:recentSessions,
+    correct:recentCorrect,incorrect:recentIncorrect,unanswered:recentUnanswered};
   }
-  return {...c,attempts,answered,correct,incorrect,unanswered,
+  return {...c,attempts,sessions,answered,correct,incorrect,unanswered,
    distinctQuestions:boundedInt(row.distinctQuestions,"distinctQuestions",0,100000),
    repeatedMisses:boundedInt(row.repeatedMisses,"repeatedMisses",0,100000),
    slowObservations:boundedInt(row.slowObservations,"slowObservations",0,100000),
@@ -488,7 +509,7 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
   if(!Array.isArray(raw.questionEvidence)||raw.questionEvidence.length>30)throw Error("Invalid question evidence");
   questionEvidence=raw.questionEvidence.map((value,index)=>{
    const row=plain(value,"questionEvidence "+index);
-   only(row,["questionRevisionId","questionId","questionHash","prompt","classification","observedAttempts","wrongAttempts",
+   only(row,["questionRevisionId","questionId","questionHash","prompt","kind","difficulty","classification","observedAttempts","wrongAttempts",
     "lastVerdict","selectedResponse","selectedResponseText","foregroundMs","visits","revisited","flagged","reasons","selfReportedErrorLabel",
     "bookmarked","fsrsDue","fsrsReviewCount","explanation"],"questionEvidence "+index);
    if(!["correct","incorrect","unanswered"].includes(String(row.lastVerdict)))throw Error("Invalid detailed verdict");
@@ -502,6 +523,8 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
    return {questionRevisionId:text(row.questionRevisionId,"questionRevisionId",160),
     questionId:text(row.questionId,"questionId",160),questionHash:text(row.questionHash,"questionHash",160),
     prompt:text(row.prompt,"prompt",20000),
+    kind:(()=>{const value=text(row.kind,"kind",40);if(!["single-choice","multiple-select","numeric-entry","true-false","matching","free-response"].includes(value))throw Error("Invalid detailed question kind");return value as QuestionRevision["content"]["kind"];})(),
+    ...(row.difficulty===undefined?{}:{difficulty:(()=>{const value=text(row.difficulty,"difficulty",20);if(!["easy","medium","hard"].includes(value))throw Error("Invalid detailed difficulty");return value as "easy"|"medium"|"hard";})()}),
     ...(row.classification===undefined?{}:{classification:validateClassification(row.classification,"question classification")}),
     observedAttempts:boundedInt(row.observedAttempts,"observedAttempts",0,100000),
     wrongAttempts:boundedInt(row.wrongAttempts,"wrongAttempts",0,100000),
@@ -525,20 +548,6 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
 }
 
 
-export function validateStandardAuthoringBrief(value:unknown):Readonly<Record<string,unknown>>{
- const raw=plain(value,"authoring brief");
- if(raw.format!=="practice-desk-authoring-brief"||raw.version!==1||raw.valid!==true)
-  throw Error("Expected a valid practice-desk-authoring-brief v1");
- const blueprint=plain(raw.blueprint,"authoring brief blueprint");
- const examId=text(blueprint.examId,"authoring brief blueprint.examId",120);
- text(blueprint.id,"authoring brief blueprint.id",120);
- if(raw.learnerFocusIncluded!==false||raw.learnerFocus!==undefined||raw.personalisationIntent!==undefined)
-  throw Error("Load a standard non-personalised Authoring Brief");
- if(!raw.task||typeof raw.task!=="object"||!raw.paper||typeof raw.paper!=="object"||
-    !raw.outputContract||typeof raw.outputContract!=="object")
-  throw Error("Authoring Brief is missing required task/paper/output contract");
- return structuredClone({...raw,blueprint:{...blueprint,examId}});
-}
 export function personalizeAuthoringBrief(
  briefValue:unknown,focusValue:unknown
 ):Readonly<Record<string,unknown>>{
