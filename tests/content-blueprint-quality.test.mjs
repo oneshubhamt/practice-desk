@@ -394,8 +394,16 @@ test("Pass 4: taxonomy-aware PFRDA brief exposes data-owned A-L nodes and reject
 test("Authoring Brief shared contract rejects shallow lookalikes and browser-native first-batch generation matches it",()=>temp(async dir=>{
  const blueprintPath=fileURLToPath(new URL("../question-banks/pfrda/2026/mocks/day-01/revised/blueprint.json",import.meta.url));
  const taxonomyPath=fileURLToPath(new URL("../question-banks/pfrda/2026/taxonomy.json",import.meta.url));
- const blueprintRaw=await readFile(blueprintPath,"utf8"),blueprint=JSON.parse(blueprintRaw);
+ const rawBlueprint=JSON.parse(await readFile(blueprintPath,"utf8"));
  const taxonomy=JSON.parse(await readFile(taxonomyPath,"utf8"));
+ const source=JSON.parse(await readFile(fileURLToPath(new URL("../question-banks/pfrda/2026/mocks/day-01/revised/bank.authoring.json",import.meta.url)),"utf8"));
+ const blueprint={...rawBlueprint,paperRules:{scoring:source.scoring,timing:source.timing,
+  navigation:source.navigation,sections:source.sections,...(source.tools?{tools:source.tools}:{}),
+  ...(source.practiceModes?{practiceModes:source.practiceModes}:{})}};
+ const blueprintRaw=JSON.stringify(blueprint,null,2)+"\n";
+ assert.throws(()=>buildInitialAuthoringBrief(rawBlueprint,JSON.stringify(rawBlueprint),{
+  bankId:"missing-rules",title:"Missing rules",batchSize:1,taxonomy
+ }),/paperRules/i);
  const brief=buildInitialAuthoringBrief(blueprint,blueprintRaw,{
   bankId:"browser-native-pfrda",title:"Browser native PFRDA batch",batchSize:2,taxonomy
  });
