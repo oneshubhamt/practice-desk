@@ -6,7 +6,7 @@
 import {cp,mkdir,mkdtemp,open,readFile,rename,rm,stat,writeFile} from "node:fs/promises";
 import {createHash} from "node:crypto";
 import {tmpdir} from "node:os";
-import {basename,dirname,join,resolve} from "node:path";
+import {basename,dirname,join,relative,resolve,sep} from "node:path";
 import {fileURLToPath} from "node:url";
 import {compileExternalQuestionBank,bindExternalQuestionTaxonomy} from "../src/authoring/external-bank.ts";
 import {validateExamPackage} from "../src/domain/exam-package.ts";
@@ -36,16 +36,76 @@ const atomicText=async(path,text)=>{
 };
 const atomicJson=(path,value)=>atomicText(path,JSON.stringify(value,null,2)+"\n");
 const lockPath=root=>join(root,"question-banks",".corpus-operation.lock");
+const journalPath=root=>join(root,"question-banks",".corpus-operation.json");
+const relPath=(root,path)=>{
+ const rel=relative(root,path).replaceAll("\\","/");
+ if(!rel||rel===".."||rel.startsWith("../")||rel.startsWith("/"))throw Error("Corpus journal path escapes repository root");
+ return rel;
+};
+const journalFile=(root,path)=>{
+ const base=resolve(root),full=resolve(base,String(path));
+ if(full!==base&&!full.startsWith(base+sep))throw Error("Corpus journal path escapes repository root");
+ return full;
+};
+const journalText=value=>JSON.stringify(value,null,2)+"\n";
+const journalManifest=(root,path,original,next)=>({path:relPath(root,path),original,next:journalText(next)});
+async function writeJournal(root,value){await atomicJson(journalPath(root),value);}
+async function clearJournal(root){await rm(journalPath(root),{force:true});}
 async function withLock(root,task){
  await mkdir(join(root,"question-banks"),{recursive:true});
  let handle;
- try{handle=await open(lockPath(root),"wx");}
- catch(error){
-  if(error&&typeof error==="object"&&"code" in error&&error.code==="EEXIST")
-   throw Error("Another corpus operation is already active");
+ const operationId=String(process.pid)+"-"+Date.now();
+ try{
+  handle=await open(lockPath(root),"wx");
+  await handle.writeFile(JSON.stringify({format:"practice-desk-corpus-lock",version:1,operationId,pid:process.pid,
+   startedAt:new Date().toISOString()})+"\n");
+ }catch(error){
+  if(error&&typeof error==="object"&&"code" in error&&error.code==="EEXIST"){
+   const hasJournal=await exists(journalPath(root));
+   throw Error(hasJournal?
+    "An incomplete corpus transaction is recorded. If no corpus process is active, run question-bank-corpus.mjs recover --root <repo>.":
+    "Another corpus operation is already active");
+  }
   throw error;
  }
- try{return await task();}finally{await handle.close();await rm(lockPath(root),{force:true});}
+ try{return await task({operationId});}
+ finally{await handle.close();await rm(lockPath(root),{force:true});}
+}
+const processAlive=pid=>{
+ if(!Number.isSafeInteger(pid)||pid<=0)return false;
+ try{process.kill(pid,0);return true;}catch(error){
+  return Boolean(error&&typeof error==="object"&&"code" in error&&error.code==="EPERM");
+ }
+};
+export async function recoverCorpus(options={}){
+ const root=resolve(options.root??repoRoot),journalAbs=journalPath(root);
+ if(!await exists(journalAbs))throw Error("No incomplete corpus transaction journal exists");
+ const journal=await json(journalAbs);
+ if(journal?.format!=="practice-desk-corpus-journal"||journal?.version!==1||
+    !["add-paper","append-revision"].includes(journal.operation)||typeof journal.operationId!=="string"||
+    typeof journal.phase!=="string"||typeof journal.createdPath!=="string"||!Array.isArray(journal.manifests))
+  throw Error("Corpus recovery journal is invalid");
+ if(await exists(lockPath(root))){
+  const lock=await json(lockPath(root)).catch(()=>null);
+  if(lock?.operationId===journal.operationId&&processAlive(lock.pid))
+   throw Error("Corpus operation "+journal.operationId+" still appears active; recovery refused");
+ }
+ const created=journalFile(root,journal.createdPath),rows=journal.manifests.map((raw,index)=>{
+  if(!raw||typeof raw!=="object"||typeof raw.path!=="string"||typeof raw.original!=="string"||typeof raw.next!=="string")
+   throw Error("Corpus recovery journal manifest "+index+" is invalid");
+  return {path:journalFile(root,raw.path),original:raw.original,next:raw.next};
+ });
+ for(const row of rows){
+  const current=await readFile(row.path,"utf8");
+  if(current!==row.original&&current!==row.next)
+   throw Error("Corpus recovery refused because a manifest changed after the interrupted operation: "+row.path);
+ }
+ for(const row of rows)if(await readFile(row.path,"utf8")!==row.original)await atomicText(row.path,row.original);
+ await rm(created,{recursive:true,force:true});
+ await loadQuestionBankCatalog(root);
+ await clearJournal(root);await rm(lockPath(root),{force:true});
+ return operationResult("recover",{recoveredOperation:journal.operation,operationId:journal.operationId,
+  recoveredFromPhase:journal.phase,createdPath:journal.createdPath},false);
 }
 function familyYear(graph,familyId,year){
  const family=graph.families.find(row=>row.family.id===familyId);
