@@ -636,6 +636,59 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
     if(focusPacketText)downloadText("practice-desk-learner-focus-"+focusExam+".json",
       focusPacketText,"application/json;charset=utf-8");
   };
+  const blueprintFile=root.querySelector<HTMLInputElement>("#learning-blueprint-file")!;
+  root.querySelector<HTMLButtonElement>("#learning-blueprint-load")!.onclick=()=>blueprintFile.click();
+  blueprintFile.onchange=async()=>{
+    const file=blueprintFile.files?.[0];blueprintFile.value="";if(!file)return;
+    try{
+      const raw=await file.text();JSON.parse(raw);
+      briefBlueprintRaw=raw;briefBlueprintName=file.name;standardBrief=null;standardBriefName="";
+      personalisedBriefText="";message="Blueprint loaded. Review bank identity and batch size, then generate the standard Authoring Brief.";draw();
+    }catch(error){
+      briefBlueprintRaw="";briefBlueprintName="";standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Invalid blueprint JSON";draw();
+    }
+  };
+  const taxonomyFile=root.querySelector<HTMLInputElement>("#learning-taxonomy-file")!;
+  root.querySelector<HTMLButtonElement>("#learning-taxonomy-load")!.onclick=()=>taxonomyFile.click();
+  taxonomyFile.onchange=async()=>{
+    const file=taxonomyFile.files?.[0];taxonomyFile.value="";if(!file)return;
+    try{
+      briefTaxonomy=JSON.parse(await file.text());briefTaxonomyName=file.name;
+      standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message="Taxonomy loaded. It will be checked against the blueprint when the brief is generated.";draw();
+    }catch(error){
+      briefTaxonomy=undefined;briefTaxonomyName="";standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Invalid taxonomy JSON";draw();
+    }
+  };
+  root.querySelector<HTMLInputElement>("#learning-brief-bank-id")!.oninput=e=>{
+    briefBankId=(e.target as HTMLInputElement).value;standardBrief=null;standardBriefName="";personalisedBriefText="";
+  };
+  root.querySelector<HTMLInputElement>("#learning-brief-title")!.oninput=e=>{
+    briefTitle=(e.target as HTMLInputElement).value;standardBrief=null;standardBriefName="";personalisedBriefText="";
+  };
+  root.querySelector<HTMLInputElement>("#learning-brief-batch-size")!.oninput=e=>{
+    briefBatchSize=Number((e.target as HTMLInputElement).value);standardBrief=null;standardBriefName="";personalisedBriefText="";
+  };
+  root.querySelector<HTMLButtonElement>("#learning-brief-generate")!.onclick=()=>{
+    if(!briefBlueprintRaw)return;
+    try{
+      const generated=buildInitialAuthoringBrief(JSON.parse(briefBlueprintRaw),briefBlueprintRaw,{
+        bankId:briefBankId.trim(),title:briefTitle.trim(),batchSize:briefBatchSize,
+        ...(briefTaxonomy===undefined?{}:{taxonomy:briefTaxonomy})
+      });
+      standardBrief=generated;standardBriefName=briefBlueprintName+" · generated";personalisedBriefText="";
+      const blueprint=generated.blueprint as Record<string,unknown>;
+      message=blueprint.examId===focusExam?
+       "Standard Authoring Brief generated locally. Inspect it before personalising or sharing.":
+       "Standard Authoring Brief generated, but its exam does not match the selected learner-focus exam.";
+      draw();
+    }catch(error){
+      standardBrief=null;standardBriefName="";personalisedBriefText="";
+      message=error instanceof Error?error.message:"Could not generate Authoring Brief";draw();
+    }
+  };
   const briefFile=root.querySelector<HTMLInputElement>("#learning-brief-file")!;
   root.querySelector<HTMLButtonElement>("#learning-brief-load")!.onclick=()=>briefFile.click();
   briefFile.onchange=async()=>{
@@ -653,6 +706,24 @@ export function createLearningDesk(root:HTMLElement,host:LearningDeskHost){
       message=error instanceof Error?error.message:"Invalid Authoring Brief";draw();
     }
   };
+  root.querySelector<HTMLButtonElement>("#learning-standard-brief-copy")?.addEventListener("click",async()=>{
+    if(!standardBrief)return;
+    const value=JSON.stringify(standardBrief,null,2);
+    try{
+      if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(value);
+      else{
+        const area=root.querySelector<HTMLTextAreaElement>("#learning-standard-brief-preview");area?.select();
+        if(!document.execCommand("copy"))throw Error("Browser copy command unavailable");
+      }
+      message="Standard Authoring Brief copied.";draw();
+    }catch{message="Automatic copy is unavailable here. Select the standard brief and copy it manually.";draw();}
+  });
+  root.querySelector<HTMLButtonElement>("#learning-standard-brief-export")?.addEventListener("click",()=>{
+    if(!standardBrief)return;
+    const blueprint=standardBrief.blueprint as Record<string,unknown>;
+    downloadText("practice-desk-authoring-brief-"+String(blueprint.examId)+".json",
+      JSON.stringify(standardBrief,null,2),"application/json;charset=utf-8");
+  });
   root.querySelector<HTMLButtonElement>("#learning-brief-personalise")!.onclick=()=>{
     if(!standardBrief||!focusPacketText)return;
     try{
