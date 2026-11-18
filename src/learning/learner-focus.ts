@@ -288,8 +288,9 @@ export function buildLearnerFocusPacket(
    const signature=q.id+"|"+q.contentHash;
    let detail=questions.get(signature);
    if(!detail){
+    const difficulty=questionDifficulty(q);
     detail={questionRevisionId:q.id,questionId:q.questionId,questionHash:q.contentHash,prompt:q.content.prompt,
-     kind:q.content.kind,...(questionDifficulty(q)?{difficulty:questionDifficulty(q)}:{}),...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
+     kind:q.content.kind,...(difficulty?{difficulty}:{}),...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
      lastFinishedAt:-Infinity,lastVerdict:verdict,foregroundMs:null,visits:null,revisited:null,flagged:false,
      slow:false,bookmarked:false,fsrsDue:false,fsrsReviewCount:0};
     questions.set(signature,detail);
@@ -327,9 +328,10 @@ export function buildLearnerFocusPacket(
   }
   let detail=questions.get(signature);
   if(!detail){
+   const difficulty=questionDifficulty(card.question);
    detail={questionRevisionId:card.question.id,questionId:card.question.questionId,
     questionHash:card.question.contentHash,prompt:card.question.content.prompt,kind:card.question.content.kind,
-    ...(questionDifficulty(card.question)?{difficulty:questionDifficulty(card.question)}:{}),...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
+    ...(difficulty?{difficulty}:{}),...(classification?{classification}:{}),observedAttemptIds:new Set(),wrongAttemptIds:new Set(),
     lastFinishedAt:Date.parse(card.updatedAt),lastVerdict:"unanswered",foregroundMs:null,visits:null,
     revisited:null,flagged:false,slow:false,bookmarked:false,fsrsDue:false,fsrsReviewCount:0};
    questions.set(signature,detail);
