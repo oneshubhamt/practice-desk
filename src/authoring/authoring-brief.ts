@@ -193,7 +193,7 @@ export function validateAuthoringBrief(
  const dedupe=plain(raw.dedupe,"authoring brief dedupe");
  only(dedupe,["comparisonSourceCount","nearDuplicateCandidates"],"authoring brief dedupe");
  integer(dedupe.comparisonSourceCount,"dedupe.comparisonSourceCount",0,1000);
- if(!Array.isArray(dedupe.nearDuplicateCandidates))throw Error("Invalid nearDuplicateCandidates");
+ integer(dedupe.nearDuplicateCandidates,"dedupe.nearDuplicateCandidates",0,1000000);
  const output=plain(raw.outputContract,"authoring brief outputContract");
  only(output,["sourceEnvelope","add","question"],"authoring brief outputContract");
  const envelope=validateEnvelope(output.sourceEnvelope);
@@ -342,7 +342,7 @@ export function buildInitialAuthoringBrief(
   priorityDeficits:priority,
   deficitSummary:{shown:priority.length,remaining:Math.max(0,deficits.length-priority.length),byGroup,
    note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts. Bounded output is interleaved across active quota groups."},
-  dedupe:{comparisonSourceCount:0,nearDuplicateCandidates:[]},
+  dedupe:{comparisonSourceCount:0,nearDuplicateCandidates:0},
   outputContract:{sourceEnvelope:envelope,
    add:["questions","optional stimuli/media only when the authored items need shared context or images"],
    question:{coreRequired:["id","examSection","kind","prompt","answer","provenance","qa",
