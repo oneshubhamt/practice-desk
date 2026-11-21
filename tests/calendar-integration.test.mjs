@@ -42,7 +42,7 @@ test("J calendar: canonical temporal boundaries reject silent date/offset normal
   assert.throws(()=>validateScheduledMock({...base,updatedAt:"2028-02-28T23:59:59.999Z"}),/Invalid scheduled mock/);
 });
 
-test("backup v5 carries scheduled mocks and exact revision-scheduler settings in the canonical archive",()=>{
+test("backup v6 carries scheduled mocks and exact revision-scheduler settings in the canonical archive",()=>{
   const scheduled={...createScheduledMock({
     packageRevisionId:"paper-revision-1",examId:"exam-1",paperId:"paper-1",
     title:"Full mock",start:"2026-11-20T08:30:00.000Z",durationMinutes:120
@@ -52,10 +52,10 @@ test("backup v5 carries scheduled mocks and exact revision-scheduler settings in
   const archive=makeBackup([scheduled],DEFAULT_PREFERENCES,
     "2026-11-13T05:10:00.000Z",undefined,revisionSettings);
   const verified=verifyBackup(structuredClone(archive));
-  assert.equal(verified.version,5);
+  assert.equal(verified.version,6);
   assert.deepEqual(verified.records,[scheduled]);
   assert.deepEqual(verified.revisionSettings,revisionSettings);
-  assert.throws(()=>verifyBackup({...structuredClone(archive),version:4}),/Invalid backup format/);
+  assert.throws(()=>verifyBackup({...structuredClone(archive),version:5}),/Invalid backup format/);
   assert.throws(()=>verifyBackup({...structuredClone(archive),
     revisionSettings:{...revisionSettings,leechThreshold:999}}),/integrity check failed/i);
 });
