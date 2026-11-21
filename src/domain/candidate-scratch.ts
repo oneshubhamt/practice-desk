@@ -176,12 +176,13 @@ export function validateCandidateScratch(value:unknown,context:ScratchContext):C
   const q=context.questions.find(question=>question.id===questionRevisionId);
   if(!q||(q.content.kind!=="single-choice"&&q.content.kind!=="multiple-select"))
    throw Error(label+": elimination requires a choice question");
+  const choices=q.content;
   if(!Array.isArray(entry.optionIds)||!entry.optionIds.length||
-    entry.optionIds.length>q.content.options.length)
+    entry.optionIds.length>choices.options.length)
    throw Error(label+": invalid eliminated options");
   const optionIds=entry.optionIds.map((option,j)=>id(option,label+".optionIds["+j+"]") as OptionId);
   if(new Set(optionIds).size!==optionIds.length||
-    optionIds.some(optionId=>!q.content.options.some(option=>option.id===optionId)))
+    optionIds.some(optionId=>!choices.options.some(option=>option.id===optionId)))
    throw Error(label+": unknown or duplicate option");
   return {questionRevisionId,optionIds};
  });
