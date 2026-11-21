@@ -117,11 +117,12 @@ export function validateQuestionMediaReferences(
  }
 }
 export function selectDisplayResources(
- questions:readonly QuestionRevision[],stimuli:readonly StimulusDefinition[]=[],assets:readonly ImageAsset[]=[]
+ questions:readonly QuestionRevision[],stimuli:readonly StimulusDefinition[]=[],assets:readonly ImageAsset[]=[],
+ extraAssetIds:readonly string[]=[]
 ):{stimuli:readonly StimulusDefinition[];assets:readonly ImageAsset[]}{
  const wantedStimuli=new Set(questions.flatMap(q=>q.content.stimulusId?[q.content.stimulusId]:[]));
  const selectedStimuli=stimuli.filter(s=>wantedStimuli.has(s.id));
- const wantedAssets=new Set<string>();
+ const wantedAssets=new Set<string>(extraAssetIds);
  for(const q of questions)for(const id of referencedAssets(q))wantedAssets.add(id);
  for(const s of selectedStimuli){
    if(s.kind==="passage"||s.kind==="case")for(const id of s.assetIds??[])wantedAssets.add(id);
