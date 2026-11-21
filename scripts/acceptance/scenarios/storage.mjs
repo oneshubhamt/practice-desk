@@ -145,7 +145,7 @@ try{
  const backupEvent=fallbackA.waitForEvent("download");
  await fallbackA.locator("#g-export-history").click();
  const backup=JSON.parse(await readFile(await (await backupEvent).path(),"utf8"));
- check(backup.version===5&&backup.records.some(x=>x.id===fallbackId),
+ check(backup.version===6&&backup.records.some(x=>x.id===fallbackId),
   "Two-tab fallback conflict does not preserve valid export");
  await fallbackA.close();await fallbackB.close();
  console.log("MODERN RESILIENCE PASS concurrent localStorage fallback and recovery export");
@@ -197,7 +197,7 @@ try{
  check(downloaded.suggestedFilename().includes("UNSAVED_RECOVERY"),
   "Unsaved emergency export did not identify potentially non-durable material");
  const recovered=JSON.parse(await readFile(await downloaded.path(),"utf8"));
- check(recovered.version===5&&recovered.records.some(x=>
+ check(recovered.version===6&&recovered.records.some(x=>
   x.recordType==="generic-attempt"&&!initiallySaved.has(x.id))&&
   await quota.locator(".generic-warning").filter({hasText:"Emergency recovery file"}).count()===1,
   "Quota failure lost attempted record or failed to explain emergency backup");
@@ -324,7 +324,7 @@ try{
   check(download.suggestedFilename().includes("UNSAVED_RECOVERY"),
     "Partial-recovery backup not clearly identified as exceptional");
   const archive=JSON.parse(await readFile(await download.path(),"utf8"));
-  check(archive.version===5&&archive.records.some(r=>r.id===good.id)&&
+  check(archive.version===6&&archive.records.some(r=>r.id===good.id)&&
     !archive.records.some(r=>r.id==="p48-corrupt-missing-snapshot"),
     "Recovery backup failed to preserve good attempt or leaked corrupted row");
   const preserved=await page.evaluate(async()=>{
