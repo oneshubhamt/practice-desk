@@ -13,7 +13,7 @@ const engine=process.argv[2]??"chromium";
 const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
 
 async function nativeNavigationJourney(){
-/** New cross-browser modern critical path; validates clean shared-snapshot backup-v5 offline.
+/** New cross-browser modern critical path; validates clean shared-snapshot backup-v6 offline.
  * Requires actual native Navigation API; no router polyfill or silent browser skip.
  */
 
@@ -36,7 +36,7 @@ try{
  await page.locator("#g-export-history").click();
  const download=await file;
  const exported=JSON.parse(await readFile(await download.path(),"utf8"));
- check(exported.format==="practice-desk-backup"&&exported.version===5&&
+ check(exported.format==="practice-desk-backup"&&exported.version===6&&
   exported.manifest?.recordCount===exported.records.length,
   engine+" verified backup metadata missing");
  check(exported.records.some(x=>x.id===attemptId&&x.state.responses.some(r=>r.response)),
