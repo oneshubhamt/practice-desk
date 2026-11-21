@@ -62,6 +62,17 @@ function richAssetIds(doc:RichDocument):Set<string>{
  return ids;
 }
 
+function hasCandidateVisibleContent(doc:RichDocument):boolean{
+ const inline=(items:readonly RichInline[])=>items.some(item=>
+  item.type==="text"?Boolean(item.text.trim()):item.type==="math"||item.type==="image");
+ return doc.blocks.some(block=>{
+  if(block.type==="paragraph"||block.type==="heading")return inline(block.content);
+  if(block.type==="list")return block.items.some(inline);
+  if(block.type==="table")return block.rows.some(row=>row.some(inline));
+  return block.type==="display-math"||block.type==="image";
+ });
+}
+
 export function candidateReferenceHash(
  value:CandidateReferenceSource,assets:readonly ImageAsset[]=[]
 ):ContentHash{
@@ -128,6 +139,8 @@ export function validateCandidateReferenceResources(
   const document=validateRichDocument(row.document,{knownAssets});
   if(JSON.stringify(row.document)!==JSON.stringify(document))
    throw Error(path+".document: noncanonical rich document");
+  if(!hasCandidateVisibleContent(document))
+   throw Error(path+".document: candidate reference must contain text, maths or an image");
   const used=richAssetIds(document);
   if(used.size!==knownAssets.size||assetIds.some(assetId=>!used.has(assetId)))
    throw Error(path+".assetIds: must exactly match images used by the reference document");
