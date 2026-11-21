@@ -3,11 +3,12 @@ import {readFile} from "node:fs/promises";
 import assert from "node:assert/strict";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
 import {plainRichDocument} from "../src/domain/rich-document.ts";
-import {paperRevisionHash} from "../src/domain/integrity.ts";
+import {questionRevisionHash,answerKeyRevisionHash,paperRevisionHash} from "../src/domain/integrity.ts";
 import {createCandidateReferenceResource} from "../src/domain/candidate-reference.ts";
 import {emptyCandidateScratch,validateCandidateScratch} from "../src/domain/candidate-scratch.ts";
 import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
+import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {reconstructRecords} from "../src/history/shared-store.ts";
@@ -165,4 +166,56 @@ test("external/agent authoring references converge on the same canonical publish
  leaked.references=[{id:"bad-reference",title:"Leaking reference",content:"The correct answer is B."}];
  assert.throws(()=>compileExternalQuestionBank(leaked),/candidate-visible reference|answer.*leak|correct answer/i,
   "candidate references must share the pre-submit answer-secrecy boundary");
+});
+
+
+test("Source/Reviewed semantic comparability includes paper-level candidate references",()=>{
+ const reference=createCandidateReferenceResource({
+  id:"shared-reference",title:"Shared reference",document:plainRichDocument("Permitted formula context")
+ });
+ const sourceQuestionBase={...questions[0],id:"source-q1"};
+ const sourceQuestion={...sourceQuestionBase,contentHash:questionRevisionHash(sourceQuestionBase)};
+ const sourceKeyBase={id:"source-key",paperId:"reference-pair",revision:1,
+  entries:[{questionRevisionId:sourceQuestion.id,answer:{kind:"single-choice",optionId:"a"}}]};
+ const sourceKey={...sourceKeyBase,contentHash:answerKeyRevisionHash(sourceKeyBase)};
+ const sourcePaperBase={id:"source-paper-r1",paperId:"reference-pair",revision:1,edition:"source",
+  answerKeyRevisionId:sourceKey.id,
+  sections:[{id:"source-section",title:"Paper",questionRevisionIds:[sourceQuestion.id]}],
+  timing:{kind:"untimed"},
+  navigation:{questionNavigation:"free",sectionNavigation:"free",allowFlagging:true,allowReview:true},
+  candidateTools:{references:[{id:reference.id,contentHash:reference.contentHash}]},
+  scoring:{defaultRule:{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0}}};
+ const sourcePaper={...sourcePaperBase,contentHash:paperRevisionHash(sourcePaperBase)};
+ const source=validateExamPackage({format:"practice-desk-exam",version:1,examId:"reference-pair-exam",
+  title:"Source",questions:[sourceQuestion],answerKey:sourceKey,paper:sourcePaper,
+  candidateReferences:[reference]});
+
+ const reviewedQuestionBase={...sourceQuestion,id:"reviewed-q1",revision:2,
+  editorial:{status:"corrected",changes:["formatting"]}};
+ const reviewedQuestion={...reviewedQuestionBase,contentHash:questionRevisionHash(reviewedQuestionBase)};
+ const reviewedKeyBase={id:"reviewed-key",paperId:"reference-pair",revision:2,
+  entries:[{questionRevisionId:reviewedQuestion.id,answer:{kind:"single-choice",optionId:"a"}}]};
+ const reviewedKey={...reviewedKeyBase,contentHash:answerKeyRevisionHash(reviewedKeyBase)};
+ const reviewedPaperFor=ref=>{
+  const base={id:"reviewed-paper-r2-"+ref.contentHash.slice(0,8),paperId:"reference-pair",revision:2,edition:"reviewed",
+   answerKeyRevisionId:reviewedKey.id,sourcePaperRevisionId:source.paper.id,
+   sourceAnswerKeyRevisionId:source.answerKey.id,
+   sections:[{id:"reviewed-section",title:"Paper",questionRevisionIds:[reviewedQuestion.id]}],
+   timing:{kind:"untimed"},
+   navigation:{questionNavigation:"free",sectionNavigation:"free",allowFlagging:true,allowReview:true},
+   candidateTools:{references:[{id:ref.id,contentHash:ref.contentHash}]},
+   scoring:{defaultRule:{correctMarks:2,incorrectMarks:-0.5,unansweredMarks:0}}};
+  return {...base,contentHash:paperRevisionHash(base)};
+ };
+ const same=validateExamPackage({format:"practice-desk-exam",version:1,examId:"reference-pair-exam",
+  title:"Reviewed",questions:[reviewedQuestion],answerKey:reviewedKey,paper:reviewedPaperFor(reference),
+  candidateReferences:[reference]});
+ assert.equal(createSourceKeyReference(same,source)?.entries[0].comparable,true);
+
+ const changed=createCandidateReferenceResource({
+  id:"shared-reference",title:"Shared reference",document:plainRichDocument("A materially changed permitted formula context")
+ });
+ const changedBundle=validateExamPackage({...same,paper:reviewedPaperFor(changed),candidateReferences:[changed]});
+ assert.equal(createSourceKeyReference(changedBundle,source)?.entries[0].comparable,false,
+  "a changed candidate reference context must suppress original-key comparability");
 });
