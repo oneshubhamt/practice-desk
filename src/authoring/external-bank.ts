@@ -503,8 +503,10 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
   const explicitLeaks=inspectCandidateIntegrity(draft).filter(x=>x.severity==="error");
   if(explicitLeaks.length)return {valid:false,questionCount:draft.questions.length,
    editorialStatus:"caution",factualVerification:"not-performed",
-   issues:explicitLeaks.map(x=>({path:"$.questions[id="+x.questionId+"]."+x.field,
-    code:x.code,severity:x.severity,message:x.message,questionId:x.questionId,
+   issues:explicitLeaks.map(x=>({
+    path:x.questionId?"$.questions[id="+x.questionId+"]."+x.field:"$."+x.field,
+    code:x.code,severity:x.severity,message:x.message,
+    ...(x.questionId?{questionId:x.questionId}:{}),
     basis:"deterministic" as const,suggestion:x.suggestion}))};
   const check=inspectAuthoringPublication(draft,existing);
   if(!check.valid||!check.compiled){
