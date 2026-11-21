@@ -77,7 +77,7 @@ export interface LearnerFocusPacket{
  readonly compositionPolicy:"blueprint-first"|"focus-first-with-blueprint-guardrails";
  readonly privacy:{
   readonly scope:"exam-only";
-  readonly omitted:readonly ["identity","device-information","unrelated-exams","unrestricted-history"];
+  readonly omitted:readonly ["identity","device-information","unrelated-exams","unrestricted-history","candidate-scratch"];
  };
  readonly generationGuidance:readonly string[];
  readonly observations:readonly LearnerFocusObservation[];
@@ -390,7 +390,7 @@ export function buildLearnerFocusPacket(
   purpose:options.intent==="exam-simulation"?"exam-simulation-authoring":"targeted-practice-authoring",
   mode:options.mode,intent:options.intent,examId,asOf,
   compositionPolicy:options.intent==="exam-simulation"?"blueprint-first":"focus-first-with-blueprint-guardrails",
-  privacy:{scope:"exam-only",omitted:["identity","device-information","unrelated-exams","unrestricted-history"]},
+  privacy:{scope:"exam-only",omitted:["identity","device-information","unrelated-exams","unrestricted-history","candidate-scratch"]},
   generationGuidance:guidance(options.intent),observations,
   ...(detailRows?{questionEvidence:detailRows}:{})};
 }
@@ -454,7 +454,7 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
  const privacy=plain(raw.privacy,"learner focus privacy");
  only(privacy,["scope","omitted"],"learner focus privacy");
  if(privacy.scope!=="exam-only"||!Array.isArray(privacy.omitted)||
-   JSON.stringify(privacy.omitted)!==JSON.stringify(["identity","device-information","unrelated-exams","unrestricted-history"]))
+   JSON.stringify(privacy.omitted)!==JSON.stringify(["identity","device-information","unrelated-exams","unrestricted-history","candidate-scratch"]))
   throw Error("Learner-focus privacy contract mismatch");
  if(!Array.isArray(raw.generationGuidance)||raw.generationGuidance.length<1||raw.generationGuidance.length>8)
   throw Error("Invalid learner-focus guidance");
@@ -545,7 +545,7 @@ export function validateLearnerFocusPacket(value:unknown):LearnerFocusPacket{
  return {format:"practice-desk-learner-focus",version:1,purpose:expectedPurpose,mode,intent,
   examId:text(raw.examId,"learner-focus examId",120),asOf:dateTime(raw.asOf,"learner-focus asOf"),
   compositionPolicy:policy,privacy:{scope:"exam-only",
-   omitted:["identity","device-information","unrelated-exams","unrestricted-history"]},
+   omitted:["identity","device-information","unrelated-exams","unrestricted-history","candidate-scratch"]},
   generationGuidance,observations,...(questionEvidence?{questionEvidence}:{})};
 }
 
