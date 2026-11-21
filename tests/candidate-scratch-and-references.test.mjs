@@ -36,6 +36,13 @@ function annotatedScratch(){
 }
 
 test("candidate references are exact-hash bound to the executable paper and frozen attempt",()=>{
+ const imageBound={id:"with-image",title:"Image-bound reference",document:plainRichDocument("Reference image"),
+  assetIds:["ref-image"]};
+ const imageA=createCandidateReferenceResource(imageBound,[{id:"ref-image",contentHash:"a".repeat(64)}]);
+ const imageB=createCandidateReferenceResource(imageBound,[{id:"ref-image",contentHash:"b".repeat(64)}]);
+ assert.notEqual(imageA.contentHash,imageB.contentHash,
+  "reference identity must change when a linked image digest changes");
+
  const {bundle,reference}=referenceBundle();
  assert.equal(bundle.paper.candidateTools.references[0].contentHash,reference.contentHash);
  const attempt=startGenericAttempt(bundle,"reference-attempt",1000);
@@ -96,8 +103,12 @@ test("backup preserves candidate scratch while learner-focus privacy excludes it
   response:{kind:"single-choice",optionId:"b"}},lookup);
  attempt=transitionGenericAttempt(attempt,{type:"SUBMIT_ATTEMPT",nowMs:1020},lookup);
  const stored={...attempt,saveRevision:1};
- const archive=verifyBackup(makeBackup([stored],{schema:1,dark:false,scale:100},
-  "2026-11-21T00:00:00.000Z"));
+ const rawArchive=makeBackup([stored],{schema:1,dark:false,scale:100},
+  "2026-11-21T00:00:00.000Z");
+ assert.equal(rawArchive.version,6);
+ assert.throws(()=>verifyBackup({...rawArchive,version:5}),/Invalid backup format/,
+  "the schema-3 attempt topology must not masquerade as the prior backup envelope");
+ const archive=verifyBackup(rawArchive);
  const [restored]=reconstructRecords(archive.records,archive.snapshots);
  const valid=validateGenericStoredRecord(restored);
  assert.deepEqual(valid.candidateScratch,stored.candidateScratch);
