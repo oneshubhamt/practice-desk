@@ -9,6 +9,7 @@ import {emptyCandidateScratch,validateCandidateScratch} from "../src/domain/cand
 import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
 import {createSourceKeyReference} from "../src/engine/source-comparison.ts";
+import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
 import {validateGenericStoredRecord} from "../src/app/stored-record-validator.ts";
 import {makeBackup,verifyBackup} from "../src/history/backup.ts";
 import {reconstructRecords} from "../src/history/shared-store.ts";
@@ -218,4 +219,12 @@ test("Source/Reviewed semantic comparability includes paper-level candidate refe
  const changedBundle=validateExamPackage({...same,paper:reviewedPaperFor(changed),candidateReferences:[changed]});
  assert.equal(createSourceKeyReference(changedBundle,source)?.entries[0].comparable,false,
   "a changed candidate reference context must suppress original-key comparability");
+ const frozenSourceReview=createSourceReviewReference(changedBundle,source);
+ assert.ok(frozenSourceReview,"a reference-only Source/Reviewed change must retain source provenance");
+ assert.equal(frozenSourceReview.schema,2);
+ assert.equal(frozenSourceReview.entries.length,0);
+ assert.deepEqual(frozenSourceReview.candidateReferences,[reference]);
+ const attempt={...startGenericAttempt(changedBundle,"reference-review",1000),
+  sourceReviewReference:frozenSourceReview};
+ assert.doesNotThrow(()=>validateSourceReviewReference(attempt));
 });
