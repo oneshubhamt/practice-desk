@@ -11,7 +11,7 @@ import {DEFAULT_REVISION_SETTINGS,validateRevisionSettings,type RevisionSettings
  * Attempts keep only their individual timing/responses/results and a reference. */
 export interface BackupArchive {
  readonly format:"practice-desk-backup";
- readonly version:5;
+ readonly version:6;
  readonly exportedAt:string;
  readonly records:readonly Record<string,unknown>[];
  readonly snapshots:readonly SharedSnapshot[];
@@ -42,7 +42,7 @@ function coreBackup(records:readonly Record<string,unknown>[],
    snapshots.set(snapshot.id,snapshot);
    return row as unknown as Record<string,unknown>;
  });
- return {format:"practice-desk-backup",version:5,exportedAt,records:rows,
+ return {format:"practice-desk-backup",version:6,exportedAt,records:rows,
    snapshots:[...snapshots.values()],preferences:validated,
    ...(savedSetups?{setups:savedSetups}:{}),revisionSettings:savedRevisionSettings};
 }
@@ -79,7 +79,7 @@ export function verifyBackup(raw:unknown):BackupArchive{
  if(!b.manifest||typeof b.manifest!=="object"||Array.isArray(b.manifest)||
    Object.keys(b.manifest).some(key=>!manifestFields.includes(key)))
    throw Error("Invalid backup: unsupported manifest fields");
- if(b.format!=="practice-desk-backup"||b.version!==5||
+ if(b.format!=="practice-desk-backup"||b.version!==6||
    !Array.isArray(b.records)||!Array.isArray(b.snapshots)||
    b.records.length>5000||b.snapshots.length>5000||
    typeof b.exportedAt!=="string"||!Number.isFinite(Date.parse(b.exportedAt)))
