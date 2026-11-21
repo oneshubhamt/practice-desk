@@ -64,7 +64,7 @@ test("candidate scratch validates stable option IDs and source-anchored highligh
   ...scratch.highlights[0],anchor:{kind:"plain",start:0,end:1000}
  }]},{questions,stimuli:[]}),/range exceeds/);
  assert.throws(()=>validateCandidateScratch({...scratch,highlights:[{
-  ...scratch.highlights[0],surface:{kind:"question-prompt",questionRevisionId:"rev-2"}
+  ...scratch.highlights[0],surface:{kind:"question-prompt",questionRevisionId:"rev-3"}
  }]},{questions,stimuli:[]}),/range exceeds/,
   "highlight ranges are validated against the exact frozen target text");
 });
