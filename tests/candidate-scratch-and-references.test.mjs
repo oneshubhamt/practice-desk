@@ -56,6 +56,9 @@ test("candidate references are exact-hash bound to the executable paper and froz
 
  const changed={...reference,title:"Changed title"};
  assert.throws(()=>validateExamPackage({...bundle,candidateReferences:[changed]}),/content hash mismatch/);
+ assert.throws(()=>validateExamPackage({...bundle,candidateReferences:[{
+  ...reference,document:{format:"practice-desk-rich",version:1,blocks:[]}
+ }]}),/must contain text, maths or an image/);
  assert.throws(()=>validateExamPackage({...bundle,candidateReferences:[]}),/inventory does not match/);
 
  const without={...pkg.paper,candidateTools:{references:[]}};
