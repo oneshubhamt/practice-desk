@@ -62,18 +62,28 @@ function richAssetIds(doc:RichDocument):Set<string>{
  return ids;
 }
 
-export function candidateReferenceHash(value:CandidateReferenceSource):ContentHash{
+export function candidateReferenceHash(
+ value:CandidateReferenceSource,assets:readonly ImageAsset[]=[]
+):ContentHash{
+ const byId=new Map(assets.map(asset=>[asset.id as string,asset.contentHash]));
+ const assetBindings=(value.assetIds??[]).map(id=>{
+  const contentHash=byId.get(id as string);
+  if(!contentHash)throw Error("Candidate reference image is missing from the asset inventory: "+id);
+  return {id,contentHash};
+ });
  return hashJson({
   id:value.id,title:value.title,
   ...(value.category?{category:value.category}:{}),
   ...(value.keywords?.length?{keywords:value.keywords}:{}),
   document:value.document,
-  ...(value.assetIds?.length?{assetIds:value.assetIds}:{})
+  ...(assetBindings.length?{assets:assetBindings}:{})
  }) as ContentHash;
 }
 
-export function createCandidateReferenceResource(value:CandidateReferenceSource):CandidateReferenceResource{
- return {...value,contentHash:candidateReferenceHash(value)};
+export function createCandidateReferenceResource(
+ value:CandidateReferenceSource,assets:readonly ImageAsset[]=[]
+):CandidateReferenceResource{
+ return {...value,contentHash:candidateReferenceHash(value,assets)};
 }
 
 export function validateCandidateReferenceBindings(value:unknown):readonly CandidateReferenceBinding[]{
@@ -126,7 +136,7 @@ export function validateCandidateReferenceResources(
    ...(assetIds.length?{assetIds:assetIds as AssetId[]}:{})
   };
   const contentHash=text(row.contentHash,path+".contentHash",64) as ContentHash;
-  if(!/^[a-f0-9]{64}$/.test(contentHash)||candidateReferenceHash(source)!==contentHash)
+  if(!/^[a-f0-9]{64}$/.test(contentHash)||candidateReferenceHash(source,assets)!==contentHash)
    throw Error(path+": content hash mismatch");
   return {...source,contentHash};
  });
