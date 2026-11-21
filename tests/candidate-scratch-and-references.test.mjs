@@ -1,4 +1,5 @@
 import test from "node:test";
+import {readFile} from "node:fs/promises";
 import assert from "node:assert/strict";
 import {pkg,questions} from "./fixtures/six-kinds.mjs";
 import {plainRichDocument} from "../src/domain/rich-document.ts";
@@ -13,6 +14,7 @@ import {reconstructRecords} from "../src/history/shared-store.ts";
 import {buildLearnerFocusPacket} from "../src/learning/learner-focus.ts";
 import {newAuthoringDraft} from "../src/authoring/authoring-draft.ts";
 import {compileAuthoringPublication} from "../src/authoring/authoring-publisher.ts";
+import {compileExternalQuestionBank} from "../src/authoring/external-bank.ts";
 
 function referenceBundle(){
  const reference=createCandidateReferenceResource({
@@ -142,5 +144,20 @@ test("Wordgard authoring publishes references through the canonical package path
  assert.equal(compiled.candidateReferences.length,1);
  assert.equal(compiled.paper.candidateTools.references.length,1);
  assert.equal(compiled.paper.candidateTools.references[0].id,"permitted-reference");
+ assert.equal(validateExamPackage(compiled),compiled);
+});
+
+
+test("external/agent authoring references converge on the same canonical publisher",async()=>{
+ const source=JSON.parse(await readFile(new URL("../examples/apfc-authoring-example.json",import.meta.url),"utf8"));
+ source.bankId="reference-external";
+ source.paperId="reference-external-paper";
+ source.title="External authoring with reference";
+ source.references=[{id:"permitted-extract",title:"Permitted extract",category:"Law",
+  keywords:["extract","reference"],content:"Candidate-visible statutory extract supplied with the paper."}];
+ const compiled=compileExternalQuestionBank(source);
+ assert.equal(compiled.candidateReferences?.length,1);
+ assert.equal(compiled.candidateReferences?.[0].id,"permitted-extract");
+ assert.deepEqual(compiled.paper.candidateTools?.references?.map(x=>x.id),["permitted-extract"]);
  assert.equal(validateExamPackage(compiled),compiled);
 });
