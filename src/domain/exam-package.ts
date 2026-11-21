@@ -100,6 +100,8 @@ export function validateExamPackage(value: unknown): ExamPackage {
     throw new Error("Every question must belong to this paper exactly once");
  const {stimuli,assets}=validateMediaInventory(raw.stimuli??[],raw.assets??[]);
  validateQuestionMediaReferences(questions,stimuli,assets);
+ if(Array.isArray(raw.candidateReferences)&&raw.candidateReferences.length===0)
+   throw Error("candidateReferences: omit the field when no candidate references exist");
  const candidateReferences=validateCandidateReferenceResources(raw.candidateReferences,assets);
  assertCandidateReferenceInventory(paper.candidateTools?.references,candidateReferences);
  assertRevisionHashes(questions,key,paper);
