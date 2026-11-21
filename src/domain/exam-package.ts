@@ -6,6 +6,8 @@ import type { QuestionRevision, StimulusDefinition, ImageAsset } from "./questio
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type { ExamId, QuestionRevisionId } from "./ids.js";
 import type {ExamTaxonomy,TaxonomyAssignments} from "./taxonomy.ts";
+import type {CandidateReferenceResource} from "./candidate-reference.ts";
+import {assertCandidateReferenceInventory,validateCandidateReferenceResources} from "./candidate-reference.ts";
 import {assertTaxonomyExam,validateExamTaxonomy,validateTaxonomyAssignments} from "./taxonomy.ts";
 
 export interface ExamPackage {
@@ -18,6 +20,8 @@ export interface ExamPackage {
   readonly questions: readonly QuestionRevision[];
   readonly stimuli?: readonly StimulusDefinition[];
   readonly assets?: readonly ImageAsset[];
+  /** Candidate-visible reference documents explicitly bound by paper.candidateTools.references. */
+  readonly candidateReferences?: readonly CandidateReferenceResource[];
   readonly explanations?: Readonly<Record<string,string>>;
   /** Optional exam-owned semantic taxonomy, supplied by package/corpus data rather than runtime code. */
   readonly taxonomy?: ExamTaxonomy;
@@ -76,7 +80,7 @@ export function validateExamPackage(value: unknown): ExamPackage {
  if(![Object.prototype,null].includes(Object.getPrototypeOf(value)))
    throw new Error("Exam package must be a plain object");
  const fields=["format","version","examId","title","paper","answerKey","questions",
-   "stimuli","assets","explanations","taxonomy","taxonomyAssignments"];
+   "stimuli","assets","candidateReferences","explanations","taxonomy","taxonomyAssignments"];
  for(const field of Object.keys(raw))
    if(!fields.includes(field))throw new Error("Exam package."+field+": unsupported field");
  if (raw.format !== "practice-desk-exam" || raw.version !== 1 ||
@@ -96,6 +100,10 @@ export function validateExamPackage(value: unknown): ExamPackage {
     throw new Error("Every question must belong to this paper exactly once");
  const {stimuli,assets}=validateMediaInventory(raw.stimuli??[],raw.assets??[]);
  validateQuestionMediaReferences(questions,stimuli,assets);
+ if(Array.isArray(raw.candidateReferences)&&raw.candidateReferences.length===0)
+   throw Error("candidateReferences: omit the field when no candidate references exist");
+ const candidateReferences=validateCandidateReferenceResources(raw.candidateReferences,assets);
+ assertCandidateReferenceInventory(paper.candidateTools?.references,candidateReferences);
  assertRevisionHashes(questions,key,paper);
  const explanations=raw.explanations;
  if(explanations!==undefined){

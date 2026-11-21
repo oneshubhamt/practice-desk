@@ -11,6 +11,7 @@ import { answerKeyRevisionHash,paperRevisionHash } from "../domain/integrity.ts"
 import { selectDisplayResources } from "../domain/media.ts";
 import { hashJson,sha256 } from "../domain/hash.ts";
 import {taxonomyPathNodes} from "../domain/taxonomy.ts";
+import {candidateReferenceAssetIds} from "../domain/candidate-reference.ts";
 
 /** This is a composition of ONE already validated, precisely selected paper.
  * No cross-exam mixing, guessed topics, or new scoring engine. */
@@ -146,7 +147,9 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
  };
  const paper:PaperRevision={...paperBase,contentHash:paperRevisionHash(paperBase)};
  const questions=picked.map(c=>c.question);
- const resources=selectDisplayResources(questions,source.stimuli??[],source.assets??[]);
+ const candidateReferences=source.candidateReferences??[];
+ const resources=selectDisplayResources(questions,source.stimuli??[],source.assets??[],
+   candidateReferenceAssetIds(candidateReferences));
  const explanations=Object.fromEntries(Object.entries(source.explanations??{}).filter(([id])=>included.has(id as QuestionRevisionId)));
  const taxonomyAssignments=source.taxonomyAssignments?
    Object.fromEntries(ids.flatMap(id=>source.taxonomyAssignments?.[id]?
@@ -154,6 +157,7 @@ export function composePracticeSet(source:ExamPackage,request:PracticeRequest):{
  const bundle:ExamPackage={format:"practice-desk-exam",version:1,
    examId:source.examId,title:source.title+" · Custom set ("+request.count+")",
    paper,answerKey,questions,...resources,explanations,
+   ...(candidateReferences.length?{candidateReferences:structuredClone(candidateReferences)}:{}),
    ...(source.taxonomy?{taxonomy:source.taxonomy,taxonomyAssignments}:{} )};
  validateExamPackage(bundle);
  const core:Omit<PracticeComposition,"contentHash">={

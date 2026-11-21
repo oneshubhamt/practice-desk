@@ -11,6 +11,7 @@ import type {
 import type { ScoringPolicy, MarkingRule } from "./scoring.js";
 import type {CalculatorProfile} from "./calculator.ts";
 import type {WordCountOverride} from "./word-count.ts";
+import type {CandidateReferenceBinding} from "./candidate-reference.ts";
 
 export interface ExamDefinition {
   readonly id: ExamId;
@@ -67,6 +68,11 @@ export interface CandidateTools {
   /** Written-answer counter visibility. Auto shows in practice, hides in exam simulation. */
   /** Omitted means Auto; published papers store only explicit overrides. */
   readonly wordCount?: WordCountOverride;
+  /** Candidate-visible, paper-authorised reference resources. Each binding pins
+   * the exact packaged resource bytes by SHA-256; availability is never inferred
+   * from an exam name.
+   */
+  readonly references?: readonly CandidateReferenceBinding[];
 }
 
 export interface NavigationPolicy {

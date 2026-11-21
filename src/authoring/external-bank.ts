@@ -19,6 +19,7 @@ import {inspectExternalQuality} from "./external-bank-qa.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 import type {QualityIssue,QualityResult} from "./external-bank-qa.ts";
 import {WORD_COUNT_POLICIES} from "../domain/word-count.ts";
+import type {CandidateReferenceSource} from "../domain/candidate-reference.ts";
 
 export type ExternalBankIssue=QualityIssue;
 export interface ExternalBankReport {
@@ -198,7 +199,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  validateExamImportBudget(value);
  const bank=object(value,"$",["format","version","bankId","examId","paperId",
   "title","edition","revision","scoring","timing","navigation","tools","practiceModes","sections",
-  "stimuli","media","questions"]);
+  "references","stimuli","media","questions"]);
  if(bank.format!=="practice-desk-authoring"||bank.version!==1)
   err("$.format","Expected practice-desk-authoring version 1");
  const bankId=key(bank.bankId,"$.bankId");
@@ -294,6 +295,26 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
  });
  const assets=media(bank.media);
  const known=new Set(assets.map(a=>a.id as string));
+ const referenceIds=new Set<string>();
+ const references:CandidateReferenceSource[]=array(bank.references??[],"$.references",64).map((value,i)=>{
+  const path="$.references["+i+"]",row=object(value,path,
+   ["id","title","category","keywords","content"]);
+  const id=key(row.id,path+".id");
+  if(referenceIds.has(id))err(path+".id","Duplicate candidate reference ID");
+  referenceIds.add(id);
+  const document=rich(row.content,path+".content",known),assetIds=assetRefs(document);
+  if(!publicationPlainText(document).trim()&&!assetIds.length)
+   err(path+".content","Candidate reference must contain readable text, maths or an image");
+  let keywords:string[]|undefined;
+  if(row.keywords!==undefined){
+   keywords=array(row.keywords,path+".keywords",24).map((item,j)=>
+    text(item,path+".keywords["+j+"]",80));
+   if(new Set(keywords).size!==keywords.length)err(path+".keywords","Duplicate candidate reference keyword");
+  }
+  return {id,title:text(row.title,path+".title",180),
+   ...(row.category===undefined?{}:{category:text(row.category,path+".category",120)}),
+   ...(keywords?.length?{keywords}:{}),document,...(assetIds.length?{assetIds}:{})};
+ });
  const stimuli=sharedStimuli(bank.stimuli,known);
  const knownStimuli=new Set(stimuli.map(s=>s.id as string));
  const qIds=new Set<string>();
@@ -447,6 +468,7 @@ export function toAuthoringDraft(value:unknown):AuthoringDraft {
   ...(practiceModes?{practiceModes}:{}),marksCorrect,marksIncorrect,marksUnanswered,scoreDecimalPlaces,
   ...(kindScoring&&Object.keys(kindScoring).length?{kindScoring}:{}),
   updatedAt:"1970-01-01T00:00:00.000Z",assets,
+  ...(references.length?{references}:{}),
   sections:[...sections.values()].map(section=>({name:section.title,minutes:section.minutes,
    ...(section.scoringOverride?{scoringOverride:section.scoringOverride}:{})})),
   stimuli,questions};
@@ -481,8 +503,10 @@ export function inspectExternalQuestionBank(value:unknown,existing:readonly Exam
   const explicitLeaks=inspectCandidateIntegrity(draft).filter(x=>x.severity==="error");
   if(explicitLeaks.length)return {valid:false,questionCount:draft.questions.length,
    editorialStatus:"caution",factualVerification:"not-performed",
-   issues:explicitLeaks.map(x=>({path:"$.questions[id="+x.questionId+"]."+x.field,
-    code:x.code,severity:x.severity,message:x.message,questionId:x.questionId,
+   issues:explicitLeaks.map(x=>({
+    path:x.questionId?"$.questions[id="+x.questionId+"]."+x.field:"$."+x.field,
+    code:x.code,severity:x.severity,message:x.message,
+    ...(x.questionId?{questionId:x.questionId}:{}),
     basis:"deterministic" as const,suggestion:x.suggestion}))};
   const check=inspectAuthoringPublication(draft,existing);
   if(!check.valid||!check.compiled){

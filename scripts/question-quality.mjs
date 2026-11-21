@@ -96,8 +96,20 @@ const parseFile=async(path,limit,label)=>{
  return {raw,value:JSON.parse(raw)};
 };
 const optionLabel=index=>String.fromCharCode(65+index);
+function candidateReferenceProjection(draft){
+ return (draft.references??[]).map(reference=>({
+  id:reference.id,title:reference.title,
+  ...(reference.category?{category:reference.category}:{}),
+  ...(reference.keywords?.length?{keywords:reference.keywords}:{}),
+  content:publicationPlainText(reference.document),
+  mediaAlt:(reference.assetIds??[]).map(id=>{
+   const asset=draft.assets.find(item=>item.id===id);
+   return {id,altText:asset?.altText??""};
+  })
+ }));
+}
 function candidateProjection(draft,q){
- const fields=candidateFields(draft,q);
+ const fields=candidateFields(draft,q),referenceContext=candidateReferenceProjection(draft);
  const result={
   questionId:q.id,kind:q.kind,physicalSection:q.section,
   prompt:publicationPlainText(q.prompt),
@@ -106,8 +118,11 @@ function candidateProjection(draft,q){
   matching:q.kind==="matching"?{
    left:q.leftItems.map(v=>publicationPlainText(v)),right:q.rightItems.map(v=>publicationPlainText(v))}:null,
   candidateContext:fields.filter(f=>f.field.startsWith("stimulus.")||f.field.startsWith("media.")),
+  ...(referenceContext.length?{candidateReferencesSha256:sha(JSON.stringify(referenceContext))}:{}),
   hasVisualMaterial:fields.some(f=>f.field.includes("altText")),
-  note:"Answer-hidden candidate-only packet; inspect any referenced visual material when the review requires it."
+  note:referenceContext.length?
+   "Answer-hidden candidate-only packet; inspect the shared candidate references and any referenced visual material when review requires it.":
+   "Answer-hidden candidate-only packet; inspect any referenced visual material when the review requires it."
  };
  return {...result,candidateSha256:sha(JSON.stringify(result))};
 }
@@ -334,7 +349,7 @@ async function prepareReviewWorkspace(value,raw,outputDir){
   return {...item,questionSha256:sha(JSON.stringify(value.questions.find(x=>x.id===q.id)))};
  });
  const packets={format:"practice-desk-review-candidates",version:1,bankId:value.bankId,
-  sourceSha256:sha(raw),total:items.length,items,
+  sourceSha256:sha(raw),total:items.length,candidateReferences:candidateReferenceProjection(draft),items,
   factualVerification:"not-performed",
   warning:"Text/alt only: inspect original source, equations and any visual material as required by the selected review mode."};
  const template=reviewTemplate(value,raw,items);
@@ -402,7 +417,8 @@ async function main(){
   }
   emit({format:"practice-desk-review-candidates",version:1,bankId:value.bankId,
    sourceSha256:sha(raw),total:draft.questions.length,offset,limit,
-   nextOffset:offset+limit<draft.questions.length?offset+limit:null,items,
+   nextOffset:offset+limit<draft.questions.length?offset+limit:null,
+   candidateReferences:candidateReferenceProjection(draft),items,
    factualVerification:"not-performed",
    warning:"Candidate text/alt-only review does not replace viewing actual image pixels when visual review is required."});
   return;

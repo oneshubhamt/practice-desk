@@ -7,6 +7,9 @@ import { validateAnswerKeyRevision, validateQuestionRevision } from "../domain/v
 import { questionRevisionHash, answerKeyRevisionHash } from "../domain/integrity.ts";
 import { selectDisplayResources, validateMediaInventory, validateQuestionMediaReferences } from "../domain/media.ts";
 import { hashJson } from "../domain/hash.ts";
+import type {CandidateReferenceBinding,CandidateReferenceResource} from "../domain/candidate-reference.ts";
+import {assertCandidateReferenceInventory,candidateReferenceAssetIds,
+ validateCandidateReferenceResources} from "../domain/candidate-reference.ts";
 
 /**
  * Optional, format-independent post-attempt provenance. Both the original
@@ -14,7 +17,7 @@ import { hashJson } from "../domain/hash.ts";
  * frozen at start. A changed paper in the library cannot rewrite history.
  */
 export interface SourceReviewReference {
- readonly schema: 1;
+ readonly schema: 2;
  readonly examId: ExamId;
  readonly paperId: PaperId;
  readonly targetPaperRevisionId: PaperRevisionId;
@@ -27,6 +30,9 @@ export interface SourceReviewReference {
  }[];
  readonly stimuli: readonly StimulusDefinition[];
  readonly assets: readonly ImageAsset[];
+ /** Original Source-edition candidate references frozen for provenance. */
+ readonly sourceCandidateReferenceBindings: readonly CandidateReferenceBinding[];
+ readonly candidateReferences: readonly CandidateReferenceResource[];
  readonly contentHash: string;
 }
 type Core=Omit<SourceReviewReference,"contentHash">;
@@ -46,6 +52,10 @@ export function createSourceReviewReference(
  const sourceStimuli=new Map((source.stimuli??[]).map(s=>[s.id,s]));
  const targetStimuli=new Map((target.stimuli??[]).map(s=>[s.id,s]));
  const selected:Core["entries"][number][]=[];
+ const sourceReferences=source.candidateReferences??[];
+ const targetReferenceBindings=target.paper.candidateTools?.references??[];
+ const sourceReferenceBindings=source.paper.candidateTools?.references??[];
+ const referenceContextChanged=JSON.stringify(sourceReferenceBindings)!==JSON.stringify(targetReferenceBindings);
  for(const question of target.questions){
    const original=byQuestion.get(question.questionId);
    if(!original)continue; // An imported revised paper may add independent new questions.
@@ -69,12 +79,14 @@ export function createSourceReviewReference(
    selected.push({targetQuestionRevisionId:question.id,
      sourceQuestion:structuredClone(original),sourceAnswer:structuredClone(sourceAnswer)});
  }
- if(!selected.length)return null;
+ if(!selected.length&&!referenceContextChanged)return null;
  const resources=selectDisplayResources(selected.map(e=>e.sourceQuestion),
-   source.stimuli??[],source.assets??[]);
- const core:Core={schema:1,examId:target.examId,paperId:target.paper.paperId,
+   source.stimuli??[],source.assets??[],candidateReferenceAssetIds(sourceReferences));
+ const core:Core={schema:2,examId:target.examId,paperId:target.paper.paperId,
    targetPaperRevisionId:target.paper.id,sourcePaperRevisionId:source.paper.id,
-   sourceAnswerKeyRevisionId:source.answerKey.id,entries:selected,...resources};
+   sourceAnswerKeyRevisionId:source.answerKey.id,entries:selected,...resources,
+   sourceCandidateReferenceBindings:structuredClone(sourceReferenceBindings),
+   candidateReferences:structuredClone(sourceReferences)};
  return {...core,contentHash:hashJson(core)};
 }
 
@@ -84,14 +96,14 @@ export function validateSourceReviewReference(attempt:GenericAttempt):void{
  if(typeof ref!=="object"||Array.isArray(ref)||
    Object.keys(ref).some(key=>!["schema","examId","paperId","targetPaperRevisionId",
      "sourcePaperRevisionId","sourceAnswerKeyRevisionId","entries",
-     "stimuli","assets","contentHash"].includes(key)))
+     "stimuli","assets","sourceCandidateReferenceBindings","candidateReferences","contentHash"].includes(key)))
    throw Error("Invalid source-review reference fields");
  if(!Array.isArray(ref.entries)||ref.entries.some(entry=>
    !entry||typeof entry!=="object"||
    Object.keys(entry).some(key=>!["targetQuestionRevisionId","sourceQuestion","sourceAnswer"].includes(key))))
    throw Error("Invalid source-review entry fields");
  const frozen=attempt.frozen;
- if(ref.schema!==1||frozen.paper.edition!=="reviewed"||
+ if(ref.schema!==2||frozen.paper.edition!=="reviewed"||
     ref.examId!==frozen.snapshot.examId||ref.paperId!==frozen.paper.paperId||
     ref.targetPaperRevisionId!==frozen.paper.id||
     ref.sourcePaperRevisionId!==frozen.paper.sourcePaperRevisionId||
@@ -101,15 +113,17 @@ export function validateSourceReviewReference(attempt:GenericAttempt):void{
       ref.sourceAnswerKeyRevisionId!==attempt.sourceKeyReference.sourceAnswerKeyRevisionId))||
     typeof ref.sourcePaperRevisionId!=="string"||!ref.sourcePaperRevisionId||
     typeof ref.sourceAnswerKeyRevisionId!=="string"||!ref.sourceAnswerKeyRevisionId||
-    !Array.isArray(ref.entries)||!ref.entries.length||
-    ref.entries.length>frozen.questions.length||
-    !Array.isArray(ref.stimuli)||!Array.isArray(ref.assets))
+    !Array.isArray(ref.entries)||ref.entries.length>frozen.questions.length||
+    !Array.isArray(ref.stimuli)||!Array.isArray(ref.assets)||
+    !Array.isArray(ref.sourceCandidateReferenceBindings)||!Array.isArray(ref.candidateReferences))
    throw new Error("Invalid frozen source-review reference");
  const core:Core={schema:ref.schema,examId:ref.examId,paperId:ref.paperId,
    targetPaperRevisionId:ref.targetPaperRevisionId,
    sourcePaperRevisionId:ref.sourcePaperRevisionId,
    sourceAnswerKeyRevisionId:ref.sourceAnswerKeyRevisionId,
-   entries:ref.entries,stimuli:ref.stimuli,assets:ref.assets};
+   entries:ref.entries,stimuli:ref.stimuli,assets:ref.assets,
+   sourceCandidateReferenceBindings:ref.sourceCandidateReferenceBindings,
+   candidateReferences:ref.candidateReferences};
  if(ref.contentHash!==hashJson(core))throw new Error("Frozen source-review hash mismatch");
  const targets=new Map(frozen.questions.map(q=>[q.id,q]));
  const seen=new Set<string>(),originalQuestions:QuestionRevision[]=[];
@@ -136,4 +150,9 @@ export function validateSourceReviewReference(attempt:GenericAttempt):void{
    revision:1,entries:keyEntries,contentHash:answerKeyRevisionHash({entries:keyEntries})},originalQuestions);
  validateMediaInventory(ref.stimuli,ref.assets);
  validateQuestionMediaReferences(originalQuestions,ref.stimuli,ref.assets);
+ const references=validateCandidateReferenceResources(ref.candidateReferences,ref.assets);
+ assertCandidateReferenceInventory(ref.sourceCandidateReferenceBindings,references);
+ if(!ref.entries.length&&JSON.stringify(ref.sourceCandidateReferenceBindings)===
+    JSON.stringify(frozen.paper.candidateTools?.references??[]))
+   throw Error("Empty source-review reference has no candidate-visible difference");
 }

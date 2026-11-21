@@ -32,7 +32,7 @@ export interface VerifiedSourceKeyReference extends CommonReference {
 }
 export type SourceKeyReference=VerifiedSourceKeyReference;
 type SourceKeyReferenceCore=Omit<VerifiedSourceKeyReference,"contentHash">;
-type Resources=Pick<ExamPackage,"stimuli"|"assets">;
+type Resources=Pick<ExamPackage,"stimuli"|"assets"|"candidateReferences"|"paper">;
 
 /** Only candidate-visible scoring inputs, never solution, tags or editorial
  * metadata. Images include their accessible alt text and content digest.
@@ -56,11 +56,17 @@ function candidateSemanticHash(question:QuestionRevision,resources:Resources):st
  // The stimulus ID is an internal reference, not content displayed to users.
  const visibleStimulus=stimulus?Object.fromEntries(Object.entries(stimulus)
    .filter(([name])=>name!=="id")):null;
+ const referenceBindings=resources.paper.candidateTools?.references??[];
+ const references=referenceBindings.map(binding=>{
+  const resource=(resources.candidateReferences??[]).find(item=>item.id===binding.id);
+  return {id:binding.id,contentHash:resource?.contentHash??null};
+ });
  return hashJson({
   kind:c.kind,prompt:c.prompt,richPrompt:c.richPrompt??null,
   assetIds:c.assetIds??[],stimulus:visibleStimulus,
   options:c.options.map(o=>({id:o.id,text:o.text,richText:o.richText??null,
-    assetIds:o.assetIds??[]})),media
+    assetIds:o.assetIds??[]})),media,
+  ...(references.length?{candidateReferences:references}:{})
  });
 }
 
@@ -167,7 +173,8 @@ export function validateSourceKeyReference(attempt:GenericAttempt):void{
     !/^[0-9a-f]{64}$/.test(choice.sourceSemanticHash)||
     (choice.comparable&&(!q.content.options.some(o=>o.id===choice.originalOptionId)||
        choice.sourceSemanticHash!==candidateSemanticHash(q,{
-        stimuli:frozen.stimuli,assets:frozen.assets}))))
+        stimuli:frozen.stimuli,assets:frozen.assets,
+        candidateReferences:frozen.candidateReferences,paper:frozen.paper}))))
    throw Error("Invalid source-key semantic correspondence");
  }
 }

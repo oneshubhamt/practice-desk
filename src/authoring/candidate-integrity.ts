@@ -7,7 +7,7 @@ import type {RichDocument} from "../domain/rich-document.ts";
 import {publicationPlainText} from "./plain-rich-text.ts";
 
 export type CandidateIntegrityIssue={
- readonly questionId:string;
+ readonly questionId?:string;
  readonly field:string;
  readonly code:"candidate-answer-leak"|"candidate-unintended-clue";
  readonly severity:"error"|"warning";
@@ -82,6 +82,22 @@ export function candidateFields(draft:AuthoringDraft,q:AuthoringQuestion):readon
 }
 export function inspectCandidateIntegrity(draft:AuthoringDraft):readonly CandidateIntegrityIssue[]{
  const issues:CandidateIntegrityIssue[]=[];
+ // Candidate reference resources share the same pre-submit secrecy boundary as
+ // prompts/stimuli. They are paper-level, so report them once rather than once
+ // per question. Deliberately do not apply the generic "solution method" warning:
+ // an authorised formula/reference sheet exists to provide permitted methods.
+ for(const reference of draft.references??[]){
+  const fields=[{field:"references[id="+reference.id+"].content",text:visible(reference.document)}];
+  const refs=referencedAssets(reference.document);
+  for(const asset of draft.assets)if(refs.has(asset.id))
+   fields.push({field:"references[id="+reference.id+"].media.altText["+asset.id+"]",text:asset.altText??""});
+  for(const {field,text} of fields){
+   if(explicitAnswer.test(text)||exposedAnswerLabel.test(text)||correctMarker.test(text))
+    issues.push({field,code:"candidate-answer-leak",severity:"error",
+     message:"Candidate-visible reference content contains an explicit answer/key label or marked correct option.",
+     suggestion:"Remove answer/key/solution indicators from the candidate reference; keep protected solutions in review data."});
+  }
+ }
  for(const q of draft.questions){
   // An exact copy of the keyed choice inside the stem is a possible
   // giveaway, but may be a legitimate quoted example: warning only.

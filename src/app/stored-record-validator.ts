@@ -13,6 +13,7 @@ import {validateSourceKeyReference} from "../engine/source-comparison.ts";
 import {validateSourceReviewReference} from "../engine/review-source.ts";
 import {validateNotebookLineage} from "../learning/revision-test.ts";
 import {validatePracticeComposition} from "./practice-compose.ts";
+import {validateCandidateScratch} from "../domain/candidate-scratch.ts";
 import {isScheduledMock as isCalendarScheduledMock,validateScheduledMock,
  type ScheduledMockRecord} from "../calendar/scheduled-mock.ts";
 export type PackageRecord={recordType:"generic-package";id:string;bundle:ExamPackage;saveRevision:number};
@@ -126,7 +127,7 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
  onlyFields(value,["recordType","saveRevision","id","packageId","startedAt","updatedAt",
    "finishedAt","frozen","state","result","manualGrades","sourceKeyReference",
    "sourceReviewReference","completionReason","notebookLineage","practiceComposition",
-   "explanations"],"saved attempt");
+   "candidateScratch","explanations"],"saved attempt");
  if(typeof value.id!=="string"||!value.id||value.id.length>200||
     typeof value.packageId!=="string"||
     !Number.isFinite(value.startedAt)||!Number.isFinite(value.updatedAt)||
@@ -137,6 +138,9 @@ export function validateGenericStoredRecord(value:unknown):RecordItem {
    throw new Error("Invalid generic attempt record");
  if(!isVerifiedSharedFrozen(value.frozen))assertFrozenContent(value.frozen);
  const paper=value.frozen.paper;
+ validateCandidateScratch(value.candidateScratch,{
+   questions:value.frozen.questions,stimuli:value.frozen.stimuli
+ });
  const hard=timeEnforcementForMode(value.frozen.snapshot.mode)==="hard";
  if(value.packageId!==paper.id)throw new Error("Attempt references an incorrect revision");
  validateSavedSessionEvidence(value);

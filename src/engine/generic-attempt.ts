@@ -8,6 +8,7 @@ import {scoreAttempt} from "./scoring.ts";
 import type {SourceKeyReference} from "./source-comparison.ts";
 import type {SourceReviewReference} from "./review-source.ts";
 import {sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
+import type {CandidateScratch} from "../domain/candidate-scratch.ts";
 
 export type CompletionReason="time-expired"|"submitted"|"section-submitted";
 
@@ -22,6 +23,8 @@ export interface GenericAttempt {
  readonly finishedAt: number | null;
  readonly frozen: FrozenAttemptContent;
  readonly state: SessionState;
+ /** Candidate-owned durable annotations. Never consumed by scoring or learning. */
+ readonly candidateScratch: CandidateScratch;
  readonly result?: ReturnType<typeof scoreAttempt>;
  readonly manualGrades?: readonly ManualGrade[];
  readonly sourceKeyReference?: SourceKeyReference;

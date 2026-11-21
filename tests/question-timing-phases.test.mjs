@@ -125,7 +125,7 @@ test("P46-B frozen stored attempts reject impossible or forged timing phase clai
 test("P46-B exact phases survive compact v5 backup, reopen and remain independent of marks",()=>{
  const a=completed(),summary=a.result.snapshot,persisted={...a,saveRevision:1};
  const archive=verifyBackup(makeBackup([persisted],{schema:1,dark:false,scale:100},"2026-11-02T20:00:00Z"));
- assert.equal(archive.version,5);
+ assert.equal(archive.version,6);
  const restored=validateGenericStoredRecord(reconstructRecords(archive.records,archive.snapshots)[0]);
  assert.equal(validateGenericStoredRecord(JSON.parse(JSON.stringify(a))).id,a.id,
    "Uncompressed original attempt remains valid when materialized independently");
