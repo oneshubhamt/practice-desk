@@ -160,4 +160,9 @@ test("external/agent authoring references converge on the same canonical publish
  assert.equal(compiled.candidateReferences?.[0].id,"permitted-extract");
  assert.deepEqual(compiled.paper.candidateTools?.references?.map(x=>x.id),["permitted-extract"]);
  assert.equal(validateExamPackage(compiled),compiled);
+
+ const leaked=structuredClone(source);
+ leaked.references=[{id:"bad-reference",title:"Leaking reference",content:"The correct answer is B."}];
+ assert.throws(()=>compileExternalQuestionBank(leaked),/candidate-visible reference|answer.*leak|correct answer/i,
+  "candidate references must share the pre-submit answer-secrecy boundary");
 });
