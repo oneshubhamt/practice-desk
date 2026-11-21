@@ -470,17 +470,19 @@
     {
       "id": "rich-media",
       "status": "implemented",
-      "summary": "Shared case/passage/table/chart/image stimuli, image references, canonical rich text and KaTeX mathematical display.",
+      "summary": "Shared case/passage/table/chart/image stimuli, image references, canonical rich text, KaTeX mathematical display, and generic hash-bound candidate reference resources.",
       "provides": [
         "Shared stimuli cited once by question ID",
         "Rich question content with linear math alternatives",
         "Embedded validated image inventory and zoom/pan display",
-        "Conservative optional image preparation workflow"
+        "Conservative optional image preparation workflow",
+        "Generic candidate reference documents authorable through the canonical source/draft publisher and frozen with exact linked-image digests"
       ],
-      "agentUse": "Use one shared stimulus for CAT DILR/RC; use image asset IDs and alt text without placing base64 data into agent inspection results.",
+      "agentUse": "Use one shared stimulus for CAT DILR/RC; use image asset IDs and alt text without placing base64 data into agent inspection results. When a paper supplies a candidate reference, author it as a generic top-level reference resource rather than inventing an exam-specific runtime field.",
       "limitations": [
         "PDF/image extraction is external AI work; not an offline app PDF ingestion feature",
-        "Actual tactile/assistive math or image quality on physical hardware requires user verification"
+        "Actual tactile/assistive math or image quality on physical hardware requires user verification",
+        "Candidate reference-panel presentation/search is a later UI pass; Pass A currently provides authoring, validation, hashing, freezing and persistence contracts only"
       ],
       "sourcePaths": [
         "src/authoring/external-bank.ts",
@@ -492,7 +494,7 @@
     {
       "id": "offline-data-recovery",
       "status": "implemented-with-limits",
-      "summary": "Local offline single HTML, immutable SHA-covered exam/source history, shared snapshot backup v4 and separate unpublished staging/draft archives.",
+      "summary": "Local offline single HTML, immutable SHA-covered exam/source history, shared snapshot backup v6 and separate unpublished staging/draft archives.",
       "provides": [
         "Strict checked exam package imports",
         "Snapshot-deduplicated saved attempt backup and recovery",
