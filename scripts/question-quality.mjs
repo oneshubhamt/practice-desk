@@ -120,7 +120,9 @@ function candidateProjection(draft,q){
   candidateContext:fields.filter(f=>f.field.startsWith("stimulus.")||f.field.startsWith("media.")),
   ...(referenceContext.length?{candidateReferencesSha256:sha(JSON.stringify(referenceContext))}:{}),
   hasVisualMaterial:fields.some(f=>f.field.includes("altText")),
-  note:"Answer-hidden candidate-only packet; inspect the shared candidate references and any referenced visual material when review requires it."
+  note:referenceContext.length?
+   "Answer-hidden candidate-only packet; inspect the shared candidate references and any referenced visual material when review requires it.":
+   "Answer-hidden candidate-only packet; inspect any referenced visual material when the review requires it."
  };
  return {...result,candidateSha256:sha(JSON.stringify(result))};
 }
