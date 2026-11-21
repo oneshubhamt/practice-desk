@@ -13,6 +13,7 @@ import {paperTimeBudgetMs,sectionTimeBudgetMs} from "../domain/timing.ts";
 export {validateExamImportBudget,validateExamPackage} from "../domain/exam-package.ts";
 import { startSession } from "../engine/session.ts";
 import { freezeAttempt } from "../history/frozen.ts";
+import {emptyCandidateScratch} from "../domain/candidate-scratch.ts";
 
 /** Derive practice policies from any validated paper without modifying its source.
  * Only authored section limits may become individual section-practice timers;
@@ -112,9 +113,10 @@ export function startGenericAttempt(
  const frozenMode=mode??(validated.paper.edition==="custom"?"custom-practice":"exam-simulation");
  const frozen=freezeAttempt(validated.paper,validated.answerKey,validated.questions,
    validated.stimuli??[],validated.assets??[],frozenMode,new Date(timestamp).toISOString(),validated.examId,
-   validated.taxonomy,validated.taxonomyAssignments);
+   validated.taxonomy,validated.taxonomyAssignments,validated.candidateReferences??[]);
  return {recordType:"generic-attempt",saveRevision:0,id,packageId:validated.paper.id,startedAt:timestamp,
    updatedAt:timestamp,finishedAt:null,completionReason:null,frozen,state:startSession(validated.paper,timestamp),
+   candidateScratch:emptyCandidateScratch(),
    ...(validated.explanations?{explanations:structuredClone(validated.explanations)}:{})};
 }
 
