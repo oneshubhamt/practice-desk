@@ -9,6 +9,9 @@ import { selectDisplayResources, validateMediaInventory, validateQuestionMediaRe
 import type { AttemptSnapshot, AttemptMode, FrozenAttemptContent } from "../domain/attempt.js";
 import type { ExamId } from "../domain/ids.js";
 import type {ExamTaxonomy,TaxonomyAssignments} from "../domain/taxonomy.ts";
+import type {CandidateReferenceResource} from "../domain/candidate-reference.ts";
+import {assertCandidateReferenceInventory,candidateReferenceAssetIds,
+ validateCandidateReferenceResources} from "../domain/candidate-reference.ts";
 import {assertTaxonomyExam,validateExamTaxonomy,validateTaxonomyAssignments} from "../domain/taxonomy.ts";
 
 /** Freeze exact scoring/display resources into the canonical attempt contract. */
@@ -17,11 +20,14 @@ export function freezeAttempt(
   stimuli:readonly StimulusDefinition[],assets:readonly ImageAsset[],
   mode: AttemptMode, frozenAt: string, examId: ExamId,
   taxonomy?:ExamTaxonomy,taxonomyAssignments?:TaxonomyAssignments,
+  candidateReferences:readonly CandidateReferenceResource[]=[],
 ): FrozenAttemptContent {
   validateAnswerKeyRevision(key, questions);
   validatePaperRevision(paper, questions, key);
   assertRevisionHashes(questions,key,paper);
-  const display=selectDisplayResources(questions,stimuli,assets);
+  const references=validateCandidateReferenceResources(candidateReferences,assets);
+  assertCandidateReferenceInventory(paper.candidateTools?.references,references);
+  const display=selectDisplayResources(questions,stimuli,assets,candidateReferenceAssetIds(references));
   if(taxonomy){
     const checked=validateExamTaxonomy(taxonomy);assertTaxonomyExam(checked,examId);
     validateTaxonomyAssignments(checked,taxonomyAssignments,new Set(questions.map(q=>q.id as string)));
@@ -30,13 +36,15 @@ export function freezeAttempt(
     examId, paperId: paper.paperId, paperRevisionId: paper.id,
     answerKeyRevisionId: key.id, scoringPolicy: paper.scoring, mode,
   };
-  return structuredClone({ schema: 2 as const, frozenAt, snapshot, paper, key, questions, ...display,
+  return structuredClone({ schema: 3 as const, frozenAt, snapshot, paper, key, questions, ...display,
+    candidateReferences:references,
     ...(taxonomy?{taxonomy,taxonomyAssignments:taxonomyAssignments??{}}:{}) });
 }
 export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptContent {
-  if (!value || value.schema !== 2 ||
+  if (!value || value.schema !== 3 ||
       !value.snapshot || !value.paper || !value.key || !Array.isArray(value.questions) ||
       !Array.isArray(value.stimuli) || !Array.isArray(value.assets) ||
+      !Array.isArray(value.candidateReferences) ||
       typeof value.snapshot.examId !== "string" || value.snapshot.examId.length === 0 ||
       value.snapshot.paperId !== value.paper.paperId ||
       value.snapshot.paperRevisionId !== value.paper.id ||
@@ -49,6 +57,8 @@ export function assertFrozenContent(value: FrozenAttemptContent): FrozenAttemptC
   assertRevisionHashes(value.questions,value.key,value.paper);
   validateMediaInventory(value.stimuli,value.assets);
   validateQuestionMediaReferences(value.questions,value.stimuli,value.assets);
+  const references=validateCandidateReferenceResources(value.candidateReferences,value.assets);
+  assertCandidateReferenceInventory(value.paper.candidateTools?.references,references);
   if(value.taxonomy){
     const taxonomy=validateExamTaxonomy(value.taxonomy);
     assertTaxonomyExam(taxonomy,value.snapshot.examId);
