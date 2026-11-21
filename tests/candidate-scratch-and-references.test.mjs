@@ -84,6 +84,19 @@ test("candidate scratch validates stable option IDs and source-anchored highligh
   ...scratch.highlights[0],surface:{kind:"question-prompt",questionRevisionId:"rev-3"}
  }]},{questions,stimuli:[]}),/range exceeds/,
   "highlight ranges are validated against the exact frozen target text");
+
+ const richQuestion={...questions[0],id:"rich-highlight",content:{...questions[0].content,
+  richPrompt:{format:"practice-desk-rich",version:1,blocks:[{type:"paragraph",content:[
+   {type:"text",text:"Alpha beta"},{type:"math",tex:"x^2",linearText:"x squared"}
+  ]}]}}};
+ const richScratch={schema:1,eliminations:[],highlights:[{id:"rich-h",
+  surface:{kind:"question-prompt",questionRevisionId:"rich-highlight"},
+  anchor:{kind:"rich",path:[0,0],start:0,end:5},color:"green"}]};
+ assert.equal(validateCandidateScratch(richScratch,{questions:[richQuestion],stimuli:[]}).highlights.length,1);
+ assert.throws(()=>validateCandidateScratch({...richScratch,highlights:[{...richScratch.highlights[0],
+  anchor:{kind:"rich",path:[0,1],start:0,end:1}}]},{questions:[richQuestion],stimuli:[]}),
+  /does not identify a highlightable text leaf/,
+  "KaTeX/math atoms must not become text-offset highlight targets");
 });
 
 test("candidate scratch is durable attempt evidence but never changes scoring",()=>{
