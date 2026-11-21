@@ -19,6 +19,7 @@ import type {AssetId,QuestionRevisionId,QuestionId,OptionId,MatchItemId,
  ExamId,PaperId,PaperRevisionId,SectionId,StimulusId,AnswerKeyRevisionId} from "../domain/ids.ts";
 import {sha256} from "../domain/hash.ts";
 import {questionRevisionHash,answerKeyRevisionHash,paperRevisionHash} from "../domain/integrity.ts";
+import {createCandidateReferenceResource} from "../domain/candidate-reference.ts";
 
 export type PublicationIssue={
  readonly questionId?:string;
@@ -249,6 +250,11 @@ export function compileAuthoringPublication(
  const groups=new Map<string,QuestionRevisionId[]>();
  const referenced=new Set<string>();
  const addRefs=(items:readonly string[])=>{for(const ref of items)referenced.add(ref);};
+ const candidateReferences=(d.references??[]).map(source=>{
+  const resource=createCandidateReferenceResource(source);
+  addRefs(resource.assetIds??[]);
+  return resource;
+ });
  for(const q of d.questions){
   const suffix=id("q",q.id);
   const revisionId=(base+":"+suffix) as QuestionRevisionId;
@@ -388,7 +394,10 @@ export function compileAuthoringPublication(
  }:{kind:"untimed"};
  const candidateTools={
   ...(d.calculatorTool?{calculator:d.calculatorTool}:{}),
-  ...(d.wordCountPolicy!=="auto"?{wordCount:d.wordCountPolicy}:{})
+  ...(d.wordCountPolicy!=="auto"?{wordCount:d.wordCountPolicy}:{}),
+  ...(candidateReferences.length?{references:candidateReferences.map(reference=>({
+    id:reference.id,contentHash:reference.contentHash
+  }))}:{})
  };
  const paperBase={
   id:base as PaperRevisionId,paperId,revision:d.revision,edition:d.edition,sections,
@@ -415,6 +424,7 @@ export function compileAuthoringPublication(
   format:"practice-desk-exam",version:1,examId:d.examId as ExamId,
   title:d.title,questions,answerKey,paper,
   ...(includedStimuli.length?{stimuli:includedStimuli}:{}),...(assets.length?{assets}:{}),
+  ...(candidateReferences.length?{candidateReferences}:{}),
   ...(Object.keys(explanationTexts).length?{explanations:explanationTexts}:{})
  };
  return validateExamPackage(compiled);
