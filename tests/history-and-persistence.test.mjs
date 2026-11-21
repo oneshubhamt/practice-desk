@@ -253,7 +253,7 @@ test("P43 portable family setups survive canonical backup with checksum protecti
    "imported:apfc":{paperRevisionId:"apfc:r1",mode:"strict",section:0,untimed:false,edition:"reviewed"}
  }};
  const backup=makeBackup([],preferences,"2026-10-30T00:00:00.000Z",setups);
- assert.equal(backup.version,5);
+ assert.equal(backup.version,6);
  assert.deepEqual(verifyBackup(backup).setups,setups);
  const modified=structuredClone(backup);
  modified.setups.families["builtin:ssc-cgl"].section=1;
@@ -343,7 +343,7 @@ test("generated additive merge is deterministic, idempotent, ordered and non-des
 test("canonical backup checksum covers records and preferences; size, IDs and timestamp are bounded",()=>{
  // Authenticated checksum alone must not launder unsupported envelope privileges.
  const unsigned=makeBackup([],{schema:1,dark:false,scale:100},"2026-11-04T03:15:00.000Z");
- assert.equal(verifyBackup(structuredClone(unsigned)).version,5);
+ assert.equal(verifyBackup(structuredClone(unsigned)).version,6);
  assert.throws(()=>verifyBackup({...unsigned,issuerSignature:"nonexistent"}),/unsupported envelope/);
  assert.throws(()=>verifyBackup({...unsigned,manifest:{...unsigned.manifest,privileged:true}}),/unsupported manifest/);
 
@@ -591,7 +591,7 @@ test("P45-B identical frozen exam content uses one SHA-addressed snapshot across
  const {DEFAULT_PREFERENCES}=await import("../src/app/preferences.ts");
  const archive=makeBackup([first,second],DEFAULT_PREFERENCES,
    "2026-11-02T11:00:00.000Z");
- assert.equal(archive.version,5);
+ assert.equal(archive.version,6);
  assert.equal(archive.snapshots.length,1,"Backup must contain exactly one shared frozen source");
  assert.equal(archive.records.length,2);
  assert.ok(archive.records.every(r=>!("frozen" in r)));
