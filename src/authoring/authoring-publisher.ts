@@ -251,7 +251,7 @@ export function compileAuthoringPublication(
  const referenced=new Set<string>();
  const addRefs=(items:readonly string[])=>{for(const ref of items)referenced.add(ref);};
  const candidateReferences=(d.references??[]).map(source=>{
-  const resource=createCandidateReferenceResource(source);
+  const resource=createCandidateReferenceResource(source,d.assets);
   addRefs(resource.assetIds??[]);
   return resource;
  });
