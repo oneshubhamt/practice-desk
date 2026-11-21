@@ -415,7 +415,7 @@ const qaMap=new Map(reviewed.questions.map(q=>[q.id,q]));
 test("CGL original wording, options, source key and media are frozen at reviewed test start",()=>{
  const ref=createSourceReviewReference(reviewed,original);
  assert.ok(ref?.entries.length>0,"Corrected CGL content not identified");
- assert.equal(ref.schema,1);
+ assert.equal(ref.schema,2);
  assert.equal(ref.paperId,reviewed.paper.paperId);
  const target=reviewed.questions.find(q=>q.id===ref.entries[0].targetQuestionRevisionId);
  assert.equal(ref.entries[0].sourceQuestion.questionId,target.questionId);
