@@ -122,7 +122,7 @@ test("P46-B frozen stored attempts reject impossible or forged timing phase clai
    delete x.state.responses.find(r=>r.firstAnsweredAt).answerEvents;
  })),/first-answer timing/,"first-answer timestamp without any recorded first commit");
 });
-test("P46-B exact phases survive compact v5 backup, reopen and remain independent of marks",()=>{
+test("P46-B exact phases survive compact v6 backup, reopen and remain independent of marks",()=>{
  const a=completed(),summary=a.result.snapshot,persisted={...a,saveRevision:1};
  const archive=verifyBackup(makeBackup([persisted],{schema:1,dark:false,scale:100},"2026-11-02T20:00:00Z"));
  assert.equal(archive.version,6);

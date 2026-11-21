@@ -150,7 +150,7 @@ try{
   downloadedPath=await download.path();
   const exported=JSON.parse(await readFile(downloadedPath,"utf8"));
   check(exported.version===6&&Boolean(exported.revisionSettings),
-    engine+" Calendar-aware backup did not include canonical v5 scheduler settings");
+    engine+" Calendar-aware backup did not include canonical v6 scheduler settings");
   check(exported.records.some(x=>x.recordType==="calendar-scheduled-mock"&&x.id===scheduled.id),
     engine+" durable scheduled mock absent from backup");
 
