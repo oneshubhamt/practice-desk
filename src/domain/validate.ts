@@ -4,6 +4,7 @@ import type { QuestionRevision } from "./question.js";
 import {validateRichDocument} from "./rich-document.ts";
 import {BASIC_CALCULATOR_V1} from "./calculator.ts";
 import {WORD_COUNT_OVERRIDES} from "./word-count.ts";
+import {validateCandidateReferenceBindings} from "./candidate-reference.ts";
 
 const QUESTION_KINDS = [
   "single-choice", "multiple-select", "numeric-entry", "true-false", "matching", "free-response",
@@ -442,11 +443,13 @@ export function validatePaperRevision(
   }
   if (paper["candidateTools"] !== undefined) {
     const tools = record(paper["candidateTools"], "paperRevision.candidateTools");
-    only(tools,["calculator","wordCount"],"paperRevision.candidateTools");
+    only(tools,["calculator","wordCount","references"],"paperRevision.candidateTools");
     if (tools["calculator"] !== undefined && tools["calculator"] !== BASIC_CALCULATOR_V1)
       throw new Error('paperRevision.candidateTools.calculator: expected "'+BASIC_CALCULATOR_V1+'"');
     if (tools["wordCount"] !== undefined)
       oneOf(tools["wordCount"],WORD_COUNT_OVERRIDES,"paperRevision.candidateTools.wordCount");
+    if (tools["references"] !== undefined)
+      validateCandidateReferenceBindings(tools["references"]);
   }
   if (paper["practiceModes"] !== undefined) {
     const modes=stringArray(paper["practiceModes"],"paperRevision.practiceModes");
