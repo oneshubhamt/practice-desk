@@ -10,6 +10,8 @@ import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts
 import {validateMediaInventory} from "../domain/media.ts";
 import {attributedTopicPath,validateTopicPath} from "../learning/syllabus-taxonomy.ts";
 import {WORD_COUNT_POLICIES,type WordCountPolicy} from "../domain/word-count.ts";
+import type {CandidateReferenceSource} from "../domain/candidate-reference.ts";
+import {createCandidateReferenceResource,validateCandidateReferenceResources} from "../domain/candidate-reference.ts";
 
 export type AuthoringMarkingRule={readonly correctMarks:number;readonly incorrectMarks:number;readonly unansweredMarks:number};
 export type AuthoringDraftSection={
@@ -90,6 +92,8 @@ export type AuthoringDraft={
  readonly allowReview:boolean;
  readonly calculatorTool?:"basic-v1";
  readonly wordCountPolicy:WordCountPolicy;
+ /** Candidate-visible paper reference documents; publisher hash-binds these into candidateTools. */
+ readonly references?:readonly CandidateReferenceSource[];
  /** Optional paper-authored mode eligibility; omitted derives from physical section structure. */
  readonly practiceModes?:readonly PaperPracticeMode[];
  readonly marksCorrect:number;
@@ -168,7 +172,7 @@ const markingRule=(value:unknown,label:string):AuthoringMarkingRule=>{
 export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const p=rec(value,"authoring draft",["schema","id","ingestionMode","examId","paperId","title","edition",
   "revision","durationMinutes","timingKind","pausePolicy","questionNavigation",
-  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool","wordCountPolicy","practiceModes",
+  "sectionNavigation","sectionTransition","allowEarlySubmit","allowReview","calculatorTool","wordCountPolicy","references","practiceModes",
   "marksCorrect","marksIncorrect","marksUnanswered","scoreDecimalPlaces","kindScoring","updatedAt","assets","sections","stimuli","questions"]);
  if(p.schema!==1)throw Error("Unsupported draft schema");
  if(p.ingestionMode!=="manual"&&p.ingestionMode!=="external-source")
@@ -191,6 +195,26 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
  const stimulusIds=new Set(stimuli.map(s=>s.id as string));
  const known=new Set(assets.map(a=>a.id));
  const rich=(x:unknown)=>validateRichDocument(x,{knownAssets:known});
+ const references=list(p.references??[],64,"candidate references").map((value,i)=>{
+  const path="candidate reference "+i,row=rec(value,path,
+   ["id","title","category","keywords","document","assetIds"]);
+  const assetIds=list(row.assetIds??[],64,path+" assets").map((asset,j)=>
+   text(asset,path+" asset "+j,128,true));
+  if(new Set(assetIds).size!==assetIds.length)throw Error("Duplicate "+path+" asset");
+  const source:CandidateReferenceSource={
+   id:text(row.id,path+" ID",128,true),
+   title:text(row.title,path+" title",180,true),
+   ...(row.category===undefined?{}:{category:text(row.category,path+" category",120,true)}),
+   ...(row.keywords===undefined?{}:{keywords:list(row.keywords,24,path+" keywords").map((keyword,j)=>
+     text(keyword,path+" keyword "+j,80,true))}),
+   document:validateRichDocument(row.document,{knownAssets:new Set(assetIds)}),
+   ...(assetIds.length?{assetIds:assetIds as CandidateReferenceSource["assetIds"]}:{})
+  };
+  if(source.keywords&&new Set(source.keywords).size!==source.keywords.length)
+   throw Error("Duplicate "+path+" keyword");
+  validateCandidateReferenceResources([createCandidateReferenceResource(source)],assets);
+  return source;
+ });
  const questions=list(p.questions,200,"questions");
  if(!questions.length)throw Error("A draft needs at least one question");
  const all=new Set<string>();
