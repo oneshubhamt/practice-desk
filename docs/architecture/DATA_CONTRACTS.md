@@ -30,7 +30,7 @@ Candidate eliminations and highlights are **candidate-owned attempt evidence**, 
 
 A candidate reference is a generic paper-authorised rich resource, not a domain-specific `labValues`, formula-sheet or statute schema. The same contract can represent permitted laboratory values, formula sheets, statutory extracts, constants, tables or other supplied examination references using the existing restricted rich-document model (text, lists, tables, maths and verified local images).
 
-The paper binds only `{id, contentHash}` entries in `candidateTools.references`; the package owns the validated resources. Attempt start freezes the exact resources and any reference-only assets into the immutable attempt snapshot. Hashes establish byte/content consistency, not that a reference is officially permitted or factually correct. Source/provenance verification remains external.
+The paper binds only `{id, contentHash}` entries in `candidateTools.references`; the package owns the validated resources. A reference hash covers its canonical rich document/metadata and the SHA-256 digests of every referenced image, so changing reference-only image bytes also changes the paper binding. Attempt start freezes the exact resources and any reference-only assets into the immutable attempt snapshot. Hashes establish byte/content consistency, not that a reference is officially permitted or factually correct. Source/provenance verification remains external.
 
 **Current implementation boundary:** Pass A defines authoring/publication/import/freeze/persistence contracts only. Candidate-facing reference-panel presentation/search and candidate annotation controls are intentionally not surfaced until their later UI passes; no exam-specific runtime inference is permitted in the meantime.
 
@@ -61,7 +61,7 @@ The paper binds only `{id, contentHash}` entries in `candidateTools.references`;
 
 - `practiceDesk.history` stores compact attempts plus deduplicated immutable snapshot bodies. Transactions verify both source identity and revision where applicable.
 - CAS/optimistic concurrency uses revision `0` only for a new in-memory record before its first durable write. Persisted rows and backups require revisions `1+`; stale sibling-tab writes are rejected and terminal results cannot be revived by an older emergency mirror.
-- `practice-desk-backup` v5 is SHA-checked, bounded, additive and conflict-aware. It cannot authenticate a maliciously authored backup: strictly validate records, fields, structural hashes and snapshots on restore.
+- `practice-desk-backup` v6 is SHA-checked, bounded, additive and conflict-aware. It cannot authenticate a maliciously authored backup: strictly validate records, fields, structural hashes and snapshots on restore.
 - Corrupted or missing snapshot references should be surfaced or quarantined, not silently replaced with newly computed key/marks. Explicit deletion/discard, stable archive IDs and recovery precedence apply.
 - Drafts/staging and local browser History are **separate export lifecycles**; noncanonical historical formats are not migration targets; do not promise implicit remote synchronization.
 
