@@ -344,7 +344,7 @@ export function buildInitialAuthoringBrief(
    note:"Quota groups overlap; satisfy these constraints jointly rather than summing their remaining counts. Bounded output is interleaved across active quota groups."},
   dedupe:{comparisonSourceCount:0,nearDuplicateCandidates:0},
   outputContract:{sourceEnvelope:envelope,
-   add:["questions","optional stimuli/media only when the authored items need shared context or images"],
+   add:["questions","optional references/stimuli/media only when the paper or authored items need candidate reference material, shared context or images"],
    question:{coreRequired:["id","examSection","kind","prompt","answer","provenance","qa",
     ...(requirements.requireExplanation===true?["explanation"]:[])],classification,
     kindSpecific:{"single-choice":"options: 2..26; one defensible keyed option",
