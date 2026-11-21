@@ -213,7 +213,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   };
   if(source.keywords&&new Set(source.keywords).size!==source.keywords.length)
    throw Error("Duplicate "+path+" keyword");
-  validateCandidateReferenceResources([createCandidateReferenceResource(source)],assets);
+  validateCandidateReferenceResources([createCandidateReferenceResource(source,assets)],assets);
   return source;
  });
  const questions=list(p.questions,200,"questions");
