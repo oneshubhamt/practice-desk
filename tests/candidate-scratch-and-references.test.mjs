@@ -59,7 +59,10 @@ test("candidate references are exact-hash bound to the executable paper and froz
  assert.throws(()=>validateExamPackage({...bundle,candidateReferences:[{
   ...reference,document:{format:"practice-desk-rich",version:1,blocks:[]}
  }]}),/must contain text, maths or an image/);
- assert.throws(()=>validateExamPackage({...bundle,candidateReferences:[]}),/inventory does not match/);
+ assert.throws(()=>validateExamPackage({...bundle,candidateReferences:[]}),/expected 1/);
+ const emptyToolsBase={...pkg.paper,candidateTools:{references:[]}};
+ const emptyTools={...emptyToolsBase,contentHash:paperRevisionHash(emptyToolsBase)};
+ assert.throws(()=>validateExamPackage({...pkg,paper:emptyTools}),/expected 1/);
 
  const without={...pkg.paper,candidateTools:{references:[]}};
  const withRef={...pkg.paper,candidateTools:{references:[{id:reference.id,contentHash:reference.contentHash}]}};
