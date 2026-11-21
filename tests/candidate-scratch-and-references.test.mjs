@@ -191,8 +191,7 @@ test("Source/Reviewed semantic comparability includes paper-level candidate refe
   title:"Source",questions:[sourceQuestion],answerKey:sourceKey,paper:sourcePaper,
   candidateReferences:[reference]});
 
- const reviewedQuestionBase={...sourceQuestion,id:"reviewed-q1",revision:2,
-  editorial:{status:"corrected",changes:["formatting"]}};
+ const reviewedQuestionBase={...sourceQuestion,id:"reviewed-q1",revision:2};
  const reviewedQuestion={...reviewedQuestionBase,contentHash:questionRevisionHash(reviewedQuestionBase)};
  const reviewedKeyBase={id:"reviewed-key",paperId:"reference-pair",revision:2,
   entries:[{questionRevisionId:reviewedQuestion.id,answer:{kind:"single-choice",optionId:"a"}}]};
