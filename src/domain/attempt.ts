@@ -11,6 +11,7 @@ import type { CandidateResponse, ImageAsset, QuestionRevision, StimulusDefinitio
 import type { PaperRevision } from "./exam.js";
 import type { AnswerKeyRevision } from "./answer-key.js";
 import type {ExamTaxonomy,TaxonomyAssignments} from "./taxonomy.ts";
+import type {CandidateReferenceResource} from "./candidate-reference.ts";
 
 export type AttemptMode =
   | "exam-simulation"
@@ -83,7 +84,7 @@ export interface AttemptRecord {
 
 /** Immutable paper/key/resources captured for one attempt. */
 export interface FrozenAttemptContent {
-  readonly schema: 2;
+  readonly schema: 3;
   readonly frozenAt: string;
   readonly snapshot: AttemptSnapshot;
   readonly paper: PaperRevision;
@@ -91,6 +92,8 @@ export interface FrozenAttemptContent {
   readonly questions: readonly QuestionRevision[];
   readonly stimuli: readonly StimulusDefinition[];
   readonly assets: readonly ImageAsset[];
+  /** Exact paper-authorised candidate reference resources frozen at attempt start. */
+  readonly candidateReferences: readonly CandidateReferenceResource[];
   /** Exact taxonomy context used for semantic analytics/practice at attempt start. */
   readonly taxonomy?: ExamTaxonomy;
   readonly taxonomyAssignments?: TaxonomyAssignments;
