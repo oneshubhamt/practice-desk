@@ -98,8 +98,8 @@ export function createCandidateReferenceResource(
 }
 
 export function validateCandidateReferenceBindings(value:unknown):readonly CandidateReferenceBinding[]{
- if(!Array.isArray(value)||value.length>MAX_REFERENCES)
-  throw Error("paperRevision.candidateTools.references: expected at most "+MAX_REFERENCES+" references");
+ if(!Array.isArray(value)||value.length<1||value.length>MAX_REFERENCES)
+  throw Error("paperRevision.candidateTools.references: expected 1–"+MAX_REFERENCES+" references");
  const seen=new Set<string>();
  return value.map((item,i)=>{
   const path="paperRevision.candidateTools.references["+i+"]",row=plain(item,path);
@@ -117,8 +117,8 @@ export function validateCandidateReferenceResources(
  value:unknown,assets:readonly ImageAsset[]
 ):readonly CandidateReferenceResource[]{
  if(value===undefined)return [];
- if(!Array.isArray(value)||value.length>MAX_REFERENCES)
-  throw Error("candidateReferences: expected at most "+MAX_REFERENCES+" resources");
+ if(!Array.isArray(value)||value.length<1||value.length>MAX_REFERENCES)
+  throw Error("candidateReferences: expected 1–"+MAX_REFERENCES+" resources");
  const available=new Set(assets.map(asset=>asset.id as string));
  const seen=new Set<string>();
  return value.map((item,i)=>{
