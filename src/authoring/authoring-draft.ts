@@ -4,6 +4,7 @@ import {STORAGE_TOPOLOGY} from "../storage-topology.ts";
  */
 import type {QuestionKind,ImageAsset,StimulusDefinition} from "../domain/question.ts";
 import type {PaperPracticeMode} from "../domain/exam.ts";
+import type {AssetId} from "../domain/ids.ts";
 import {QUESTION_KINDS} from "../domain/question.ts";
 import type {RichDocument} from "../domain/rich-document.ts";
 import {plainRichDocument,validateRichDocument} from "../domain/rich-document.ts";
@@ -199,7 +200,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   const path="candidate reference "+i,row=rec(value,path,
    ["id","title","category","keywords","document","assetIds"]);
   const assetIds=list(row.assetIds??[],64,path+" assets").map((asset,j)=>
-   text(asset,path+" asset "+j,128,true));
+   text(asset,path+" asset "+j,128,true) as AssetId);
   if(new Set(assetIds).size!==assetIds.length)throw Error("Duplicate "+path+" asset");
   const source:CandidateReferenceSource={
    id:text(row.id,path+" ID",128,true),
@@ -208,7 +209,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
    ...(row.keywords===undefined?{}:{keywords:list(row.keywords,24,path+" keywords").map((keyword,j)=>
      text(keyword,path+" keyword "+j,80,true))}),
    document:validateRichDocument(row.document,{knownAssets:new Set(assetIds)}),
-   ...(assetIds.length?{assetIds:assetIds as CandidateReferenceSource["assetIds"]}:{})
+   ...(assetIds.length?{assetIds}:{})
   };
   if(source.keywords&&new Set(source.keywords).size!==source.keywords.length)
    throw Error("Duplicate "+path+" keyword");
@@ -430,6 +431,7 @@ export function validateAuthoringDraft(value:unknown):AuthoringDraft{
   marksUnanswered:defaultRule.unansweredMarks,scoreDecimalPlaces,
   ...(kindScoring&&Object.keys(kindScoring).length?{kindScoring}:{}),
   updatedAt:text(p.updatedAt,"updated time",100,true),assets,sections,
+  ...(references.length?{references}:{}),
   ...(stimuli.length?{stimuli}:{}),questions:verified
  };
  const usedSections=new Set(verified.map(q=>q.section));
