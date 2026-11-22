@@ -147,7 +147,9 @@ export function renderModelExam(
         paper.timing.kind==="sectional"?(untimedSection?"Finish untimed section":"Submit section"):
         lockedWhole&&hasNextSection?"Finish section →":"Submit exam")+'</button></div></section>'+
      '<aside class="panel pad exam-sidebar" aria-label="Question navigator"><h3>Question navigator</h3>'+
-     '<p class="fine navigator-intro">'+(multiSection?"Jump to a question in this section":"Jump to a question")+'</p><div class="generic-palette">'+
+     '<p class="fine navigator-intro">'+(multiSection?
+       "Numbered buttons stay in this section; quick navigation follows the paper rules.":
+       "Jump to a question or use quick navigation.")+'</p><div class="generic-palette">'+
       section.questionRevisionIds.map((qid,i)=>{
         const r=responsesById.get(qid);
         const locked=state.status!=="running"||(paper.navigation.questionNavigation==="forward-only"&&i<state.questionIndex);
