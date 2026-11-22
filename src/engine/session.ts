@@ -159,6 +159,20 @@ function checkpoint(
   }
   return next;
 }
+export function canNavigateToQuestion(
+ paper:PaperRevision,state:SessionState,sectionIndex:number,questionIndex:number
+):boolean{
+ if(state.status!=="running")return false;
+ const section=paper.sections[sectionIndex];
+ if(!section?.questionRevisionIds[questionIndex]||state.completedSections.includes(sectionIndex))return false;
+ if(paper.timing.kind==="sectional"&&sectionIndex!==state.sectionIndex)return false;
+ if(paper.navigation.sectionNavigation==="sequential-locked"&&sectionIndex!==state.sectionIndex)return false;
+ if(paper.navigation.questionNavigation==="forward-only"&&
+   (sectionIndex<state.sectionIndex||
+    (sectionIndex===state.sectionIndex&&questionIndex<state.questionIndex)))return false;
+ return !(sectionIndex===state.sectionIndex&&questionIndex===state.questionIndex);
+}
+
 export function transition(
  paper:PaperRevision,state:SessionState,event:SessionEvent,mode:AttemptMode="exam-simulation"
 ): SessionState {
@@ -213,14 +227,8 @@ export function transition(
     return advance(paper, current);
   }
   if (event.type === "NAVIGATE") {
-    const section = paper.sections[event.sectionIndex];
-    if (!section?.questionRevisionIds[event.questionIndex] || current.completedSections.includes(event.sectionIndex)) return current;
-    if (paper.timing.kind === "sectional" && event.sectionIndex !== current.sectionIndex) return current;
-    if (paper.navigation.sectionNavigation === "sequential-locked" && event.sectionIndex !== current.sectionIndex) return current;
-    if (paper.navigation.questionNavigation === "forward-only" &&
-        (event.sectionIndex < current.sectionIndex ||
-         (event.sectionIndex === current.sectionIndex && event.questionIndex < current.questionIndex))) return current;
-    if(event.sectionIndex===current.sectionIndex&&event.questionIndex===current.questionIndex)return current;
+    if(!canNavigateToQuestion(paper,current,event.sectionIndex,event.questionIndex))return current;
+    const section=paper.sections[event.sectionIndex]!;
     return enterQuestion({ ...current, sectionIndex: event.sectionIndex, questionIndex: event.questionIndex,
       sectionElapsedMs: event.sectionIndex === current.sectionIndex ? current.sectionElapsedMs : 0 },
       section.questionRevisionIds[event.questionIndex]!);
