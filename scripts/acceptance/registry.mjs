@@ -1,5 +1,5 @@
 import {catalogLifecycle} from "./scenarios/catalog.mjs";
-import {candidateCore,candidateMcqTools,statusPalette} from "./scenarios/candidate.mjs";
+import {candidateCore,candidateHighlighting,candidateMcqTools,statusPalette} from "./scenarios/candidate.mjs";
 import {authoringPublication,externalBankAuthoring} from "./scenarios/authoring.mjs";
 import {storageResilience,partialRecovery} from "./scenarios/storage.mjs";
 import {fileNavigation} from "./scenarios/navigation.mjs";
@@ -13,6 +13,7 @@ const scenario=(id,tags,run)=>Object.freeze({id,tags:Object.freeze(["browser",..
 export const scenarioRegistry=Object.freeze([
  scenario("candidate-core",["smoke","candidate","history","learning"],candidateCore),
  scenario("candidate-mcq-tools",["smoke","candidate","navigation"],candidateMcqTools),
+ scenario("candidate-highlighting",["smoke","candidate","annotation"],candidateHighlighting),
  scenario("status-palette",["candidate","visual-state","deep"],statusPalette),
  scenario("authoring-publication",["smoke","authoring","publication"],authoringPublication),
  scenario("catalog-lifecycle",["smoke","catalog","removal"],catalogLifecycle),
