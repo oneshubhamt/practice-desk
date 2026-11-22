@@ -9,6 +9,8 @@ import {calculatorPanelHTML,calculatorToggleHTML} from "./exam-calculator.ts";
 import {BASIC_CALCULATOR_V1,newExamCalculatorState,type ExamCalculatorState} from "../domain/calculator.ts";
 import {shouldShowWordCount} from "../domain/word-count.ts";
 import {overtimeMs,sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
+import {eliminatedOptionIdsForQuestion} from "../domain/candidate-scratch.ts";
+import {findNextCandidateQuestion} from "./exam-navigation.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -44,7 +46,7 @@ export function examClockDisplay(
 }
 
 export function renderModelExam(
- attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId">,
+ attempt:Pick<GenericAttempt,"state"|"frozen"|"packageId"|"candidateScratch">,
  bundle:ExamPackage|undefined,warning="",
  draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string},
  view:Readonly<{focused:boolean}>={focused:false},
@@ -83,6 +85,9 @@ export function renderModelExam(
    const calculator=calculatorState??newExamCalculatorState();
    const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
    const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
+   const eliminatedOptionIds=eliminatedOptionIdsForQuestion(attempt.candidateScratch,q.id);
+   const nextUnanswered=findNextCandidateQuestion(paper,state,"unanswered");
+   const nextFlagged=findNextCandidateQuestion(paper,state,"flagged");
    const multiSection=paper.sections.length>1;
    const showSectionContext=multiSection||attempt.frozen.snapshot.mode==="section-practice";
 
@@ -120,7 +125,8 @@ export function renderModelExam(
      supplementalAssetHTML(assets,q.content.assetIds,q.content.richPrompt,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response,{
-       showWordCount:shouldShowWordCount(paper.candidateTools?.wordCount,attempt.frozen.snapshot.mode)
+       showWordCount:shouldShowWordCount(paper.candidateTools?.wordCount,attempt.frozen.snapshot.mode),
+       eliminatedOptionIds
      })+
      (currentDraft?'<p class="generic-inline-warning" role="status">'+escapeText(currentDraft.message)+'</p>':"")+
      '</fieldset>'+
@@ -149,6 +155,9 @@ export function renderModelExam(
         (r?.flagged?"marked":"")+'" data-q="'+i+'" aria-current="'+(i===state.questionIndex?"step":"false")+'" aria-label="Question '+(i+1)+
         (r?.response?", answered":", unanswered")+(r?.flagged?", marked for review":"")+'"'+(locked?" disabled":"")+'>'+(i+1)+'</button>';
       }).join("")+'</div>'+
+      '<div class="navigator-jumps" role="group" aria-label="Quick question navigation">'+
+       '<button class="btn quiet" id="g-next-unanswered"'+(!nextUnanswered?" disabled":"")+'>Next unanswered</button>'+
+       '<button class="btn quiet" id="g-next-flagged"'+(!nextFlagged?" disabled":"")+'>Next flagged</button></div>'+
       '<div class="navigator-stats" role="group" aria-label="'+(multiSection?"Current section answer counts":"Question answer counts")+'">'+
        '<div><b>'+sectionAnswered+'<span> / '+section.questionRevisionIds.length+'</span></b><small>Answered</small></div>'+
        '<div><b>'+(section.questionRevisionIds.length-sectionAnswered)+'</b><small>Not answered</small></div>'+
