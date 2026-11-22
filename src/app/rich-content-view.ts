@@ -35,12 +35,15 @@ function decoratedText(inline:Extract<RichInline,{type:"text"}>,path:readonly nu
  for(let i=0;i<boundaries.length-1;i++){
   const start=boundaries[i]!,end=boundaries[i+1]!;
   if(end<=start)continue;
-  let segment=markedText(inline.text.slice(start,end),inline.marks);
+  let segment=escapeText(inline.text.slice(start,end));
   const active=decorations.filter(item=>item.start<=start&&item.end>=end)
     .sort((a,b)=>a.id.localeCompare(b.id));
   for(const item of active)segment='<mark class="candidate-highlight" data-candidate-highlight-id="'+
     escapeText(item.id)+'" data-highlight-color="'+escapeText(item.color)+'">'+segment+'</mark>';
   html+=segment;
+ }
+ for(const mark of [...(inline.marks??[])].reverse()){
+  const tag=tags[mark];html="<"+tag+">"+html+"</"+tag+">";
  }
  return options.annotatable?'<span class="pd-rich-text-leaf" data-rich-path="'+path.join(".")+'">'+html+'</span>':html;
 }
