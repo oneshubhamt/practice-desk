@@ -94,7 +94,7 @@ jobs:
         with:
           name: source-verified-static-app
           path: Practice_Desk_Static
-      - name: Eight critical Chromium smoke scenarios
+      - name: Nine critical Chromium smoke scenarios
         run: node scripts/timed-run.mjs browser-smoke -- node scripts/acceptance-suite.mjs chromium --tag=smoke
       - name: Browser/WASM optimizer activation
         run: node scripts/timed-run.mjs browser-optimizer-full -- node scripts/fsrs-browser-optimizer-smoke.mjs chromium full
