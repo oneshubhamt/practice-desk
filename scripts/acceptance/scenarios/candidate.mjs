@@ -453,3 +453,61 @@ try{
 }catch(e){await h.diagnose("review-palette-"+engine,page,e);throw e;
 }finally{await h.finish();}
 }
+
+
+export async function candidateMcqTools(){
+ const {openHarness,records,check,assertNoOverflow,route}=await import("../../browser/fixtures.mjs");
+ const {importModernPaper}=await import("../../paper-select.mjs");
+ const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
+ const engine=process.argv[2]??"chromium";
+ const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
+ const {page,errors}=await h.open({viewport:{width:1100,height:790}});
+ try{
+  await importModernPaper(page,pkg,"six-kinds-candidate-tools.json");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  const attemptId=new URL(await page.url()).searchParams.get("attempt");
+  check(Boolean(attemptId),"candidate-tools attempt ID missing");
+
+  check(await page.locator("[data-eliminate]").count()===2,
+   "single-choice question did not expose one strike control per stable option");
+  await page.locator('input[data-choice="a"]').check();
+  await page.locator('[data-eliminate="b"]').click();
+  check(await page.locator('input[data-choice="a"]').isChecked(),
+   "striking option B changed selected option A");
+  check(await page.locator('[data-eliminate="b"]').getAttribute("aria-pressed")==="true",
+   "option B strike state was not exposed accessibly");
+  check(await page.locator('[data-eliminate="b"]').locator("..").evaluate(el=>el.classList.contains("eliminated")),
+   "struck option did not receive eliminated presentation state");
+
+  await page.locator('[data-q="2"]').click();
+  await page.locator("#g-flag").click();
+  await page.locator('[data-q="0"]').click();
+  await page.locator("#g-next-unanswered").click();
+  check(await page.locator(".exam-question").getAttribute("data-active-question")==="rev-1",
+   "Next unanswered did not advance to the next unanswered question");
+  check(await page.locator("[data-eliminate]").count()===3,
+   "multiple-select question did not expose strike controls");
+  await page.locator("#g-next-flagged").click();
+  check(await page.locator(".exam-question").getAttribute("data-active-question")==="rev-2",
+   "Next flagged did not advance to the next marked question");
+
+  await page.reload({waitUntil:"load"});await route(page,"exam");
+  await page.locator('[data-q="0"]').click();
+  check(await page.locator('input[data-choice="a"]').isChecked(),
+   "saved answer did not survive candidate-tools reload");
+  check(await page.locator('[data-eliminate="b"]').getAttribute("aria-pressed")==="true",
+   "stable OptionId elimination did not survive reload");
+  const stored=(await records(page)).find(x=>x.id===attemptId);
+  check(stored?.candidateScratch?.eliminations?.some(row=>
+    row.questionRevisionId==="rev-0"&&row.optionIds.length===1&&row.optionIds[0]==="b"),
+    "persisted candidate scratch did not retain eliminated OptionId b");
+
+  await page.setViewportSize({width:195,height:844});
+  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
+  await assertNoOverflow(page,"candidate MCQ tools 195px 140%");
+  check(!errors.length,"candidate-tools browser errors: "+errors.join("; "));
+  console.log("CANDIDATE MCQ TOOLS "+engine+
+   " PASS: independent strike state, reload persistence, next-unanswered/flagged and 195px layout");
+ }catch(e){await h.diagnose("candidate-mcq-tools-"+engine,page,e);throw e;
+ }finally{await h.finish();}
+}
