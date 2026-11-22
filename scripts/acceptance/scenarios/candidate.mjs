@@ -512,3 +512,135 @@ export async function candidateMcqTools(){
  }catch(e){await h.diagnose("candidate-mcq-tools-"+engine,page,e);throw e;
  }finally{await h.finish();}
 }
+
+
+export async function candidateHighlighting(){
+ const {openHarness,records,check,assertNoOverflow,route}=await import("../../browser/fixtures.mjs");
+ const {importModernPaper}=await import("../../paper-select.mjs");
+ const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
+ const {questionRevisionHash}=await import("../../../src/domain/integrity.ts");
+ const richPrompt={format:"practice-desk-rich",version:1,blocks:[{
+  type:"paragraph",content:[
+   {type:"text",text:"Alpha ",marks:["strong"]},
+   {type:"math",tex:"x^2",linearText:"x squared"},
+   {type:"text",text:" beta",marks:["underline"]}
+  ]
+ }]};
+ const richStimulus={id:"highlight-passage",kind:"passage",title:"Case passage",text:"Clinical clue",
+  richText:{format:"practice-desk-rich",version:1,blocks:[{type:"paragraph",content:[
+   {type:"text",text:"Clinical ",marks:["emphasis"]},{type:"text",text:"clue"}
+  ]}]}};
+ const original=pkg.questions[0],content={...original.content,stimulusId:richStimulus.id,richPrompt};
+ const richQuestion={...original,content,contentHash:questionRevisionHash({content,editorial:original.editorial})};
+ const highlightPkg={...pkg,title:"Candidate highlighting",questions:[richQuestion,...pkg.questions.slice(1)],
+  stimuli:[richStimulus]};
+ const engine=process.argv[2]??"chromium";
+ const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
+ const {page,errors}=await h.open({viewport:{width:1100,height:790}});
+
+ async function selectBetween(startSelector,startOffset,endSelector,endOffset){
+  await page.evaluate(({startSelector,startOffset,endSelector,endOffset})=>{
+   const start=document.querySelector(startSelector),end=document.querySelector(endSelector);
+   if(!start||!end)throw Error("Highlight selection target missing");
+   const point=(root,offset)=>{
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+    let node,seen=0;
+    while((node=walker.nextNode())){
+     const length=node.textContent?.length??0;
+     if(offset<=seen+length)return {node,offset:offset-seen};
+     seen+=length;
+    }
+    throw Error("Highlight selection offset exceeds target text");
+   };
+   const a=point(start,startOffset),b=point(end,endOffset),range=document.createRange();
+   range.setStart(a.node,a.offset);range.setEnd(b.node,b.offset);
+   const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+   start.dispatchEvent(new PointerEvent("pointerup",{bubbles:true}));
+  },{startSelector,startOffset,endSelector,endOffset});
+ }
+ try{
+  await importModernPaper(page,highlightPkg,"candidate-highlighting.json");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  const attemptId=new URL(await page.url()).searchParams.get("attempt");
+  check(Boolean(attemptId),"candidate-highlighting attempt ID missing");
+  check(await page.locator('[data-highlight-surface="question-prompt"][data-highlight-mode="rich"]').count()===1,
+   "rich question prompt did not expose one candidate highlight surface");
+  check(await page.locator('[data-highlight-surface="question-prompt"] [data-rich-path="0.0"]').count()===1&&
+    await page.locator('[data-highlight-surface="question-prompt"] [data-rich-path="0.2"]').count()===1,
+   "rich prompt text leaves did not expose stable structural paths");
+  check(await page.locator('[data-highlight-surface="question-prompt"] [data-rich-path="0.1"]').count()===0,
+   "inline KaTeX incorrectly became a character-offset highlight leaf");
+
+  await selectBetween(
+   '[data-highlight-surface="question-prompt"] [data-rich-path="0.0"]',0,
+   '[data-highlight-surface="question-prompt"] [data-rich-path="0.2"]',5
+  );
+  check(!(await page.getByRole("button",{name:"Highlight selected text yellow"}).isDisabled()),
+   "valid rich selection did not enable highlight colors");
+  await page.getByRole("button",{name:"Highlight selected text yellow"}).click();
+  check(await page.locator('mark.candidate-highlight[data-highlight-color="yellow"]').count()===2,
+   "cross-leaf rich selection did not render two text-only highlight fragments");
+  check(await page.locator('[data-highlight-surface="question-prompt"] .katex mark.candidate-highlight').count()===0,
+   "candidate highlight wrapped KaTeX math");
+
+  await selectBetween(
+   '[data-highlight-surface="stimulus-passage"] [data-rich-path="0.1"]',0,
+   '[data-highlight-surface="stimulus-passage"] [data-rich-path="0.1"]',4
+  );
+  await page.getByRole("button",{name:"Highlight selected text green"}).click();
+  check(await page.locator('[data-highlight-surface="stimulus-passage"] mark[data-highlight-color="green"]').count()===1,
+   "eligible rich passage selection was not highlighted");
+
+  await page.locator("#g-next").click();
+  check(await page.locator('[data-highlight-surface="question-prompt"][data-highlight-mode="plain"]').count()===1,
+   "plain question prompt did not expose canonical text highlighting");
+  await selectBetween(
+   '[data-highlight-surface="question-prompt"][data-highlight-mode="plain"]',0,
+   '[data-highlight-surface="question-prompt"][data-highlight-mode="plain"]',6
+  );
+  await page.getByRole("button",{name:"Highlight selected text pink"}).click();
+  check((await page.locator('[data-highlight-surface="question-prompt"] mark[data-highlight-color="pink"]').innerText())==="Select",
+   "plain prompt highlight did not use canonical source offsets");
+
+  await page.reload({waitUntil:"load"});await route(page,"exam");
+  check(await page.locator('[data-highlight-surface="question-prompt"] mark[data-highlight-color="pink"]').count()===1,
+   "plain highlight did not survive reload");
+  await page.locator('[data-q="0"]').click();
+  check(await page.locator('[data-highlight-surface="question-prompt"] mark[data-highlight-color="yellow"]').count()===2&&
+    await page.locator('[data-highlight-surface="stimulus-passage"] mark[data-highlight-color="green"]').count()===1,
+   "rich prompt/stimulus highlights did not survive redraw and reload");
+
+  let stored=(await records(page)).find(x=>x.id===attemptId);
+  const promptHighlights=stored?.candidateScratch?.highlights?.filter(x=>
+   x.surface?.kind==="question-prompt"&&x.surface.questionRevisionId===richQuestion.id&&x.color==="yellow")??[];
+  check(promptHighlights.length===2&&
+    promptHighlights.some(x=>x.anchor?.kind==="rich"&&JSON.stringify(x.anchor.path)==="[0,0]")&&
+    promptHighlights.some(x=>x.anchor?.kind==="rich"&&JSON.stringify(x.anchor.path)==="[0,2]")&&
+    !promptHighlights.some(x=>JSON.stringify(x.anchor?.path)==="[0,1]"),
+   "persisted rich selection did not retain structural text-only anchors");
+  check(stored?.frozen?.questions?.[0]?.contentHash===richQuestion.contentHash&&
+    stored?.frozen?.questions?.[0]?.content?.richPrompt?.blocks?.[0]?.content?.[1]?.type==="math",
+   "candidate highlighting mutated frozen question content");
+
+  await selectBetween(
+   '[data-highlight-surface="question-prompt"] [data-rich-path="0.0"]',0,
+   '[data-highlight-surface="question-prompt"] [data-rich-path="0.0"]',5
+  );
+  check(!(await page.locator("#g-highlight-remove").isDisabled()),
+   "selecting highlighted text did not enable removal");
+  await page.locator("#g-highlight-remove").click();
+  check(await page.locator('[data-highlight-surface="question-prompt"] mark[data-highlight-color="yellow"]').count()===1,
+   "removal did not delete only the overlapping structural highlight");
+  stored=(await records(page)).find(x=>x.id===attemptId);
+  check((stored?.candidateScratch?.highlights?.length??0)===3,
+   "removing one rich fragment changed unrelated candidate annotations");
+
+  await page.setViewportSize({width:195,height:844});
+  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
+  await assertNoOverflow(page,"candidate highlighting 195px 140%");
+  check(!errors.length,"candidate-highlighting browser errors: "+errors.join("; "));
+  console.log("CANDIDATE HIGHLIGHTING "+engine+
+   " PASS: structural rich/plain anchors, atomic math, eligible stimulus, reload, remove and 195px layout");
+ }catch(e){await h.diagnose("candidate-highlighting-"+engine,page,e);throw e;
+ }finally{await h.finish();}
+}
