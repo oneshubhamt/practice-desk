@@ -85,7 +85,7 @@ export function renderGenericControls(
         // Elimination is deliberately a sibling control, never nested in the
         // answer label: striking an option cannot select or clear an answer.
         // Image enlargement remains outside the answer label for the same reason.
-        return media?'<div class="generic-choice-media-row '+(eliminated?"eliminated":"")+'">'+actionRow+
+        return media?'<div class="generic-choice-media-row">'+actionRow+
           '<div class="generic-choice-media">'+media+'</div></div>':actionRow;
       }).join("")+
       '</fieldset>';
