@@ -42,7 +42,7 @@ export const emptyCandidateScratch=():CandidateScratch=>({
  schema:1,eliminations:[],highlights:[]
 });
 
-export type CandidateCandidateScratchContext={
+export type CandidateScratchContext={
  readonly questions:readonly QuestionRevision[];
  readonly stimuli:readonly StimulusDefinition[];
 };
