@@ -102,7 +102,7 @@ test("eligible passage, table-cell and media-caption surfaces are independently 
    q:{...questions[0],content:{...questions[0].content,stimulusId:"pass"}},
    highlight:{id:"p",surface:{kind:"stimulus-passage",stimulusId:"pass"},
     anchor:{kind:"plain",start:0,end:8},color:"yellow"},
-   pattern:/data-highlight-surface="stimulus-passage"[^>]*>Clinical<\/mark> clue/
+   pattern:/data-highlight-surface="stimulus-passage"[^>]*><mark[^>]*>Clinical<\/mark> clue/
   },
   {
    q:{...questions[0],content:{...questions[0].content,stimulusId:"tab"}},
