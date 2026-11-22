@@ -274,10 +274,11 @@ test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notice
  // Pass 3 adds the full pinned Calendar surface (~212 KB minified runtime, measured in CI).
  // Keep a bounded post-integration review ceiling rather than silently dropping Calendar functionality.
  // The standalone intentionally includes the current PFRDA Day 1 package plus
- // the consolidated Day 3 package. Day 3 adds ~46 KiB to the generated standalone
- // versus the previously reviewed build. Keep a tight bound so future preinstalls
- // must make an explicit payload-budget decision rather than growing silently.
- assert.ok(size<2_950_000,"Bundled file exceeds reviewed preinstalled-bank size limit: "+size);
+ // the consolidated Day 3 package. Day 3 adds ~46 KiB to the generated standalone.
+ // Pass C candidate highlighting adds ~12 KiB of shared runtime at the measured
+ // 2,954,357-byte build. Retain a narrow reviewed ceiling so later growth still
+ // requires an explicit payload-budget decision rather than expanding silently.
+ assert.ok(size<2_970_000,"Bundled file exceeds reviewed runtime/preinstalled size limit: "+size);
 });
 }
 await registerMathRenderingTests();
