@@ -476,7 +476,8 @@ export async function candidateMcqTools(){
    "striking option B changed selected option A");
   check(await page.locator('[data-eliminate="b"]').getAttribute("aria-pressed")==="true",
    "option B strike state was not exposed accessibly");
-  check(await page.locator('[data-eliminate="b"]').locator("..").evaluate(el=>el.classList.contains("eliminated")),
+  check(await page.locator('[data-eliminate="b"]').evaluate(el=>
+    Boolean(el.parentElement?.classList.contains("eliminated"))),
    "struck option did not receive eliminated presentation state");
 
   await page.locator('[data-q="2"]').click();
