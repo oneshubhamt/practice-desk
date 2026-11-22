@@ -42,7 +42,7 @@ export const emptyCandidateScratch=():CandidateScratch=>({
  schema:1,eliminations:[],highlights:[]
 });
 
-type ScratchContext={
+export type CandidateScratchContext={
  readonly questions:readonly QuestionRevision[];
  readonly stimuli:readonly StimulusDefinition[];
 };
@@ -106,7 +106,7 @@ function validateAnchor(anchorValue:unknown,plainText:string,rich:RichDocument|u
  throw Error(label+": unsupported anchor kind");
 }
 function target(
- surfaceValue:unknown,context:ScratchContext,label:string
+ surfaceValue:unknown,context:CandidateScratchContext,label:string
 ):{plain:string;rich?:RichDocument}{
  const surface=plain(surfaceValue,label);
  if(surface.kind==="question-prompt"){
@@ -161,6 +161,57 @@ function target(
 }
 
 
+export function candidateHighlightSurfaceKey(surface:CandidateHighlightSurface):string{
+ switch(surface.kind){
+  case "question-prompt":return "question-prompt|"+surface.questionRevisionId;
+  case "option-text":return "option-text|"+surface.questionRevisionId+"|"+surface.optionId;
+  case "stimulus-passage":return "stimulus-passage|"+surface.stimulusId;
+  case "stimulus-table-cell":return "stimulus-table-cell|"+surface.stimulusId+"|"+surface.row+"|"+surface.column;
+  case "stimulus-caption":return "stimulus-caption|"+surface.stimulusId;
+ }
+}
+
+export function candidateHighlightsForSurface(
+ scratch:CandidateScratch,surface:CandidateHighlightSurface
+):readonly CandidateHighlight[]{
+ const key=candidateHighlightSurfaceKey(surface);
+ return scratch.highlights.filter(item=>candidateHighlightSurfaceKey(item.surface)===key);
+}
+
+function anchorsOverlap(a:CandidateTextAnchor,b:CandidateTextAnchor):boolean{
+ if(a.kind!==b.kind)return false;
+ if(a.kind==="rich"&&b.kind==="rich"&&
+   (a.path.length!==b.path.length||a.path.some((part,i)=>part!==b.path[i])))return false;
+ return a.start<b.end&&b.start<a.end;
+}
+
+export function candidateHighlightIdsOverlapping(
+ scratch:CandidateScratch,fragments:readonly Pick<CandidateHighlight,"surface"|"anchor">[]
+):readonly string[]{
+ const ids=new Set<string>();
+ for(const item of scratch.highlights)for(const fragment of fragments){
+  if(candidateHighlightSurfaceKey(item.surface)===candidateHighlightSurfaceKey(fragment.surface)&&
+     anchorsOverlap(item.anchor,fragment.anchor))ids.add(item.id);
+ }
+ return [...ids];
+}
+
+export function addCandidateHighlights(
+ scratch:CandidateScratch,highlights:readonly CandidateHighlight[],context:CandidateScratchContext
+):CandidateScratch{
+ if(!highlights.length)return scratch;
+ return validateCandidateScratch({...scratch,highlights:[...scratch.highlights,...highlights]},context);
+}
+
+export function removeCandidateHighlights(
+ scratch:CandidateScratch,highlightIds:readonly string[]
+):CandidateScratch{
+ if(!highlightIds.length)return scratch;
+ const remove=new Set(highlightIds);
+ const highlights=scratch.highlights.filter(item=>!remove.has(item.id));
+ return highlights.length===scratch.highlights.length?scratch:{...scratch,highlights};
+}
+
 export function eliminatedOptionIdsForQuestion(
  scratch:CandidateScratch,questionRevisionId:QuestionRevisionId
 ):readonly OptionId[]{
@@ -185,7 +236,7 @@ export function setCandidateOptionEliminated(
    [...retained,{questionRevisionId:question.id,optionIds}]:retained};
 }
 
-export function validateCandidateScratch(value:unknown,context:ScratchContext):CandidateScratch{
+export function validateCandidateScratch(value:unknown,context:CandidateScratchContext):CandidateScratch{
  const root=plain(value,"candidate scratch");
  only(root,["schema","eliminations","highlights"],"candidate scratch");
  if(root.schema!==1||!Array.isArray(root.eliminations)||!Array.isArray(root.highlights)||

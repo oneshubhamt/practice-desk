@@ -121,7 +121,16 @@ export function renderModelExam(
          '<b>'+escapeText(s.title)+'</b><small>'+status+'</small></button>';
      }).join("")+'</div>':"")+'<div class="generic-layout exam-grid"><section class="panel pad exam-question" data-active-question="'+escapeText(q.id)+'"><p class="eyebrow">'+
      (multiSection?escapeText(section.title)+' · ':"")+'Question '+(state.questionIndex+1)+' of '+section.questionRevisionIds.length+'</p>'+
-     stimulusHTML(assets,q)+renderQuestionPrompt(assets,q)+
+     '<div class="candidate-highlight-tools" role="toolbar" aria-label="Text highlighting">'+
+      '<span class="fine candidate-highlight-label">Highlight selection</span>'+
+      '<button type="button" class="candidate-highlight-swatch" data-highlight-color="yellow" aria-label="Highlight selected text yellow" disabled>Yellow</button>'+
+      '<button type="button" class="candidate-highlight-swatch" data-highlight-color="green" aria-label="Highlight selected text green" disabled>Green</button>'+
+      '<button type="button" class="candidate-highlight-swatch" data-highlight-color="pink" aria-label="Highlight selected text pink" disabled>Pink</button>'+
+      '<button type="button" class="btn quiet candidate-highlight-remove" id="g-highlight-remove" disabled>Remove</button></div>'+
+     '<p class="fine candidate-highlight-status" id="g-highlight-status" role="status" aria-live="polite">'+
+      ((state.status==="running"||state.status==="paused")?
+       "Select text in the question or an eligible stimulus.":"Highlighting is unavailable while this section is locked.")+'</p>'+
+     stimulusHTML(assets,q,attempt.candidateScratch)+renderQuestionPrompt(assets,q,attempt.candidateScratch)+
      supplementalAssetHTML(assets,q.content.assetIds,q.content.richPrompt,"Figure for question "+(state.questionIndex+1))+
      '<fieldset class="generic-response-group"'+(state.status!=="running"?" disabled":"")+'>'
      +renderGenericControls(assets,q,currentDraft?{kind:"multiple-select",optionIds:currentDraft.optionIds}:response,{

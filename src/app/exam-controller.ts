@@ -12,6 +12,7 @@ import {readCalculatorWorkspace,writeCalculatorWorkspace} from "./candidate-tool
 import {countWords,wordCountBand} from "../domain/word-count.ts";
 import {eliminatedOptionIdsForQuestion,setCandidateOptionEliminated} from "../domain/candidate-scratch.ts";
 import {findNextCandidateQuestion} from "./exam-navigation.ts";
+import {bindCandidateHighlighting} from "./candidate-highlighting.ts";
 import {commitCurrentWrittenDraft,discardCurrentWrittenDraft,stageWrittenResponseDraft}
  from "./written-response-draft.ts";
 
@@ -68,6 +69,20 @@ if(calculatorProfile){
 const section=owner.attempt!.frozen.paper.sections[owner.attempt!.state.sectionIndex];
 const q=owner.attempt!.frozen.questions.find(x=>x.id===section?.questionRevisionIds[owner.attempt!.state.questionIndex]);
 if(!q)return;
+bindCandidateHighlighting({
+ root:owner.root,
+ scratch:owner.attempt!.candidateScratch,
+ context:{questions:owner.attempt!.frozen.questions,stimuli:owner.attempt!.frozen.stimuli},
+ canAnnotate:!owner.storageFault&&["running","paused"].includes(owner.attempt!.state.status),
+ now:()=>owner.now(),
+ onChange:(candidateScratch,now)=>{
+  if(!owner.attempt)return;
+  owner.attempt={...owner.attempt,candidateScratch,updatedAt:now};
+  owner.warning="";
+  void owner.save(owner.attempt);
+  owner.draw();
+ }
+});
 owner.root.querySelectorAll<HTMLButtonElement>("[data-eliminate]").forEach(button=>button.onclick=()=>{
      if(!owner.attempt||owner.attempt.state.status!=="running")return;
      if(q.content.kind!=="single-choice"&&q.content.kind!=="multiple-select")return;

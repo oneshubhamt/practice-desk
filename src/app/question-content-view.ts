@@ -3,7 +3,11 @@ import type {ExamPackage} from "../domain/exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {OptionId} from "../domain/ids.js";
 import type {RichDocument,RichInline} from "../domain/rich-document.ts";
+import type {CandidateHighlightSurface,CandidateScratch} from "../domain/candidate-scratch.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
+import {
+ candidateAnnotatedPlainHTML,candidateHighlightSurfaceAttributes,candidateRichRenderOptions
+} from "./candidate-highlight-view.ts";
 import {escapeText} from "./html-escape.ts";
 import {countWords,wordCountBand} from "../domain/word-count.ts";
 function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
@@ -50,12 +54,27 @@ function renderAuthoredTextWithoutImages(bundle:ExamPackage,plain:string,rich?:R
  const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
  return authoredTextHTML(plain,rich,knownAssets,()=> "");
 }
-export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):string{
+function candidateAuthoredText(
+ bundle:ExamPackage,plain:string,rich:RichDocument|undefined,scratch:CandidateScratch,
+ surface:CandidateHighlightSurface,image:(id:string,alt:string)=>string
+):string{
+ const knownAssets=new Set(bundle.assets?.map(asset=>asset.id)??[]);
+ return rich?authoredTextHTML(plain,rich,knownAssets,image,candidateRichRenderOptions(scratch,surface)):
+   candidateAnnotatedPlainHTML(plain,scratch,surface);
+}
+export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision,scratch?:CandidateScratch):string{
  const content=q.content;
- return content.richPrompt?
+ if(!scratch)return content.richPrompt?
    '<div class="generic-prompt pd-rich-prompt" role="heading" aria-level="2">'+
      renderAuthoredText(bundle,content.prompt,content.richPrompt)+'</div>':
    '<h2 class="generic-prompt">'+escapeText(content.prompt)+'</h2>';
+ const surface:CandidateHighlightSurface={kind:"question-prompt",questionRevisionId:q.id};
+ const attrs=candidateHighlightSurfaceAttributes(surface,content.richPrompt?"rich":"plain");
+ const body=candidateAuthoredText(bundle,content.prompt,content.richPrompt,scratch,surface,
+   (id,alt)=>assetHTML(bundle,[id],alt));
+ return content.richPrompt?
+   '<div class="generic-prompt pd-rich-prompt" role="heading" aria-level="2"'+attrs+'>'+body+'</div>':
+   '<h2 class="generic-prompt"'+attrs+'>'+body+'</h2>';
 }
 export function renderGenericControls(
  bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse,
@@ -126,23 +145,57 @@ export function renderGenericControls(
     '<p class="generic-inline-warning" id="g-match-feedback" role="status" aria-live="polite" aria-atomic="true"></p>'+
     '<button class="btn primary" id="g-save">Save matches</button>';
 }
-export function stimulusHTML(bundle:ExamPackage,q:QuestionRevision):string{
+export function stimulusHTML(bundle:ExamPackage,q:QuestionRevision,scratch?:CandidateScratch):string{
  const stimulus=bundle.stimuli?.find(s=>s.id===q.content.stimulusId);
  if(!stimulus)return "";
- if(stimulus.kind==="passage"||stimulus.kind==="case")
-   return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="'+
-     escapeText((stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"))+
-       " — scroll to read full text")+'"><b>'+escapeText(stimulus.title||"Reading passage")+
-     '</b>'+(stimulus.richText?renderAuthoredText(bundle,stimulus.text,stimulus.richText):
+ if(stimulus.kind==="passage"||stimulus.kind==="case"){
+   const title=escapeText(stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"));
+   const label=escapeText((stimulus.title||(stimulus.kind==="case"?"Case study":"Reading passage"))+
+     " — scroll to read full text");
+   if(!scratch)return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="'+label+'"><b>'+
+     title+'</b>'+(stimulus.richText?renderAuthoredText(bundle,stimulus.text,stimulus.richText):
        '<p>'+escapeText(stimulus.text)+'</p>')+
      supplementalAssetHTML(bundle,stimulus.assetIds,stimulus.richText,
        "Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
- if(stimulus.kind==="table")return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+'</b><div class="scroll-table"><table><tr>'+
-   stimulus.columns.map((c,i)=>'<th>'+renderAuthoredText(bundle,c,stimulus.richColumns?.[i])+'</th>').join("")+'</tr>'+
-   stimulus.rows.map((r,i)=>'<tr>'+r.map((c,j)=>'<td>'+
-     renderAuthoredText(bundle,c,stimulus.richRows?.[i]?.[j])+'</td>').join("")+'</tr>').join("")+'</table></div></section>';
- if ("assetId" in stimulus) return '<section class="generic-stimulus">'+
-    assetHTML(bundle,[stimulus.assetId],stimulus.altText)+
-    '<div>'+renderAuthoredText(bundle,stimulus.caption||stimulus.altText,stimulus.richCaption)+'</div></section>';
-  return "";
+   const surface:CandidateHighlightSurface={kind:"stimulus-passage",stimulusId:stimulus.id};
+   const attrs=candidateHighlightSurfaceAttributes(surface,stimulus.richText?"rich":"plain");
+   const body=candidateAuthoredText(bundle,stimulus.text,stimulus.richText,scratch,surface,
+     (id,alt)=>assetHTML(bundle,[id],alt));
+   return '<section class="generic-stimulus" role="region" tabindex="0" aria-label="'+label+'"><b>'+
+     title+'</b>'+(stimulus.richText?'<div'+attrs+'>'+body+'</div>':'<p'+attrs+'>'+body+'</p>')+
+     supplementalAssetHTML(bundle,stimulus.assetIds,stimulus.richText,
+       "Image accompanying "+(stimulus.title||"reading passage"))+'</section>';
+ }
+ if(stimulus.kind==="table"){
+   if(!scratch)return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+
+     '</b><div class="scroll-table"><table><tr>'+
+     stimulus.columns.map((text,i)=>'<th>'+renderAuthoredText(bundle,text,stimulus.richColumns?.[i])+'</th>').join("")+
+     '</tr>'+stimulus.rows.map((row,i)=>'<tr>'+row.map((text,j)=>'<td>'+
+       renderAuthoredText(bundle,text,stimulus.richRows?.[i]?.[j])+'</td>').join("")+'</tr>').join("")+
+     '</table></div></section>';
+   const cell=(text:string,rich:RichDocument|undefined,row:"header"|number,column:number,tag:"th"|"td")=>{
+     const surface:CandidateHighlightSurface={kind:"stimulus-table-cell",stimulusId:stimulus.id,row,column};
+     const attrs=candidateHighlightSurfaceAttributes(surface,rich?"rich":"plain");
+     return '<'+tag+attrs+'>'+candidateAuthoredText(bundle,text,rich,scratch,surface,
+       (id,alt)=>assetHTML(bundle,[id],alt))+'</'+tag+'>';
+   };
+   return '<section class="generic-stimulus"><b>'+escapeText(stimulus.title||"Table")+
+     '</b><div class="scroll-table"><table><tr>'+
+     stimulus.columns.map((text,i)=>cell(text,stimulus.richColumns?.[i],"header",i,"th")).join("")+
+     '</tr>'+stimulus.rows.map((row,i)=>'<tr>'+row.map((text,j)=>
+       cell(text,stimulus.richRows?.[i]?.[j],i,j,"td")).join("")+'</tr>').join("")+
+     '</table></div></section>';
+ }
+ if("assetId" in stimulus){
+   if(!scratch)return '<section class="generic-stimulus">'+
+     assetHTML(bundle,[stimulus.assetId],stimulus.altText)+
+     '<div>'+renderAuthoredText(bundle,stimulus.caption||stimulus.altText,stimulus.richCaption)+'</div></section>';
+   const surface:CandidateHighlightSurface={kind:"stimulus-caption",stimulusId:stimulus.id};
+   const attrs=candidateHighlightSurfaceAttributes(surface,stimulus.richCaption?"rich":"plain");
+   const caption=stimulus.caption||stimulus.altText;
+   return '<section class="generic-stimulus">'+assetHTML(bundle,[stimulus.assetId],stimulus.altText)+
+     '<div'+attrs+'>'+candidateAuthoredText(bundle,caption,stimulus.richCaption,scratch,surface,
+       (id,alt)=>assetHTML(bundle,[id],alt))+'</div></section>';
+ }
+ return "";
 }
