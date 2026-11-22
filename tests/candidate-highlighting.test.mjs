@@ -81,7 +81,7 @@ test("rich prompt annotations use structural text-leaf paths while authored mark
  assert.match(html,/data-rich-path="0\.3"/);
  assert.doesNotMatch(html,/data-rich-path="0\.1"/,"inline KaTeX must stay atomic");
  assert.doesNotMatch(html,/data-rich-path="0\.2"/,"inline images must stay atomic");
- assert.match(html,/data-highlight-color="yellow"><strong>Alpha<\/strong><\/mark>/);
+ assert.match(html,/<strong><mark class="candidate-highlight"[^>]*data-highlight-color="yellow">Alpha<\/mark><\/strong>/);
  assert.match(html,/<u> <mark class="candidate-highlight"[^>]*data-highlight-color="green">beta<\/mark><\/u>/);
  assert.match(html,/<ul class="pd-rich-list">/);
  assert.match(html,/<em><mark class="candidate-highlight"[^>]*>List<\/mark> item<\/em>/);
