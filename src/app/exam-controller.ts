@@ -10,6 +10,8 @@ import {multipleDraftMessage,duplicateMatchingTargets} from "./response-drafts.t
 import {bindExamCalculator} from "./exam-calculator.ts";
 import {readCalculatorWorkspace,writeCalculatorWorkspace} from "./candidate-tool-state.ts";
 import {countWords,wordCountBand} from "../domain/word-count.ts";
+import {eliminatedOptionIdsForQuestion,setCandidateOptionEliminated} from "../domain/candidate-scratch.ts";
+import {findNextCandidateQuestion} from "./exam-navigation.ts";
 import {commitCurrentWrittenDraft,discardCurrentWrittenDraft,stageWrittenResponseDraft}
  from "./written-response-draft.ts";
 
@@ -66,6 +68,20 @@ if(calculatorProfile){
 const section=owner.attempt!.frozen.paper.sections[owner.attempt!.state.sectionIndex];
 const q=owner.attempt!.frozen.questions.find(x=>x.id===section?.questionRevisionIds[owner.attempt!.state.questionIndex]);
 if(!q)return;
+owner.root.querySelectorAll<HTMLButtonElement>("[data-eliminate]").forEach(button=>button.onclick=()=>{
+     if(!owner.attempt||owner.attempt.state.status!=="running")return;
+     if(q.content.kind!=="single-choice"&&q.content.kind!=="multiple-select")return;
+     const option=q.content.options.find(item=>item.id===button.dataset.eliminate);
+     if(!option){owner.notice("Unknown question option.");return;}
+     const eliminated=eliminatedOptionIdsForQuestion(owner.attempt.candidateScratch,q.id).includes(option.id);
+     const nextScratch=setCandidateOptionEliminated(owner.attempt.candidateScratch,q,option.id,!eliminated);
+     if(nextScratch===owner.attempt.candidateScratch)return;
+     const now=owner.now();
+     owner.attempt={...owner.attempt,candidateScratch:nextScratch,updatedAt:now};
+     owner.warning="";
+     void owner.save(owner.attempt);
+     owner.draw();
+   });
 owner.root.querySelectorAll<HTMLInputElement>("[data-choice]").forEach(input=>input.onchange=()=>{
      if(q.content.kind==="single-choice"){
        const option=q.content.options.find(x=>x.id===input.dataset.choice);
@@ -192,6 +208,15 @@ owner.root.querySelector<HTMLButtonElement>("#g-prev")!.onclick=()=>navigate(own
 owner.root.querySelector<HTMLButtonElement>("#g-next")!.onclick=()=>navigate(owner.attempt!.state.sectionIndex,owner.attempt!.state.questionIndex+1);
 owner.root.querySelectorAll<HTMLButtonElement>("[data-q]").forEach(b=>b.onclick=()=>navigate(owner.attempt!.state.sectionIndex,Number(b.dataset.q)));
 owner.root.querySelectorAll<HTMLButtonElement>("[data-section]").forEach(b=>b.onclick=()=>navigate(Number(b.dataset.section),0));
+const jump=(kind:"unanswered"|"flagged")=>{
+  if(!owner.attempt)return;
+  const target=findNextCandidateQuestion(owner.attempt.frozen.paper,owner.attempt.state,kind);
+  if(target)navigate(target.sectionIndex,target.questionIndex);
+};
+const nextUnanswered=owner.root.querySelector<HTMLButtonElement>("#g-next-unanswered");
+if(nextUnanswered)nextUnanswered.onclick=()=>jump("unanswered");
+const nextFlagged=owner.root.querySelector<HTMLButtonElement>("#g-next-flagged");
+if(nextFlagged)nextFlagged.onclick=()=>jump("flagged");
 const pause=owner.root.querySelector<HTMLButtonElement>("#g-pause");
 if(pause)pause.onclick=()=>owner.dispatch({type:owner.attempt!.state.status==="paused"?"RESUME":"PAUSE",nowMs:owner.now()});
 owner.root.querySelector<HTMLButtonElement>("#g-submit")!.onclick=()=>{
