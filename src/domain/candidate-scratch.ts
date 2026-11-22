@@ -160,6 +160,31 @@ function target(
  throw Error(label+": unsupported highlight surface");
 }
 
+
+export function eliminatedOptionIdsForQuestion(
+ scratch:CandidateScratch,questionRevisionId:QuestionRevisionId
+):readonly OptionId[]{
+ return scratch.eliminations.find(row=>row.questionRevisionId===questionRevisionId)?.optionIds??[];
+}
+
+export function setCandidateOptionEliminated(
+ scratch:CandidateScratch,question:QuestionRevision,optionId:OptionId,eliminated:boolean
+):CandidateScratch{
+ if(question.content.kind!=="single-choice"&&question.content.kind!=="multiple-select")
+   throw Error("Option elimination requires a choice question");
+ const option=question.content.options.find(item=>item.id===optionId);
+ if(!option)throw Error("Unknown option for candidate elimination");
+ const previous=scratch.eliminations.find(row=>row.questionRevisionId===question.id)?.optionIds??[];
+ const had=previous.includes(optionId);
+ if(had===eliminated)return scratch;
+ const selected=new Set(previous);
+ if(eliminated)selected.add(optionId);else selected.delete(optionId);
+ const optionIds=question.content.options.filter(item=>selected.has(item.id)).map(item=>item.id);
+ const retained=scratch.eliminations.filter(row=>row.questionRevisionId!==question.id);
+ return {...scratch,eliminations:optionIds.length?
+   [...retained,{questionRevisionId:question.id,optionIds}]:retained};
+}
+
 export function validateCandidateScratch(value:unknown,context:ScratchContext):CandidateScratch{
  const root=plain(value,"candidate scratch");
  only(root,["schema","eliminations","highlights"],"candidate scratch");

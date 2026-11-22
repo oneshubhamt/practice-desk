@@ -1,6 +1,7 @@
 /** Inert HTML for frozen question media, stimuli and all six response kinds. */
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
+import type {OptionId} from "../domain/ids.js";
 import type {RichDocument,RichInline} from "../domain/rich-document.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
@@ -58,7 +59,7 @@ export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision):stri
 }
 export function renderGenericControls(
  bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse,
- options:Readonly<{showWordCount?:boolean}>={}
+ options:Readonly<{showWordCount?:boolean;eliminatedOptionIds?:readonly OptionId[]}>={}
 ):string{
   const c=q.content;
   if(c.kind==="single-choice"||c.kind==="multiple-select"){
@@ -68,16 +69,24 @@ export function renderGenericControls(
     return '<fieldset class="generic-choices"><legend>'+legend+'</legend>'+ 
       '<p class="generic-choice-narrow-legend" aria-hidden="true">'+legend+'</p>'+
       c.options.map((o,i)=>{
-        const media=assetHTML(bundle,o.assetIds,"Image for option "+String.fromCharCode(65+i));
-        const text=o.richText?'<div class="pd-rich-choice-text"><b>'+String.fromCharCode(65+i)+'.</b> '+
+        const optionLabel=String.fromCharCode(65+i);
+        const eliminated=Boolean(options.eliminatedOptionIds?.includes(o.id));
+        const media=assetHTML(bundle,o.assetIds,"Image for option "+optionLabel);
+        const text=o.richText?'<div class="pd-rich-choice-text"><b>'+optionLabel+'.</b> '+
            renderAuthoredTextWithoutImages(bundle,o.text,o.richText)+'</div>':
-           '<span><b>'+String.fromCharCode(65+i)+'.</b> '+escapeText(o.text)+'</span>';
+           '<span><b>'+optionLabel+'.</b> '+escapeText(o.text)+'</span>';
         const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
           (selected.includes(o.id)?" checked":"")+'>'+text+'</label>';
-        // No interactive image enlargement control nested inside an answer
-        // label: expanding an option diagram can never select that answer.
-        return media?'<div class="generic-choice-media-row">'+label+
-          '<div class="generic-choice-media">'+media+'</div></div>':label;
+        const strike='<button type="button" class="btn quiet choice-elimination" data-eliminate="'+escapeText(o.id)+
+          '" aria-pressed="'+eliminated+'" aria-label="'+(eliminated?"Restore":"Eliminate")+' option '+optionLabel+
+          '" title="'+(eliminated?"Restore":"Eliminate")+' option '+optionLabel+'">'+
+          (eliminated?"Restore":"Strike")+'</button>';
+        const actionRow='<div class="generic-choice-action-row '+(eliminated?"eliminated":"")+'">'+label+strike+'</div>';
+        // Elimination is deliberately a sibling control, never nested in the
+        // answer label: striking an option cannot select or clear an answer.
+        // Image enlargement remains outside the answer label for the same reason.
+        return media?'<div class="generic-choice-media-row">'+actionRow+
+          '<div class="generic-choice-media">'+media+'</div></div>':actionRow;
       }).join("")+
       '</fieldset>';
   }

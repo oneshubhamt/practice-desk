@@ -6,13 +6,13 @@
 
 | Gate | When | Non-negotiable scope |
 |---|---|---|
-| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **469** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
-| **Smoke** | Every relevant PR/push; needs Fast | **7** real Chrome journeys including candidate→History and author→Publish→Review; complete browser/WASM optimizer activation |
+| **Fast** | Every relevant PR/push | Node **26.13.0**, locked dependencies, strict TS, deterministic offline HTML, **530** non-deep Node tests, isolated FSRS optimizer smoke and static Worker/WASM build |
+| **Smoke** | Every relevant PR/push; needs Fast | **8** real Chrome journeys including candidate→History and author→Publish→Review; complete browser/WASM optimizer activation |
 | **Cross** | Every relevant PR/push; needs Fast | **4** genuine engine-sensitive scenarios **each** on Playwright Firefox and WebKit, plus WASM optimizer probes on both |
 | **Deep** | Push to `working`; needs Fast | **7** scale/benchmark Node cases, **14** named assertion-killed mutations and native/WASM parity run as one contract lane **concurrently in the same runner** with the **8** serial Chrome browser scenarios |
 | **Publish** | Push to `working` **only** | Requires **successful Fast + Smoke + both Cross legs + Deep**; checks tested-head ancestry, no unverified source/CI/artifact drift, publishes only the tested deterministic HTML |
 
-The full Node inventory is **41 files / 476 cases** (469 fast + 7 deep). The browser registry has **15 scenarios / 23 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
+The full Node inventory is **45 files / 537 cases** (530 fast + 7 deep). The browser registry has **16 scenarios / 24 engine executions**. The deep gate is not a routine PR gate, but **no `working` publication can bypass it**. Markdown-only changes do not trigger executable CI. Never weaken a required gate solely to improve timings.
 
 ## Local reproducibility
 
@@ -41,7 +41,7 @@ Install the locked browser toolchain and its host dependencies when running loca
 - **Authoring/catalog:** signed lineage, reviewer evidence, exact publication revision, pre-reveal private-key/explanation isolation, browser adversaries for stem/shared-stimulus/media-alt leakage, QA refusal, catalog-preinstalled family visibility, manifest-only paper append, independent family removal, zero-preinstall boot/import recovery, and offline publish→score→review→reload including question-specific manual-mark ceilings.
 - **Learning:** deterministic scheduling/replay, an independent published FSRS-7 dual-trace retrievability reference, upstream/native/WASM parity, actual browser Worker activation, explicit optimizer/profile privacy.
 - **Calendar:** canonical temporal records plus an Asia/Kolkata datetime-local→UTC year-boundary browser witness with reload preservation.
-- **UI/security:** actual browser paint, ARIA/keyboard/focus, file navigation, responsive 195px/140% layout, media, CSP, no remote dependence.
+- **UI/security:** actual browser paint, ARIA/keyboard/focus, file navigation, responsive 195px/140% layout, media, CSP, no remote dependence; candidate MCQ strike/restore persistence plus Next unanswered/Next flagged are exercised in a real Chromium journey, while pure policy tests prove quick jumps cannot bypass forward-only, sectional/sequential locks or completed sections.
 
 For every proposed test deletion or move, first name **risk → invariant → surviving independent witness → cheapest valid layer**. Preserve real subprocesses for CLI transactions, actual IndexedDB and browser/process-restart witnesses, and meaningful security/a11y assertions. Mere source phrases, CSS classes or success-only mocks are not proof. The **14 mutants** require baseline-green and the named test's assertion failure; they are sensitivity spot checks, **not** a global mutation score.
 
