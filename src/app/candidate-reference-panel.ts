@@ -187,7 +187,7 @@ export function createCandidateReferencePanel():CandidateReferencePanel{
   close();
 
   const dialog=document.createElement("dialog");
-  dialog.className="candidate-reference-dialog";
+  dialog.className="candidate-reference-dialog generic-workspace";
   dialog.setAttribute("aria-labelledby","candidate-reference-panel-title");
   dialog.setAttribute("aria-describedby","candidate-reference-panel-help");
 
