@@ -18,6 +18,7 @@ export function drawWorkspaceScreen(owner:ScreenControllerContext,):void{
    // Do not destroy a live Wordgard editor for a background state notification.
    // Manual close or successful publication refreshes Library explicitly.
    if(owner.view==="authoring"&&owner.authoringStudio.isOpen())return;
+   owner.referencePanel.syncAttempt(owner.view==="exam"?owner.attempt?.id??null:null);
    owner.imageViewer.beforeRender();owner.imagePreparation.beforeRender();owner.authoringStudio.beforeRender();
    const currentSection=owner.attempt?.frozen.paper.sections[owner.attempt.state.sectionIndex];
    const currentQuestion=owner.attempt?.state.questionIndex;

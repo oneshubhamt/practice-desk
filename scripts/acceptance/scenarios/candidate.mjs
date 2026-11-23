@@ -644,3 +644,122 @@ export async function candidateHighlighting(){
  }catch(e){await h.diagnose("candidate-highlighting-"+engine,page,e);throw e;
  }finally{await h.finish();}
 }
+
+
+export async function candidateReferencePanel(){
+ const {openHarness,check,assertNoOverflow,route}=await import("../../browser/fixtures.mjs");
+ const {importModernPaper}=await import("../../paper-select.mjs");
+ const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
+ const {sha256}=await import("../../../src/domain/hash.ts");
+ const {paperRevisionHash}=await import("../../../src/domain/integrity.ts");
+ const {createCandidateReferenceResource}=await import("../../../src/domain/candidate-reference.ts");
+ const {validateExamPackage}=await import("../../../src/app/exam-package.ts");
+ const IMAGE="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/4NwAAAAASUVORK5CYII=";
+ const bytes=Uint8Array.from(atob(IMAGE.split(",")[1]),c=>c.charCodeAt(0));
+ const asset={id:"candidate-reference-image",mediaType:"image/png",dataUri:IMAGE,
+  contentHash:sha256(bytes),altText:"Reference-only diagram"};
+ const quant=createCandidateReferenceResource({
+  id:"quant-ref",title:"Formula and conversion sheet",category:"Quantitative",
+  keywords:["formula","conversion","constants"],assetIds:[asset.id],
+  document:{format:"practice-desk-rich",version:1,blocks:[
+   {type:"heading",level:2,content:[{type:"text",text:"Permitted formulas",marks:["strong"]}]},
+   {type:"table",rows:[
+    [[{type:"text",text:"Quantity"}],[{type:"text",text:"Conversion"}]],
+    [[{type:"text",text:"Length"}],[{type:"text",text:"100 centimetres = 1 metre"}]]
+   ]},
+   {type:"display-math",tex:"A=\\pi r^2",linearText:"Area equals pi r squared"},
+   {type:"image",assetId:asset.id,altText:"Circle radius reference diagram"}
+  ]}
+ },[asset]);
+ const law=createCandidateReferenceResource({
+  id:"law-ref",title:"Permitted statutory extract",category:"Law",keywords:["statute","section"],
+  document:{format:"practice-desk-rich",version:1,blocks:[
+   {type:"paragraph",content:[{type:"text",text:"Section 10: candidate-visible statutory wording."}]}
+  ]}
+ });
+ const clinical=createCandidateReferenceResource({
+  id:"clinical-ref",title:"Laboratory ranges",category:"Clinical",keywords:["laboratory","range"],
+  document:{format:"practice-desk-rich",version:1,blocks:[
+   {type:"table",rows:[
+    [[{type:"text",text:"Analyte"}],[{type:"text",text:"Reference range"}]],
+    [[{type:"text",text:"Example marker"}],[{type:"text",text:"10–20 units"}]]
+   ]}
+  ]}
+ });
+ const refs=[law,quant,clinical];
+ const candidateTools={...(pkg.paper.candidateTools??{}),references:refs.map(x=>({id:x.id,contentHash:x.contentHash}))};
+ const paperBase={...pkg.paper,candidateTools};
+ const paper={...paperBase,contentHash:paperRevisionHash(paperBase)};
+ const referencePkg=validateExamPackage({...pkg,title:"Generic authorised reference paper",paper,
+  assets:[asset],candidateReferences:refs,
+  explanations:{...(pkg.explanations??{}),"rev-0":"REVIEWER ONLY SECRET SHOULD NEVER ENTER THE PANEL"}});
+ const engine=process.argv[2]??"chromium";
+ const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
+ const {page,errors}=await h.open({viewport:{width:1100,height:790}});
+ try{
+  await importModernPaper(page,referencePkg,"candidate-reference-panel.json");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  const trigger=page.getByRole("button",{name:"Open candidate reference materials"});
+  check(await trigger.count()===1,"authored reference bindings did not expose one candidate-tool trigger");
+  await trigger.click();
+  const dialog=page.locator("dialog.candidate-reference-dialog");
+  check(await dialog.getAttribute("open")!==null,"candidate reference dialog did not open");
+  const search=page.getByRole("searchbox",{name:"Search candidate references"});
+  check(await search.evaluate(el=>document.activeElement===el),"reference search did not receive initial keyboard focus");
+  check((await page.locator(".candidate-reference-status").innerText()).includes("3 of 3 references shown"),
+   "reference panel did not report bounded authored inventory");
+  check((await dialog.innerText()).includes("Permitted statutory extract"),
+   "first paper-bound reference was not selected in authored binding order");
+  check(!(await dialog.innerText()).includes("REVIEWER ONLY SECRET"),
+   "reviewer-only explanation leaked into candidate reference panel");
+
+  await search.fill("centimetres metre");
+  check(await page.locator("[data-reference-id]").count()===1,
+   "local body/table search did not narrow the reference inventory");
+  check((await page.locator(".candidate-reference-current-title").innerText())==="Formula and conversion sheet",
+   "table-text search selected the wrong reference");
+  check(await page.locator('.candidate-reference-document [aria-label="Reference table"]').count()===1,
+   "rich reference table did not render through shared semantic renderer");
+  check(await page.locator(".candidate-reference-document .katex").count()>=1,
+   "candidate reference maths did not render through offline KaTeX");
+  const imageSrc=await page.locator(".candidate-reference-image").getAttribute("src");
+  check(Boolean(imageSrc?.startsWith("data:image/png;base64,")),
+   "reference-only image was not rendered from frozen local data");
+  check(await dialog.locator('img[src^="http://"],img[src^="https://"],a[href^="http://"],a[href^="https://"]').count()===0,
+   "reference panel introduced a remote runtime image/link dependency");
+
+  await page.keyboard.press("Control+f");
+  check(await search.evaluate(el=>document.activeElement===el),"Ctrl+F did not focus local reference search");
+  await search.fill("");
+  const category=page.getByRole("combobox",{name:"Filter candidate references by category"});
+  await category.selectOption("Law");
+  check(await page.locator("[data-reference-id]").count()===1&&
+    (await page.locator(".candidate-reference-current-title").innerText())==="Permitted statutory extract",
+   "category filter did not select the matching authored reference");
+  await category.selectOption("");
+  const first=page.locator("[data-reference-id]").first();
+  await first.focus();await page.keyboard.press("End");
+  check((await page.locator(".candidate-reference-current-title").innerText())==="Laboratory ranges",
+   "End key did not navigate to the final visible reference");
+  check(await page.locator("[data-reference-id]").last().getAttribute("aria-selected")==="true",
+   "keyboard reference navigation did not expose selected state");
+
+  await page.setViewportSize({width:195,height:844});
+  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
+  await assertNoOverflow(page,"candidate reference panel 195px 140%");
+  await page.keyboard.press("Escape");
+  check(await page.locator("dialog.candidate-reference-dialog").count()===0,
+   "Escape did not close candidate reference panel");
+  check(await trigger.evaluate(el=>document.activeElement===el),"closing reference panel did not return focus to its trigger");
+
+  await trigger.click();
+  check((await search.inputValue())==="","reference search unexpectedly persisted as attempt data");
+  check((await page.locator(".candidate-reference-status").innerText()).includes("3 of 3 references shown"),
+   "reopened transient panel did not reset to the frozen authored inventory");
+  await page.keyboard.press("Escape");
+  check(!errors.length,"candidate-reference browser errors: "+errors.join("; "));
+  console.log("CANDIDATE REFERENCES "+engine+
+   " PASS: authored-only trigger, frozen rich/table/math/image content, local search/filter, keyboard and 195px layout");
+ }catch(e){await h.diagnose("candidate-reference-panel-"+engine,page,e);throw e;
+ }finally{await h.finish();}
+}

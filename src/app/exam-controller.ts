@@ -55,6 +55,16 @@ export const dispatchExamEvent=(owner:ExamControllerContext,event:SessionEvent)=
 export function bindExamScreen(owner:ExamControllerContext):void{
 owner.root.querySelector<HTMLButtonElement>("#g-exam-full")!.onclick=()=>
      window.dispatchEvent(new Event("practice-desk:toggle-fullscreen"));
+const referenceButton=owner.root.querySelector<HTMLButtonElement>("#g-references");
+if(referenceButton&&owner.attempt){
+  referenceButton.onclick=()=>owner.referencePanel.open({
+    attemptId:owner.attempt!.id,
+    bindings:owner.attempt!.frozen.paper.candidateTools?.references,
+    resources:owner.attempt!.frozen.candidateReferences,
+    assets:owner.attempt!.frozen.assets,
+    trigger:referenceButton
+  });
+}
 const calculatorId=owner.attempt!.id;
 const calculatorProfile=owner.attempt!.frozen.paper.candidateTools?.calculator;
 if(calculatorProfile){
