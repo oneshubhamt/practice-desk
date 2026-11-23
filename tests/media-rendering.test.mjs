@@ -276,9 +276,11 @@ test("P47-5C release carries only local WOFF2 and both KaTeX/Wordgard MIT notice
  // The standalone intentionally includes the current PFRDA Day 1 package plus
  // the consolidated Day 3 package. Day 3 adds ~46 KiB to the generated standalone.
  // Pass C candidate highlighting adds ~12 KiB of shared runtime at the measured
- // 2,954,357-byte build. Retain a narrow reviewed ceiling so later growth still
- // requires an explicit payload-budget decision rather than expanding silently.
- assert.ok(size<2_970_000,"Bundled file exceeds reviewed runtime/preinstalled size limit: "+size);
+ // 2,954,357-byte build. Pass D's verified release was 2,966,817 bytes.
+ // Pass E was reduced from 2,981,398 to 2,973,753 bytes before this explicit
+ // payload-budget decision: +6,936 bytes (+0.23%) for save status + bounded handoff.
+ // Keep only narrow headroom so later growth still requires another measured review.
+ assert.ok(size<2_975_000,"Bundled file exceeds reviewed runtime/preinstalled size limit: "+size);
 });
 }
 await registerMathRenderingTests();
