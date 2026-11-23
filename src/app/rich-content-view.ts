@@ -9,6 +9,7 @@ export interface RichTextDecoration{
 }
 export interface RichRenderOptions{
  readonly annotatable?:boolean;
+ readonly tableLabel?:string;
  readonly textDecorations?:(path:readonly number[],text:string)=>readonly RichTextDecoration[];
 }
 const tags:Readonly<Record<RichMark,string>>={
@@ -64,7 +65,8 @@ function blockHTML(block:RichBlock,image:ImageHTML,blockIndex:number,options:Ric
   case "list":return '<'+(block.ordered?"ol":"ul")+' class="pd-rich-list">'+
     block.items.map((item,itemIndex)=>'<li>'+content(item,image,[blockIndex,itemIndex],options)+'</li>').join("")+
     '</'+(block.ordered?"ol":"ul")+'>';
-  case "table":return '<div class="pd-rich-table-scroll" tabindex="0" role="region" aria-label="Question table"><table class="pd-rich-table"><tbody>'+
+  case "table":return '<div class="pd-rich-table-scroll" tabindex="0" role="region" aria-label="'+
+    escapeText(options.tableLabel??"Question table")+'"><table class="pd-rich-table"><tbody>'+
     block.rows.map((row,rowIndex)=>'<tr>'+row.map((cell,columnIndex)=>'<'+(rowIndex===0?"th":"td")+'>'+
       content(cell,image,[blockIndex,rowIndex,columnIndex],options)+'</'+(rowIndex===0?"th":"td")+'>').join("")+'</tr>').join("")+
     '</tbody></table></div>';
