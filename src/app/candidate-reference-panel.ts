@@ -23,7 +23,7 @@ export function candidateReferenceDocumentText(document:RichDocument):string{
  };
  return document.blocks.map(blocks).join(" ").replace(/\s+/gu," ").trim();
 }
-function normalized(value:string):string{return value.normalize("NFKC").toLocaleLowerCase().replace(/\s+/gu," ").trim();}
+function normalized(value:string):string{return value.normalize("NFKC").toLowerCase().replace(/\s+/gu," ").trim();}
 export function candidateReferenceSearchText(resource:CandidateReferenceResource):string{
  return normalized([
   resource.title,resource.category??"",...(resource.keywords??[]),
@@ -246,6 +246,9 @@ export function createCandidateReferencePanel():CandidateReferencePanel{
   closeButton.addEventListener("click",close);
   dialog.addEventListener("cancel",event=>{event.preventDefault();close();});
   dialog.addEventListener("keydown",event=>{
+   // Reference-panel keys must never leak into exam answer/navigation or
+   // fullscreen/display shortcuts behind the native modal.
+   event.stopPropagation();
    if(event.key==="Escape"){event.preventDefault();close();return;}
    if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="f"){
     event.preventDefault();search.focus({preventScroll:true});search.select();return;
