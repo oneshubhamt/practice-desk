@@ -1339,6 +1339,55 @@ html[data-theme="dark"] .display-trigger[aria-expanded="true"]{
 @media(max-width:300px){.generic-workspace .generic-choice-media-row{padding:7px}.generic-choice-media-row .generic-choice-media{padding-left:0}.generic-image-head{padding:6px}.generic-image-caption{max-height:55px}.generic-image-help{font-size:9px}.generic-image-dialog .btn{padding:5px}}
 @media(prefers-reduced-motion:reduce){.generic-image-large,.generic-image-dialog{transition:none!important;animation:none!important}}
 
+/* Authored, frozen candidate reference material. The modal is transient UI:
+ * only its immutable resource payload is attempt data. */
+.candidate-reference-dialog{border:1px solid var(--line);border-radius:13px;padding:0;color:var(--ink);background:var(--panel);
+ width:min(1060px,calc(100vw - 16px));max-width:calc(100vw - 16px);height:min(88dvh,860px);max-height:calc(100dvh - 16px);
+ margin:auto;box-shadow:0 22px 90px #0007;overflow:hidden}
+.candidate-reference-dialog::backdrop{background:rgba(5,10,20,.78)}
+.candidate-reference-shell{display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr);height:100%;min-height:0;min-width:0}
+.candidate-reference-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 13px;border-bottom:1px solid var(--line);min-width:0}
+.candidate-reference-head h2{margin:0;font-size:18px;overflow-wrap:anywhere}
+.candidate-reference-head .eyebrow{display:block;margin-bottom:1px}
+.candidate-reference-close{min-height:38px;flex:0 0 auto}
+.candidate-reference-help,.candidate-reference-status{margin:0;padding:6px 13px;overflow-wrap:anywhere}
+.candidate-reference-help{border-bottom:1px solid var(--line)}
+.candidate-reference-controls{display:grid;grid-template-columns:minmax(0,2fr) minmax(150px,1fr);gap:8px;padding:8px 13px;border-bottom:1px solid var(--line);min-width:0}
+.candidate-reference-controls .picker{display:grid;gap:4px;min-width:0}
+.candidate-reference-controls input,.candidate-reference-controls select{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.candidate-reference-status{border-bottom:1px solid var(--line)}
+.candidate-reference-layout{display:grid;grid-template-columns:minmax(185px,270px) minmax(0,1fr);min-width:0;min-height:0;height:100%}
+.candidate-reference-list{min-width:0;min-height:0;overflow:auto;padding:8px;border-right:1px solid var(--line);background:var(--soft)}
+.candidate-reference-item{display:grid;gap:2px;width:100%;min-width:0;padding:8px 9px;margin:0 0 6px;text-align:left;border:1px solid var(--line);
+ border-radius:9px;background:var(--panel);color:var(--ink);font:inherit;cursor:pointer;overflow-wrap:anywhere}
+.candidate-reference-item small{color:var(--muted)}
+.candidate-reference-item.selected{border-color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
+.candidate-reference-item:focus-visible{outline:3px solid #85b8e8;outline-offset:1px}
+.candidate-reference-empty{padding:6px;margin:0}
+.candidate-reference-content{min-width:0;min-height:0;overflow:auto;padding:13px;overscroll-behavior:contain}
+.candidate-reference-current-title{margin:0 0 4px;font-size:17px;overflow-wrap:anywhere}
+.candidate-reference-meta{margin:0 0 11px;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
+.candidate-reference-document{min-width:0;max-width:100%}
+.candidate-reference-document .pd-rich-table-scroll{max-height:min(52dvh,520px);overflow:auto}
+.candidate-reference-media{display:block;max-width:100%;margin:.55em 0}
+.candidate-reference-image{display:block;max-width:100%;height:auto;max-height:60dvh;object-fit:contain}
+@media(max-width:620px){
+ .candidate-reference-dialog{width:calc(100vw - 12px);max-width:calc(100vw - 12px);height:calc(100dvh - 16px)}
+ .candidate-reference-controls{grid-template-columns:minmax(0,1fr)}
+ .candidate-reference-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+ .candidate-reference-list{display:flex;gap:6px;overflow:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px}
+ .candidate-reference-item{flex:0 0 min(210px,78vw);margin:0}
+}
+@media(max-width:300px){
+ .candidate-reference-head{padding:6px;align-items:flex-start;flex-wrap:wrap}
+ .candidate-reference-head>div{min-width:0;flex:1 1 110px}
+ .candidate-reference-close{flex:1 1 70px}
+ .candidate-reference-help,.candidate-reference-status,.candidate-reference-controls,.candidate-reference-content{padding:6px}
+ .candidate-reference-item{flex-basis:78vw;padding:6px}
+ .candidate-reference-current-title{font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){.candidate-reference-dialog{transition:none!important;animation:none!important}}
+
 /* image import preparation is separate from the immutable exam viewer.
  Preview panes scroll at 200/400% so small glyphs/strokes can be compared. */
 .generic-image-preparation{overflow:hidden;max-height:calc(100dvh - 12px)}
