@@ -29,6 +29,7 @@ import {type AppRoute,type NativeRouter} from "./navigation.ts";
 import type {ExamFamily} from "./exam-families.ts";
 import type {ScreenRenderer} from "./screen-renderer.ts";
 import type {ImageViewer} from "./image-viewer.ts";
+import type {CandidateReferencePanel} from "./candidate-reference-panel.ts";
 import type {ImagePreparation} from "./image-preparation.ts";
 import type {AuthoringStudioController} from "../authoring/authoring-studio.ts";
 import type {WrittenResponseDraftStore} from "./written-response-draft.ts";
@@ -74,6 +75,7 @@ export interface WorkspaceContext{
  hydrationDone:() => void;
  readonly imagePreparation:ImagePreparation;
  readonly imageViewer:ImageViewer;
+ readonly referencePanel:CandidateReferencePanel;
  readonly importHistory:(file: File) => Promise<void>;
  readonly keyboard:(event: KeyboardEvent) => void;
  lastCommittedAt:number | null;
@@ -150,7 +152,7 @@ export type CalendarControllerContext=Slice<
 
 export type ExamControllerContext=Slice<
  "attempt"|"calculatorStates"|"choiceDrafts"|"writtenDrafts"|"dispatch"|"draw"|"go"|"notice"|"now"|
- "packageForAttempt"|"reviewFilter"|"root"|"save"|"storageFault"|"warning"
+ "packageForAttempt"|"referencePanel"|"reviewFilter"|"root"|"save"|"storageFault"|"warning"
 >;
 
 export type ResultControllerContext=Slice<
@@ -198,7 +200,7 @@ export type PersistenceControllerContext=Slice<
 
 export type LifecycleControllerContext=Slice<
  "attempt"|"authoringStudio"|"calculatorStates"|"writtenDrafts"|"dispatch"|"dispatchVisibility"|
- "disposed"|"draw"|"fallbackConflict"|"go"|"imagePreparation"|"imageViewer"|
+ "disposed"|"draw"|"fallbackConflict"|"go"|"imagePreparation"|"imageViewer"|"referencePanel"|
  "keyboard"|"lastTimerSave"|"learningDesk"|"calendarController"|"now"|"pagehide"|"recordStorageFailure"|
  "reviewFilter"|"root"|"router"|"save"|"storage"|"storageBackend"|"storageFault"|
  "timer"|"view"|"visibility"|"warning"|"writeMirror"|"writeQueue"
@@ -206,7 +208,7 @@ export type LifecycleControllerContext=Slice<
 
 export type ScreenControllerContext=Slice<
  "attempt"|"authoringStudio"|"disposed"|"draw"|"examHTML"|"fallbackConflict"|
- "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"learningDesk"|"calendarController"|"listHTML"|
+ "go"|"historyQuery"|"imagePreparation"|"imageViewer"|"referencePanel"|"learningDesk"|"calendarController"|"listHTML"|
  "loading"|"packages"|"records"|"resultHTML"|"resultTab"|"root"|"screenRenderer"|
  "storageBackend"|"storageFault"|"storageSnapshot"|"view"|"warning"
 > & HistoryControllerContext & LibraryControllerContext & AuthoringScreenControllerContext & ResultControllerContext & ExamControllerContext;
