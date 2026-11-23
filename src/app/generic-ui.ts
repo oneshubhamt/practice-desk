@@ -17,6 +17,7 @@ import {readPracticeSetups,type PracticeSetups} from "./practice-selection.ts";
 import {examFamilyCatalog} from "./exam-families.ts";
 import {createScreenRenderer} from "./screen-renderer.ts";
 import {createImageViewer} from "./image-viewer.ts";
+import {createCandidateReferencePanel} from "./candidate-reference-panel.ts";
 import {createImagePreparation} from "./image-preparation.ts";
 import {createNativeRouter,type AppRoute,type RouteContext,type NativeRouter} from "./navigation.ts";
 import {createWorkspaceAuthoringStudio} from "./authoring-controller.ts";
@@ -85,6 +86,7 @@ export function mountExamWorkspace(
  const manualGradeDrafts=new Map<string,{marks:string;note:string}>();
  const screenRenderer=createScreenRenderer(root);
  const imageViewer=createImageViewer(root);
+ const referencePanel=createCandidateReferencePanel();
  const imagePreparation=createImagePreparation();
  const now=createSessionClock(Date.now(),performance.now(),()=>performance.now());
  const mirrorKey=STORAGE_TOPOLOGY.activeAttemptMirror;
@@ -172,7 +174,7 @@ export function mountExamWorkspace(
    freshlyStartedAttemptId:null,
    go,
    historyQuery:initialHistoryQuery,historyQueryKey,hydration,hydrationDone,
-   imagePreparation,imageViewer,importHistory,keyboard,
+   imagePreparation,imageViewer,referencePanel,importHistory,keyboard,
    lastCommittedAt:null,lastStorageFailure:null,lastTimerSave:0,
    get learningDesk(){return learningDesk;},
    get calendarController(){return calendarController;},
