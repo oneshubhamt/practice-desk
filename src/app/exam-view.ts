@@ -102,7 +102,7 @@ export function renderModelExam(
      (showSectionContext?' · '+escapeText(section.title)+(multiSection?' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length:''):'')+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low ":"")+(clock.overtime?"overtime":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        clock.text+'</strong><small id="g-timer-label">'+clock.label+'</small></div>'+
-     '<span class="exam-save-state" id="g-save-state" data-save-state="'+escapeText(saveStatus.state)+
+     '<span class="tag" id="g-save-state" data-save-state="'+escapeText(saveStatus.state)+
        '" role="status" aria-live="polite" aria-atomic="true" aria-label="'+escapeText(saveStatus.detail)+
        '" title="'+escapeText(saveStatus.detail)+'">'+escapeText(saveStatus.label)+'</span>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+

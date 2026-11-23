@@ -29,10 +29,9 @@ export function candidateSaveStatus(
  health:Pick<StorageHealth,"pendingWrites"|"locked">
 ):CandidateSaveStatus{
  if(health.locked)return {state:"problem",label:"Save problem",
-   detail:"Changes in this tab are not safely stored. Follow the recovery guidance before continuing."};
+   detail:"Attempt writes are locked; follow the recovery guidance."};
  if(health.pendingWrites>0)return {state:"saving",label:"Saving…",
-   detail:health.pendingWrites+" Practice Desk write"+(health.pendingWrites===1?" is":"s are")+
-     " being committed to browser storage."};
+   detail:health.pendingWrites+" attempt write"+(health.pendingWrites===1?" is":"s are")+" pending."};
  return {state:"saved",label:"Saved",
-   detail:"No attempt writes are pending. Fields with their own Save action are not included until committed."};
+   detail:"No attempt writes are pending; unsaved form drafts are not yet durable."};
 }
