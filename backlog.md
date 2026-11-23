@@ -13,7 +13,7 @@ This file contains **only unresolved work**. Closed programme findings and their
 
 ## Separately authorised enhancements
 
-- Remaining candidate-affordance programme after landed Pass A/B/C foundations: generic candidate-reference panel presentation/search/accessibility; actual persistence save-status indication; and an explicit bounded Study Handoff export. Candidate-reference and durable candidate-scratch data contracts are already foundationally defined; these remaining items are UI/integration work, not alternate schemas.
+- Remaining candidate-affordance programme after landed Pass A/B/C/D foundations: actual persistence save-status indication and an explicit bounded Study Handoff export. Candidate-reference and durable candidate-scratch data contracts are already foundationally defined; these remaining items are UI/integration work, not alternate schemas.
 - Richer calendar planning beyond FSRS due scheduling.
 - Unscored survey/feedback flows separate from exam grading.
 - Larger independently source-verified APFC/CAT banks and syllabus/quality calibration.
