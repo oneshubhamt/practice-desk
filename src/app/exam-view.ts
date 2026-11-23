@@ -82,6 +82,7 @@ export function renderModelExam(
    const isLow=clock.low;
    const focused=view.focused;
    const calculatorEnabled=paper.candidateTools?.calculator===BASIC_CALCULATOR_V1;
+   const referenceCount=paper.candidateTools?.references?.length??0;
    const calculator=calculatorState??newExamCalculatorState();
    const sectionAnswered=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.response)).length;
    const sectionFlagged=section.questionRevisionIds.filter(qid=>Boolean(responsesById.get(qid)?.flagged)).length;
@@ -100,6 +101,8 @@ export function renderModelExam(
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low ":"")+(clock.overtime?"overtime":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        clock.text+'</strong><small id="g-timer-label">'+clock.label+'</small></div>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+
+     (referenceCount?'<button class="btn quiet" type="button" id="g-references" aria-haspopup="dialog" '+
+       'aria-label="Open candidate reference materials">References <span aria-hidden="true">('+referenceCount+')</span></button>':"")+
      '<button class="btn quiet" id="g-library">← Library</button>'+
      '<button class="btn" type="button" id="g-exam-full" aria-label="Toggle full-screen test view" aria-pressed="'+
      focused+'">'+(focused?"⛶ Exit full screen":"⛶ Full screen")+'</button></div></div>'+
