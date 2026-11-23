@@ -106,9 +106,9 @@ export interface StudyHandoffPacket{
 
 function handoffStimulus(stimulus:StimulusDefinition|undefined):StudyHandoffStimulus|undefined{
  if(!stimulus)return undefined;
- if(stimulus.kind==="passage"||stimulus.kind==="case")
+ if("text" in stimulus)
   return {kind:stimulus.kind,...(stimulus.title!==undefined?{title:stimulus.title}:{}),text:stimulus.text};
- if(stimulus.kind==="table")
+ if("columns" in stimulus)
   return {kind:"table",...(stimulus.title!==undefined?{title:stimulus.title}:{}),
    columns:[...stimulus.columns],rows:stimulus.rows.map(row=>[...row])};
  return {kind:stimulus.kind,...(stimulus.title!==undefined?{title:stimulus.title}:{}),
@@ -275,9 +275,9 @@ function contentMarkdown(content:StudyHandoffQuestionContent):string[]{
  if(content.stimulus){
   lines.push("","**Stimulus**");
   if(content.stimulus.title)lines.push("Title: "+inline(content.stimulus.title));
-  if(content.stimulus.kind==="passage"||content.stimulus.kind==="case")
+  if("text" in content.stimulus)
    lines.push("",quoted(content.stimulus.text));
-  else if(content.stimulus.kind==="table"){
+  else if("columns" in content.stimulus){
    lines.push("Columns: "+content.stimulus.columns.map(inline).join(" | "));
    for(const row of content.stimulus.rows)lines.push("- "+row.map(inline).join(" | "));
   }else{
