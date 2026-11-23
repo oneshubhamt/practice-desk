@@ -53,8 +53,8 @@ export const updateWorkspaceStorageHealth=(owner:StorageHealthControllerContext)
   const candidate=candidateSaveStatus(snapshot);
   examSave.textContent=candidate.label;
   examSave.dataset.saveState=candidate.state;
-  examSave.setAttribute("aria-label",candidate.detail);
-  examSave.title=candidate.detail;
+  examSave.setAttribute("aria-label",candidate.label);
+  examSave.title=candidate.label;
  }
  const saved=owner.root.querySelector<HTMLElement>("#g-storage-last-commit");
  if(saved)saved.textContent="Last completed write in this tab: "+

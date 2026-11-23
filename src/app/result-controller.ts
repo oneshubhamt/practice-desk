@@ -271,9 +271,8 @@ export function bindResultScreen(owner:ResultControllerContext):void{
              serializeStudyHandoffJson(packet),"application/json;charset=utf-8");
          }else throw Error("Unknown Study Handoff format");
          const status=owner.root.querySelector<HTMLElement>("#g-study-handoff-status");
-         if(status)status.textContent="Exported "+packet.includedQuestions+" of "+packet.totalQuestions+
-           " questions"+(packet.truncated?" (bounded export truncated).":".")+
-           (packet.inclusion.annotations?" Candidate annotations included.":" Candidate annotations omitted.");
+         if(status)status.textContent="Exported "+packet.includedQuestions+"/"+packet.totalQuestions+
+           " questions"+(packet.truncated?" (truncated).":".");
        }catch(error){
          owner.notice(error instanceof Error?error.message:"Study Handoff export failed");
        }

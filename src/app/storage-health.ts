@@ -20,18 +20,11 @@ export type CandidateSaveState="saving"|"saved"|"problem";
 export interface CandidateSaveStatus{
  readonly state:CandidateSaveState;
  readonly label:"Saving…"|"Saved"|"Save problem";
- readonly detail:string;
 }
-/** Candidate-facing projection of the existing persistence pipeline.
- * This never starts a write and does not treat explicit unsaved form drafts as durable.
- */
+/** Read-only projection of the existing persistence queue/lock. */
 export function candidateSaveStatus(
  health:Pick<StorageHealth,"pendingWrites"|"locked">
 ):CandidateSaveStatus{
- if(health.locked)return {state:"problem",label:"Save problem",
-   detail:"Attempt writes are locked; follow the recovery guidance."};
- if(health.pendingWrites>0)return {state:"saving",label:"Saving…",
-   detail:health.pendingWrites+" attempt write"+(health.pendingWrites===1?" is":"s are")+" pending."};
- return {state:"saved",label:"Saved",
-   detail:"No attempt writes are pending; unsaved form drafts are not yet durable."};
+ if(health.locked)return {state:"problem",label:"Save problem"};
+ return health.pendingWrites>0?{state:"saving",label:"Saving…"}:{state:"saved",label:"Saved"};
 }
