@@ -13,7 +13,8 @@ const scenario=(id,tags,run)=>Object.freeze({id,tags:Object.freeze(["browser",..
 export const scenarioRegistry=Object.freeze([
  scenario("candidate-core",["smoke","candidate","history","learning"],candidateCore),
  scenario("candidate-mcq-tools",["smoke","candidate","navigation"],candidateMcqTools),
- scenario("candidate-highlighting",["smoke","candidate","annotation"],candidateHighlighting),\n scenario("candidate-reference-panel",["smoke","candidate","reference","cross-browser"],candidateReferencePanel),
+ scenario("candidate-highlighting",["smoke","candidate","annotation"],candidateHighlighting),
+ scenario("candidate-reference-panel",["smoke","candidate","reference","cross-browser"],candidateReferencePanel),
  scenario("status-palette",["candidate","visual-state","deep"],statusPalette),
  scenario("authoring-publication",["smoke","authoring","publication"],authoringPublication),
  scenario("catalog-lifecycle",["smoke","catalog","removal"],catalogLifecycle),
