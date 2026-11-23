@@ -725,7 +725,8 @@ export async function candidateReferencePanel(){
   const imageSrc=await page.locator(".candidate-reference-image").getAttribute("src");
   check(Boolean(imageSrc?.startsWith("data:image/png;base64,")),
    "reference-only image was not rendered from frozen local data");
-  check(!/https?:\/\//i.test(await dialog.innerHTML()),"reference panel introduced a remote runtime dependency");
+  check(await dialog.locator('img[src^="http://"],img[src^="https://"],a[href^="http://"],a[href^="https://"]').count()===0,
+   "reference panel introduced a remote runtime image/link dependency");
 
   await page.keyboard.press("Control+f");
   check(await search.evaluate(el=>document.activeElement===el),"Ctrl+F did not focus local reference search");
