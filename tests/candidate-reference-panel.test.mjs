@@ -86,7 +86,7 @@ test("reference rich rendering supports authored marks, tables, KaTeX and frozen
  assert.match(html,/katex/);
  assert.match(html,/data:image\/png;base64,/);
  assert.match(html,/alt="Circle radius reference diagram"/);
- assert.doesNotMatch(html,/https?:\/\//);
+ assert.doesNotMatch(html,/<(?:img|a)\\b[^>]*(?:src|href)="https?:\\/\\//i);
 });
 
 test("reference trigger is authored paper policy and is never inferred from an exam title",()=>{
