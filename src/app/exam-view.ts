@@ -11,6 +11,7 @@ import {shouldShowWordCount} from "../domain/word-count.ts";
 import {overtimeMs,sectionTimeBudgetMs,timeEnforcementForMode} from "../domain/timing.ts";
 import {eliminatedOptionIdsForQuestion} from "../domain/candidate-scratch.ts";
 import {findNextCandidateQuestion} from "./exam-navigation.ts";
+import type {CandidateSaveStatus} from "./storage-health.ts";
 /** Human-readable view of a frozen practice mode; do not alter persistence. */
 export function readablePracticeMode(mode:string):string{
  switch(mode){
@@ -50,7 +51,8 @@ export function renderModelExam(
  bundle:ExamPackage|undefined,warning="",
  draft?:{readonly questionId:string;readonly optionIds:readonly OptionId[];readonly message:string},
  view:Readonly<{focused:boolean}>={focused:false},
- calculatorState?:ExamCalculatorState
+ calculatorState?:ExamCalculatorState,
+ saveStatus:CandidateSaveStatus={state:"saved",label:"Saved",detail:"No attempt writes are pending."}
 ):string {
    const paper=attempt.frozen.paper, state=attempt.state;
    const section=paper.sections[state.sectionIndex];
@@ -100,6 +102,9 @@ export function renderModelExam(
      (showSectionContext?' · '+escapeText(section.title)+(multiSection?' · Section '+(state.sectionIndex+1)+' of '+paper.sections.length:''):'')+'</p></div>'+
      '<div class="row exam-header-actions"><div class="exam-clock '+(isLow?"low ":"")+(clock.overtime?"overtime":"")+'"><strong class="generic-timer" id="g-timer" role="timer">'+
        clock.text+'</strong><small id="g-timer-label">'+clock.label+'</small></div>'+
+     '<span class="exam-save-state" id="g-save-state" data-save-state="'+escapeText(saveStatus.state)+
+       '" role="status" aria-live="polite" aria-atomic="true" aria-label="'+escapeText(saveStatus.detail)+
+       '" title="'+escapeText(saveStatus.detail)+'">'+escapeText(saveStatus.label)+'</span>'+
      (calculatorEnabled?calculatorToggleHTML(calculator):"")+
      (referenceCount?'<button class="btn quiet" type="button" id="g-references" aria-haspopup="dialog" '+
        'aria-label="Open candidate reference materials">References <span aria-hidden="true">('+referenceCount+')</span></button>':"")+

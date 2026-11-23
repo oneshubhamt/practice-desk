@@ -1,4 +1,4 @@
-import {healthSummary,type StorageHealth} from "./storage-health.ts";
+import {candidateSaveStatus,healthSummary,type StorageHealth} from "./storage-health.ts";
 import type {StorageHealthControllerContext} from "./coordinator-context.ts";
 
 export const showWorkspaceStorageEstimate=async (owner:StorageHealthControllerContext):Promise<void>=>{
@@ -48,6 +48,14 @@ export const updateWorkspaceStorageHealth=(owner:StorageHealthControllerContext)
  const snapshot=owner.storageSnapshot();
  const status=owner.root.querySelector<HTMLElement>("#g-storage-health");
  if(status)status.textContent=healthSummary(snapshot);
+ const examSave=owner.root.querySelector<HTMLElement>("#g-save-state");
+ if(examSave){
+  const candidate=candidateSaveStatus(snapshot);
+  examSave.textContent=candidate.label;
+  examSave.dataset.saveState=candidate.state;
+  examSave.setAttribute("aria-label",candidate.detail);
+  examSave.title=candidate.detail;
+ }
  const saved=owner.root.querySelector<HTMLElement>("#g-storage-last-commit");
  if(saved)saved.textContent="Last completed write in this tab: "+
   (owner.lastCommittedAt===null?"none observed since opening":new Date(owner.lastCommittedAt).toLocaleString());

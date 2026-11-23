@@ -196,6 +196,22 @@ export function candidateHighlightIdsOverlapping(
  return [...ids];
 }
 
+/** Resolve the exact frozen-source excerpt represented by one validated highlight.
+ * Study/export callers get source text, never DOM/HTML offsets.
+ */
+export function candidateHighlightText(
+ highlight:CandidateHighlight,context:CandidateScratchContext
+):string{
+ const source=target(highlight.surface,context,"candidate highlight surface");
+ validateAnchor(highlight.anchor,source.plain,source.rich,"candidate highlight anchor");
+ if(highlight.anchor.kind==="plain")
+  return source.plain.slice(highlight.anchor.start,highlight.anchor.end);
+ if(!source.rich)throw Error("Candidate rich highlight has no rich source");
+ const leaf=textLeaf(source.rich,highlight.anchor.path);
+ if(leaf===null)throw Error("Candidate rich highlight does not resolve to a text leaf");
+ return leaf.slice(highlight.anchor.start,highlight.anchor.end);
+}
+
 export function addCandidateHighlights(
  scratch:CandidateScratch,highlights:readonly CandidateHighlight[],context:CandidateScratchContext
 ):CandidateScratch{

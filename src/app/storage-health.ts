@@ -15,3 +15,24 @@ export function healthSummary(health:StorageHealth):string{
    " pending; wait for completion before closing the page.";
  return "No writes pending in this tab. Browser storage can still be cleared or evicted.";
 }
+
+export type CandidateSaveState="saving"|"saved"|"problem";
+export interface CandidateSaveStatus{
+ readonly state:CandidateSaveState;
+ readonly label:"Saving…"|"Saved"|"Save problem";
+ readonly detail:string;
+}
+/** Candidate-facing projection of the existing persistence pipeline.
+ * This never starts a write and does not treat explicit unsaved form drafts as durable.
+ */
+export function candidateSaveStatus(
+ health:Pick<StorageHealth,"pendingWrites"|"locked">
+):CandidateSaveStatus{
+ if(health.locked)return {state:"problem",label:"Save problem",
+   detail:"Changes in this tab are not safely stored. Follow the recovery guidance before continuing."};
+ if(health.pendingWrites>0)return {state:"saving",label:"Saving…",
+   detail:health.pendingWrites+" Practice Desk write"+(health.pendingWrites===1?" is":"s are")+
+     " being committed to browser storage."};
+ return {state:"saved",label:"Saved",
+   detail:"No attempt writes are pending. Fields with their own Save action are not included until committed."};
+}

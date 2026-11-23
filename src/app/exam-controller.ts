@@ -13,6 +13,7 @@ import {countWords,wordCountBand} from "../domain/word-count.ts";
 import {eliminatedOptionIdsForQuestion,setCandidateOptionEliminated} from "../domain/candidate-scratch.ts";
 import {findNextCandidateQuestion} from "./exam-navigation.ts";
 import {bindCandidateHighlighting} from "./candidate-highlighting.ts";
+import {candidateSaveStatus} from "./storage-health.ts";
 import {commitCurrentWrittenDraft,discardCurrentWrittenDraft,stageWrittenResponseDraft}
  from "./written-response-draft.ts";
 
@@ -32,7 +33,9 @@ export function renderCurrentExamHTML(owner:ExamControllerContext):string {
    return renderModelExam(owner.attempt,owner.packageForAttempt(owner.attempt),owner.warning,draft,{
      focused:Boolean(document.fullscreenElement||
        document.documentElement.classList.contains("immersive"))
-   },calculator);
+   },calculator,candidateSaveStatus({
+     pendingWrites:owner.pendingWrites,locked:owner.storageFault||owner.fallbackConflict
+   }));
  }
 
 export const dispatchExamEvent=(owner:ExamControllerContext,event:SessionEvent)=>{

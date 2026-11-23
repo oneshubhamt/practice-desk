@@ -151,8 +151,9 @@ export type CalendarControllerContext=Slice<
 >;
 
 export type ExamControllerContext=Slice<
- "attempt"|"calculatorStates"|"choiceDrafts"|"writtenDrafts"|"dispatch"|"draw"|"go"|"notice"|"now"|
- "packageForAttempt"|"referencePanel"|"reviewFilter"|"root"|"save"|"storageFault"|"warning"
+ "attempt"|"calculatorStates"|"choiceDrafts"|"writtenDrafts"|"dispatch"|"draw"|"fallbackConflict"|"go"|
+ "notice"|"now"|"packageForAttempt"|"pendingWrites"|"referencePanel"|"reviewFilter"|"root"|"save"|
+ "storageFault"|"warning"
 >;
 
 export type ResultControllerContext=Slice<

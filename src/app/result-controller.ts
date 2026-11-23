@@ -23,6 +23,11 @@ import {editorialStatusLabel} from "./editorial-labels.ts";
 import {reviewMatch,reviewFiltersHTML,resultTabsHTML,timingLedgerHTML,resultInsightsHTML,
  resultCompletionLabel,writtenWordSummary,type ResultTab,type ReviewFilter} from "./result-presentation.ts";
 import {paperProvenanceText} from "./exam-preflight.ts";
+import {downloadText} from "./download-file.ts";
+import {
+ buildStudyHandoffPacket,serializeStudyHandoffJson,serializeStudyHandoffMarkdown,
+ studyHandoffFileName,studyHandoffPanelHTML,type StudyHandoffSelection
+} from "./study-handoff.ts";
 
 import type {ResultControllerContext} from "./coordinator-context.ts";
 
@@ -153,6 +158,7 @@ export function renderCurrentResultHTML(owner:ResultControllerContext):string {
     '<div class="scroll-table result-section-table"><table><thead><tr><th>'+(multiSection?"Section":"Paper")+'</th><th>Attempted</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Time used</th></tr></thead><tbody>'+
      paperSectionRows+'</tbody></table></div>'+scoringDetails+'</section>'+
      resultInsightsHTML(owner.attempt,revealReview)+
+     studyHandoffPanelHTML(revealReview)+
     '<div class="row result-footer-actions">'+
       (revealReview?'<button class="btn" id="g-view-question-review">View question-by-question review →</button>':"")+
       '<button class="btn" id="g-result-library">Test library</button></div></div>':
@@ -241,6 +247,37 @@ export function bindResultScreen(owner:ResultControllerContext):void{
      owner.root.querySelector<HTMLButtonElement>("#g-history-results")!.onclick=()=>owner.go({screen:"history"});
      const resultLibrary=owner.root.querySelector<HTMLButtonElement>("#g-result-library");
      if(resultLibrary)resultLibrary.onclick=()=>owner.go({screen:"library"});
+     owner.root.querySelectorAll<HTMLButtonElement>("[data-study-handoff-format]").forEach(button=>button.onclick=()=>{
+       if(!owner.attempt?.result||owner.attempt.finishedAt===null)return;
+       const checked=(key:keyof StudyHandoffSelection):boolean=>
+         owner.root.querySelector<HTMLInputElement>('[data-study-handoff-option="'+key+'"]')?.checked??false;
+       const selection:StudyHandoffSelection={
+         questionContent:checked("questionContent"),
+         candidateResponses:checked("candidateResponses"),
+         expectedResponses:checked("expectedResponses"),
+         outcomes:checked("outcomes"),
+         timing:checked("timing"),
+         flags:checked("flags"),
+         annotations:checked("annotations")
+       };
+       try{
+         const packet=buildStudyHandoffPacket(owner.attempt,selection);
+         const format=button.dataset.studyHandoffFormat;
+         if(format==="markdown"){
+           downloadText(studyHandoffFileName(owner.attempt,"md"),
+             serializeStudyHandoffMarkdown(packet),"text/markdown;charset=utf-8");
+         }else if(format==="json"){
+           downloadText(studyHandoffFileName(owner.attempt,"json"),
+             serializeStudyHandoffJson(packet),"application/json;charset=utf-8");
+         }else throw Error("Unknown Study Handoff format");
+         const status=owner.root.querySelector<HTMLElement>("#g-study-handoff-status");
+         if(status)status.textContent="Exported "+packet.includedQuestions+" of "+packet.totalQuestions+
+           " questions"+(packet.truncated?" (bounded export truncated).":".")+
+           (packet.inclusion.annotations?" Candidate annotations included.":" Candidate annotations omitted.");
+       }catch(error){
+         owner.notice(error instanceof Error?error.message:"Study Handoff export failed");
+       }
+     });
      const viewReview=owner.root.querySelector<HTMLButtonElement>("#g-view-question-review");
      if(viewReview)viewReview.onclick=()=>owner.go({screen:"result",attemptId:owner.attempt!.id,tab:"review"});
      const tabs=[...owner.root.querySelectorAll<HTMLButtonElement>("[data-result-tab]")];

@@ -25,7 +25,7 @@ Candidate eliminations and highlights are **candidate-owned attempt evidence**, 
 - Highlights are anchored to the exact frozen candidate-visible surface. The Pass-C candidate UI exposes question prompts plus eligible stimulus passage/case text, table cells and image/chart captions; option text remains representable by the generic contract but is not surfaced by the current candidate UI. Plain text uses bounded canonical-source offsets. Rich text uses structural paths into text leaves plus local start/end offsets: paragraph/heading `block → inline`, list `block → item → inline`, table `block → row → column → inline`. Authoring bold/emphasis/underline/list/table structure remains intact around the decoration. Inline/display KaTeX and images expose no text-leaf path and therefore stay atomic/non-highlightable. A cross-leaf selection is persisted as multiple source fragments, never one flattened DOM/HTML range.
 - Scratch validation rejects unknown questions/options/stimuli, duplicate IDs, unsupported surfaces and out-of-range anchors. It is stored on the attempt separately from the response/timing state.
 - Candidate scratch survives completion and checksum-verified History backup so an explicit later review/handoff can use it. It is deleted with the attempt. This is intentionally different from **transient workspace scratch** such as calculator state, unsaved multiple-select/matching drafts and transient written-response drafts, which terminal persistence clears.
-- Learner-focus/personalisation exports do not expose candidate scratch. Any future Study Handoff export must be explicit, bounded and separately user-invoked.
+- Learner-focus/personalisation exports do not expose candidate scratch. **Attempt / Study Handoff** is a separate, bounded, single-completed-attempt export; candidate annotations are included only through an explicit opt-in control and are resolved back to exact frozen-source excerpts rather than DOM offsets.
 
 ## Candidate reference resources
 
@@ -65,6 +65,15 @@ The paper binds only `{id, contentHash}` entries in `candidateTools.references`;
 - `practice-desk-backup` v6 is SHA-checked, bounded, additive and conflict-aware. It cannot authenticate a maliciously authored backup: strictly validate records, fields, structural hashes and snapshots on restore.
 - Corrupted or missing snapshot references should be surfaced or quarantined, not silently replaced with newly computed key/marks. Explicit deletion/discard, stable archive IDs and recovery precedence apply.
 - Drafts/staging and local browser History are **separate export lifecycles**; noncanonical historical formats are not migration targets; do not promise implicit remote synchronization.
+- The exam-screen **Saving… / Saved / Save problem** state observes the existing queued durable-write count and storage lock. It is presentation only: it starts no new write and does not turn explicit unsaved response fields into persisted evidence.
+
+## Completed-attempt Study Handoff
+
+- `practice-desk-study-handoff` v1 is an explicitly invoked **single completed-attempt** representation, not a backup, History API or learner-focus packet. Its builder receives one `GenericAttempt` and has no capability to enumerate other History.
+- Inclusion controls independently cover frozen question/stimulus text, saved candidate responses, expected responses, immutable marks/verdicts, foreground time, review flags and candidate annotations. Eliminations/highlights are off by default. Saved free-response text can contain anything the learner typed, so users may exclude candidate responses.
+- Expected responses are a hard builder-level capability: if the frozen paper has `allowReview:false`, requesting them still produces no expected-answer field. UI disabling is only a second presentation guard.
+- Attempt ID, account identity, device information, calendar timestamps, other attempts, learning history, worked explanations, reviewer notes, source URLs and binary media are outside the handoff. Question/paper revision IDs remain so an external study tool can identify the frozen evidence being discussed.
+- JSON and Markdown serialization are bounded. A pathological oversized attempt is truncated only at a whole-question boundary and reports `includedQuestions / totalQuestions`; no export path mutates the completed attempt.
 
 ## Learner-to-authoring evidence
 
