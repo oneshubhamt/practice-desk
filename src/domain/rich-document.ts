@@ -115,6 +115,21 @@ export function validateRichDocument(input:unknown,opts:RichValidationOptions={}
   }) as RichBlock[];
   return freezeDeep({format:"practice-desk-rich",version:1,blocks});
 }
+export function richDocumentPlainText(doc:RichDocument):string{
+ const inline=(item:RichInline):string=>{
+  if(item.type==="text")return item.text;
+  if(item.type==="math")return item.linearText;
+  return item.altText;
+ };
+ const row=(items:readonly RichInline[])=>items.map(inline).join("");
+ return doc.blocks.map(block=>{
+  if(block.type==="paragraph"||block.type==="heading")return row(block.content);
+  if(block.type==="list")return block.items.map(row).join("\n");
+  if(block.type==="table")return block.rows.map(cells=>cells.map(row).join(" | ")).join("\n");
+  if(block.type==="display-math")return block.linearText;
+  return block.altText;
+ }).join("\n").trim();
+}
 export function plainRichDocument(text:string):RichDocument{
   return validateRichDocument({format:"practice-desk-rich",version:1,
     blocks:[{type:"paragraph",content:[{type:"text",text}]}]});

@@ -4,6 +4,7 @@ import type {ImageAsset} from "../domain/question.js";
 import type {RichBlock,RichDocument,RichInline} from "../domain/rich-document.ts";
 import {richDocumentHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
+import type {ImageViewer} from "./image-viewer.ts";
 
 export const CANDIDATE_REFERENCE_QUERY_MAX=120;
 
@@ -52,8 +53,10 @@ export function orderedCandidateReferences(
 function referenceImageHTML(assets:readonly ImageAsset[],id:string,alt:string):string{
  const asset=assets.find(item=>item.id===id);
  if(!asset)throw Error("Frozen candidate reference image missing: "+id);
- return '<span class="candidate-reference-media"><img class="candidate-reference-image" src="'+
-  escapeText(asset.dataUri)+'" alt="'+escapeText(alt)+'" decoding="async"></span>';
+ return '<span class="candidate-reference-media generic-media-frame"><img class="candidate-reference-image generic-figure" src="'+
+  escapeText(asset.dataUri)+'" alt="'+escapeText(alt)+'" decoding="async">'+
+  '<span role="button" tabindex="0" class="generic-image-open" data-image-open aria-label="Enlarge image: '+
+  escapeText(alt)+'">Enlarge image</span></span>';
 }
 export function candidateReferenceDocumentHTML(
  resource:CandidateReferenceResource,assets:readonly ImageAsset[]
@@ -102,7 +105,9 @@ function focusable(dialog:HTMLDialogElement):HTMLElement[]{
  )].filter(element=>!element.hidden&&element.getAttribute("aria-hidden")!=="true");
 }
 
-export function createCandidateReferencePanel():CandidateReferencePanel{
+export function createCandidateReferencePanel(
+ imageViewer:Pick<ImageViewer,"open">
+):CandidateReferencePanel{
  let active:ActivePanel|null=null,disposed=false;
 
  const close=():void=>{
@@ -152,7 +157,7 @@ export function createCandidateReferencePanel():CandidateReferencePanel{
    state.list.appendChild(empty);
    state.title.textContent="No reference selected";
    const message=document.createElement("p");
-   message.textContent="Change the search or category filter to view authorised reference material.";
+   message.textContent="Change the search or category filter to view paper-supplied reference material.";
    state.content.replaceChildren(message);
    state.selectedId="";
    return;
@@ -202,7 +207,7 @@ export function createCandidateReferencePanel():CandidateReferencePanel{
 
   const help=document.createElement("p");
   help.id="candidate-reference-panel-help";help.className="fine candidate-reference-help";
-  help.textContent="Search and browse only the reference material supplied with this paper. Ctrl/⌘+F focuses search; Escape closes.";
+  help.textContent="Search and browse the reference material supplied with this paper. Its presence does not certify that an external examination officially permits it. Ctrl/⌘+F focuses search; Escape closes.";
 
   const controls=document.createElement("div");controls.className="candidate-reference-controls";
   const searchLabel=document.createElement("label");searchLabel.className="picker";searchLabel.textContent="Search references";
@@ -243,13 +248,32 @@ export function createCandidateReferencePanel():CandidateReferencePanel{
   };
   search.addEventListener("input",refresh);
   category.addEventListener("change",refresh);
+  const openReferenceImage=(target:EventTarget|null):boolean=>{
+   if(!(target instanceof Element))return false;
+   const hit=target.closest<HTMLElement>("[data-image-open],img.generic-figure");
+   if(!hit||!dialog.contains(hit))return false;
+   const frame=hit.closest<HTMLElement>(".generic-media-frame");
+   const image=frame?.querySelector<HTMLImageElement>("img.generic-figure");
+   if(!image)return false;
+   const trigger=frame?.querySelector<HTMLElement>("[data-image-open]")??hit;
+   imageViewer.open(image,trigger);
+   return true;
+  };
   closeButton.addEventListener("click",close);
+  dialog.addEventListener("click",event=>{
+   if(!openReferenceImage(event.target))return;
+   event.preventDefault();event.stopPropagation();
+  });
   dialog.addEventListener("cancel",event=>{event.preventDefault();close();});
   dialog.addEventListener("keydown",event=>{
    // Reference-panel keys must never leak into exam answer/navigation or
    // fullscreen/display shortcuts behind the native modal.
    event.stopPropagation();
    if(event.key==="Escape"){event.preventDefault();close();return;}
+   if((event.key==="Enter"||event.key===" ")&&
+      event.target instanceof HTMLElement&&event.target.matches("[data-image-open]")){
+    event.preventDefault();openReferenceImage(event.target);return;
+   }
    if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="f"){
     event.preventDefault();search.focus({preventScroll:true});search.select();return;
    }

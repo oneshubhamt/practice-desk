@@ -86,6 +86,8 @@ test("reference rich rendering supports authored marks, tables, KaTeX and frozen
  assert.match(html,/katex/);
  assert.match(html,/data:image\/png;base64,/);
  assert.match(html,/alt="Circle radius reference diagram"/);
+ assert.match(html,/class="candidate-reference-image generic-figure"/);
+ assert.match(html,/data-image-open/);
  for(const remote of ['src="http://','src="https://','href="http://','href="https://'])
   assert.equal(html.includes(remote),false,"reference renderer must not emit remote image/link resources");
 });

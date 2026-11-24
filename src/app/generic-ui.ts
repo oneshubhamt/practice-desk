@@ -86,7 +86,7 @@ export function mountExamWorkspace(
  const manualGradeDrafts=new Map<string,{marks:string;note:string}>();
  const screenRenderer=createScreenRenderer(root);
  const imageViewer=createImageViewer(root);
- const referencePanel=createCandidateReferencePanel();
+ const referencePanel=createCandidateReferencePanel(imageViewer);
  const imagePreparation=createImagePreparation();
  const now=createSessionClock(Date.now(),performance.now(),()=>performance.now());
  const mirrorKey=STORAGE_TOPOLOGY.activeAttemptMirror;

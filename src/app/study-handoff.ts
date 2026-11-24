@@ -3,6 +3,9 @@ import {
  candidateHighlightSurfaceKey,candidateHighlightText,eliminatedOptionIdsForQuestion,type CandidateHighlight
 } from "../domain/candidate-scratch.ts";
 import type {CandidateResponse,QuestionRevision} from "../domain/question.ts";
+import type {RichDocument,RichInline} from "../domain/rich-document.ts";
+import {richDocumentPlainText} from "../domain/rich-document.ts";
+import {taxonomyPathNodes} from "../domain/taxonomy.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {Verdict} from "../engine/scoring.ts";
 import {readableAnswer} from "./exam-package.ts";
@@ -21,8 +24,12 @@ export interface StudyHandoffAnnotations{
  readonly eliminatedOptions:readonly {readonly optionId:string;readonly text:string}[];
  readonly highlights:readonly {readonly color:string;readonly surface:string;readonly excerpt:string}[];
 }
+export interface StudyHandoffClassification{
+ readonly subject?:string;readonly topic?:string;readonly subtopic?:string;readonly topicIds?:readonly string[];
+}
 export interface StudyHandoffQuestion{
  readonly number:number;readonly questionRevisionId:string;readonly questionId:string;readonly section:string;
+ readonly classification?:StudyHandoffClassification;
  readonly content?:{readonly kind:QuestionRevision["content"]["kind"];readonly text:string};
  readonly selected?:{readonly response:CandidateResponse;readonly text:string};
  readonly expected?:{readonly answer:CorrectAnswer;readonly text:string};
@@ -39,16 +46,67 @@ export interface StudyHandoffPacket{
  readonly questions:readonly StudyHandoffQuestion[];
 }
 
-function questionText(attempt:GenericAttempt,question:QuestionRevision):string{
- const c=question.content,p=[c.prompt],s=c.stimulusId&&attempt.frozen.stimuli.find(row=>row.id===c.stimulusId);
- if(s){
-  if("text" in s)p.push(s.text);
-  else if("columns" in s)p.push(s.columns.join(" | "),...s.rows.map(row=>row.join(" | ")));
-  else p.push(s.altText,...(s.caption?[s.caption]:[]));
+function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
+ const ids=new Set<string>();
+ if(!doc)return ids;
+ const inline=(items:readonly RichInline[])=>{for(const item of items)if(item.type==="image")ids.add(item.assetId);};
+ for(const block of doc.blocks){
+  if(block.type==="paragraph"||block.type==="heading")inline(block.content);
+  else if(block.type==="list")block.items.forEach(inline);
+  else if(block.type==="table")block.rows.forEach(row=>row.forEach(inline));
+  else if(block.type==="image")ids.add(block.assetId);
  }
- if("options" in c)p.push(...c.options.map(o=>o.id+". "+o.text));
- else if(c.kind==="matching")p.push(...c.leftItems.map(x=>x.id+". "+x.text),...c.rightItems.map(x=>x.id+". "+x.text));
+ return ids;
+}
+function visibleText(plain:string,rich:RichDocument|undefined):string{
+ return rich?richDocumentPlainText(rich):plain;
+}
+function supplementalAssetText(
+ attempt:GenericAttempt,ids:readonly string[]|undefined,rich:RichDocument|undefined
+):readonly string[]{
+ const embedded=richAssetIds(rich);
+ return (ids??[]).filter(id=>!embedded.has(id)).map(id=>{
+  const asset=attempt.frozen.assets.find(item=>item.id===id);
+  if(!asset)throw Error("Study Handoff question image is missing from frozen assets");
+  return "[Image: "+(asset.altText??"Question figure")+"]";
+ });
+}
+function questionText(attempt:GenericAttempt,question:QuestionRevision):string{
+ const c=question.content,p=[
+  visibleText(c.prompt,c.richPrompt),
+  ...supplementalAssetText(attempt,c.assetIds,c.richPrompt)
+ ],s=c.stimulusId&&attempt.frozen.stimuli.find(row=>row.id===c.stimulusId);
+ if(s){
+  if("text" in s)p.push(visibleText(s.text,s.richText),...supplementalAssetText(attempt,s.assetIds,s.richText));
+  else if("columns" in s){
+   p.push(s.columns.map((text,i)=>visibleText(text,s.richColumns?.[i])).join(" | "));
+   p.push(...s.rows.map((row,i)=>row.map((text,j)=>visibleText(text,s.richRows?.[i]?.[j])).join(" | ")));
+  }else p.push("[Image: "+s.altText+"]",visibleText(s.caption??s.altText,s.richCaption));
+ }
+ if("options" in c)p.push(...c.options.flatMap(o=>[
+  o.id+". "+visibleText(o.text,o.richText),
+  ...supplementalAssetText(attempt,o.assetIds,o.richText)
+ ]));
+ else if(c.kind==="matching")p.push(
+  ...c.leftItems.flatMap(x=>[x.id+". "+visibleText(x.text,x.richText),
+    ...supplementalAssetText(attempt,x.assetIds,x.richText)]),
+  ...c.rightItems.flatMap(x=>[x.id+". "+visibleText(x.text,x.richText),
+    ...supplementalAssetText(attempt,x.assetIds,x.richText)])
+ );
  return p.filter(Boolean).join("\n");
+}
+function classification(a:GenericAttempt,q:QuestionRevision):StudyHandoffClassification|undefined{
+ const topicIds=q.content.topicIds?.map(String)??[];
+ const assigned=a.frozen.taxonomyAssignments?.[q.id];
+ if(a.frozen.taxonomy&&assigned){
+  const nodes=taxonomyPathNodes(a.frozen.taxonomy,assigned);
+  const subject=nodes.find(node=>node.kind==="subject")?.label;
+  const topic=nodes.find(node=>node.kind==="topic")?.label;
+  const subtopic=nodes.find(node=>node.kind==="subtopic")?.label;
+  return {...(subject?{subject}:{}),...(topic?{topic}:{}),...(subtopic?{subtopic}:{}),
+   ...(topicIds.length?{topicIds}:{})};
+ }
+ return topicIds.length?{topicIds}:undefined;
 }
 function belongs(h:CandidateHighlight,q:QuestionRevision):boolean{
  return "questionRevisionId" in h.surface?h.surface.questionRevisionId===q.id:
@@ -93,7 +151,9 @@ export function buildStudyHandoffPacket(
   const r=rs.get(q.id),key=keys.get(q.id),score=scores.get(q.id);
   if(inclusion.expectedResponses&&!key)throw Error("Missing frozen key");
   if(inclusion.outcomes&&!score)throw Error("Missing frozen score");
+  const classified=classification(a,q);
   const row:StudyHandoffQuestion={number:i+1,questionRevisionId:q.id,questionId:q.questionId,section:item.section.title,
+   ...(classified?{classification:classified}:{}),
    ...(inclusion.questionContent?{content:{kind:q.content.kind,text:questionText(a,q)}}:{}),
    ...(inclusion.candidateResponses&&r?.response?{selected:{response:structuredClone(r.response),text:readableAnswer(q,r.response)}}:{}),
    ...(inclusion.expectedResponses&&key?{expected:{answer:structuredClone(key),text:readableAnswer(q,key)}}:{}),
@@ -106,9 +166,23 @@ export function buildStudyHandoffPacket(
  }
  return {...base,includedQuestions:rows.length,truncated:rows.length<ordered.length,questions:rows};
 }
-export function serializeStudyHandoffJson(packet:StudyHandoffPacket):string{return JSON.stringify(packet)+"\n";}
+function serializedPacket(packet:StudyHandoffPacket):string{
+ const json=JSON.stringify(packet);
+ if(json.length+1>STUDY_HANDOFF_MAX_OUTPUT_CHARS)
+  throw Error("Study Handoff exceeds the output limit");
+ return json;
+}
+export function serializeStudyHandoffJson(packet:StudyHandoffPacket):string{
+ return serializedPacket(packet)+"\n";
+}
 export function serializeStudyHandoffMarkdown(packet:StudyHandoffPacket):string{
- return "# Practice Desk — Attempt / Study Handoff\n\n```json\n"+JSON.stringify(packet)+"\n```\n";
+ const json=serializedPacket(packet);
+ const runs=json.match(/`+/gu)??[];
+ const fence="`".repeat(Math.max(3,...runs.map(run=>run.length+1)));
+ const output="# Practice Desk — Attempt / Study Handoff\n\n"+fence+"json\n"+json+"\n"+fence+"\n";
+ if(output.length>STUDY_HANDOFF_MAX_OUTPUT_CHARS)
+  throw Error("Study Handoff exceeds the output limit");
+ return output;
 }
 export function studyHandoffFileName(a:GenericAttempt,extension:"md"|"json"):string{
  const id=a.frozen.paper.paperId.replace(/[^A-Za-z0-9._-]+/gu,"-").slice(0,80)||"paper";

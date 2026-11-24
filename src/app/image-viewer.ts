@@ -47,6 +47,8 @@ export function isLocalVerifiedImageUri(uri:string):boolean{
 }
 export interface ImageViewer{
  isOpen():boolean;
+ /** Open one already-rendered local verified thumbnail in the shared zoom/pan viewer. */
+ open(thumbnail:HTMLImageElement,trigger:HTMLElement):void;
  /** Close before a screen redraw changes the element that launched the viewer. */
  beforeRender():void;
  close():void;
@@ -300,6 +302,7 @@ export function createImageViewer(root:HTMLElement):ImageViewer{
  root.addEventListener("keydown",key,true);
  return {
    isOpen:()=>active!==null,
+   open,
    beforeRender:()=>{if(active)close();},
    close,
    dispose:()=>{if(disposed)return;disposed=true;close();

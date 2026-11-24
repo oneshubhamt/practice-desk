@@ -103,6 +103,33 @@ test("textual choice options use stable option-text anchors without changing ans
  assert.match(html,/data-choice="a" checked/,"highlighting option B must not rewrite selected option A");
 });
 
+test("rich textual choice options keep structural anchors while maths and images stay atomic",()=>{
+ const richText={format:"practice-desk-rich",version:1,blocks:[{type:"paragraph",content:[
+  {type:"text",text:"Beta "},
+  {type:"math",tex:"x^2",linearText:"x squared"},
+  {type:"image",assetId:"atomic-image",altText:"Atomic option image"},
+  {type:"text",text:" tail",marks:["underline"]}
+ ]}]};
+ const original=questions[0];
+ const q={...original,content:{...original.content,options:[
+  original.content.options[0],
+  {...original.content.options[1],richText,assetIds:["atomic-image"]}
+ ]}};
+ const pack={...pkg,assets:[asset],questions:[q,...questions.slice(1)]};
+ const scratch=validateCandidateScratch({schema:1,eliminations:[],highlights:[{
+  id:"rich-option",surface:{kind:"option-text",questionRevisionId:q.id,optionId:"b"},
+  anchor:{kind:"rich",path:[0,0],start:0,end:4},color:"yellow"
+ }]},context([q],[]));
+ const html=renderGenericControls(pack,q,{kind:"single-choice",optionId:"a"},{candidateScratch:scratch});
+ assert.match(html,/data-highlight-option="b"/);
+ assert.match(html,/data-rich-path="0\.0"/);
+ assert.doesNotMatch(html,/data-rich-path="0\.1"/,"inline option KaTeX must stay atomic");
+ assert.doesNotMatch(html,/data-rich-path="0\.2"/,"inline option image must stay atomic");
+ assert.match(html,/katex-mathml/);
+ assert.match(html,/data-image-open/);
+ assert.match(html,/data-choice="a" checked/,"rich option highlighting must not rewrite answer state");
+});
+
 test("eligible passage, table-cell and media-caption surfaces are independently source anchored",()=>{
  const passage={id:"pass",kind:"passage",title:"Case",text:"Clinical clue"};
  const table={id:"tab",kind:"table",title:"Labs",columns:["Marker"],rows:[["Value"]]};

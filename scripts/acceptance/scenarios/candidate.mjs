@@ -723,6 +723,8 @@ export async function candidateReferencePanel(){
    "first paper-bound reference was not selected in authored binding order");
   check(!(await dialog.innerText()).includes("REVIEWER ONLY SECRET"),
    "reviewer-only explanation leaked into candidate reference panel");
+  check((await dialog.innerText()).includes("does not certify that an external examination officially permits it"),
+   "reference panel overstated paper-supplied material as officially permitted");
 
   await search.fill("centimetres metre");
   check(await page.locator("[data-reference-id]").count()===1,
@@ -738,6 +740,16 @@ export async function candidateReferencePanel(){
    "reference-only image was not rendered from frozen local data");
   check(await dialog.locator('img[src^="http://"],img[src^="https://"],a[href^="http://"],a[href^="https://"]').count()===0,
    "reference panel introduced a remote runtime image/link dependency");
+  const imageOpen=page.getByRole("button",{name:"Enlarge image: Circle radius reference diagram"});
+  await imageOpen.click();
+  const imageDialog=page.locator("dialog.generic-image-dialog");
+  check(await imageDialog.getAttribute("open")!==null,
+   "reference-only figure did not open in the shared verified image viewer");
+  check((await imageDialog.locator("img.generic-image-large").getAttribute("alt"))==="Circle radius reference diagram",
+   "shared image viewer lost the frozen reference figure alternative text");
+  await page.getByRole("button",{name:"Close enlarged image"}).click();
+  check(await imageOpen.evaluate(el=>document.activeElement===el),
+   "closing the shared reference image viewer did not return focus to its trigger");
 
   await page.keyboard.press("Control+f");
   check(await search.evaluate(el=>document.activeElement===el),"Ctrl+F did not focus local reference search");
@@ -770,7 +782,7 @@ export async function candidateReferencePanel(){
   await page.keyboard.press("Escape");
   check(!errors.length,"candidate-reference browser errors: "+errors.join("; "));
   console.log("CANDIDATE REFERENCES "+engine+
-   " PASS: authored-only trigger, frozen rich/table/math/image content, local search/filter, keyboard and 195px layout");
+   " PASS: authored-only trigger, neutral trust boundary, frozen rich/table/math content, shared image viewer, local search/filter, keyboard and 195px layout");
  }catch(e){await h.diagnose("candidate-reference-panel-"+engine,page,e);throw e;
  }finally{await h.finish();}
 }
@@ -816,6 +828,14 @@ export async function candidateReliabilityHandoff(){
   check(Boolean(attemptId),"Pass F handoff attempt identity missing");
   check((await page.locator("#g-save-state").innerText())==="Saved",
    "exam did not expose the real candidate save-state projection");
+  await page.evaluate(()=>{
+   const badge=document.querySelector("#g-save-state");
+   window.__pdSaveStates=[badge?.textContent??""];
+   window.__pdSaveObserver=new MutationObserver(()=>{
+    window.__pdSaveStates.push(badge?.textContent??"");
+   });
+   window.__pdSaveObserver.observe(badge,{childList:true,subtree:true,characterData:true});
+  });
 
   await page.locator('input[data-choice="a"]').check();
   await page.locator('[data-eliminate="b"]').click();
@@ -823,6 +843,14 @@ export async function candidateReliabilityHandoff(){
   await page.getByRole("button",{name:"Highlight selected text yellow"}).click();
   await page.locator("#g-flag").click();
   await page.waitForFunction(()=>document.querySelector("#g-save-state")?.textContent==="Saved");
+  const saveStates=await page.evaluate(()=>{
+   window.__pdSaveObserver?.disconnect();
+   const states=window.__pdSaveStates??[];
+   delete window.__pdSaveObserver;delete window.__pdSaveStates;
+   return states;
+  });
+  check(saveStates.includes("Saving…")&&saveStates.at(-1)==="Saved",
+   "real queued persistence did not visibly transition Saving… to Saved");
   const durable=(await records(page)).find(row=>row.id===attemptId);
   check(durable?.state.responses.some(row=>row.questionRevisionId==="rev-0"&&row.response?.optionId==="a")&&
     durable?.candidateScratch?.eliminations?.some(row=>row.optionIds?.includes("b"))&&
@@ -893,7 +921,7 @@ export async function candidateReliabilityHandoff(){
   });
   check(!errors.length,"Pass F reliability/handoff browser errors: "+errors.join("; "));
   console.log("PASS F RELIABILITY/HANDOFF "+engine+
-   " PASS: durable save feedback, real failure state, bounded downloads, privacy, no-review gate and 195px layout");
+   " PASS: Saving/Saved/failure feedback, bounded downloads, privacy, no-review gate and 195px layout");
  }catch(e){await h.diagnose("candidate-reliability-handoff-"+engine,page,e);throw e;
  }finally{await h.finish();}
 }

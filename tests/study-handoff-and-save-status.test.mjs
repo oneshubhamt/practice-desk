@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {pkg} from "./fixtures/six-kinds.mjs";
-import {paperRevisionHash} from "../src/domain/integrity.ts";
+import {paperRevisionHash,questionRevisionHash} from "../src/domain/integrity.ts";
 import {validateCandidateScratch} from "../src/domain/candidate-scratch.ts";
 import {validateExamPackage,startGenericAttempt} from "../src/app/exam-package.ts";
 import {transitionGenericAttempt} from "../src/engine/generic-attempt.ts";
@@ -93,6 +93,44 @@ test("Study Handoff derives response, released key, score, timing, flags and sou
   assert.equal(output.includes("NEVER EXPORT THIS EXPLANATION"),false);
  }
  assert.equal(studyHandoffFileName(attempt,"json"),"Practice_Desk_Study_Handoff_paper.json");
+});
+
+test("Study Handoff exports frozen rich context and classification with collision-safe bounded serializers",()=>{
+ const q0=pkg.questions[0];
+ const richPrompt={format:"practice-desk-rich",version:1,blocks:[{type:"paragraph",content:[
+  {type:"text",text:"Candidate "},{type:"math",tex:"x^2",linearText:"x squared"},
+  {type:"text",text:" context"}
+ ]}]};
+ const content={...q0.content,prompt:"Plain fallback should not replace rich display",richPrompt};
+ const richQ={...q0,content,contentHash:questionRevisionHash({content,editorial:q0.editorial})};
+ const taxonomy={format:"practice-desk-taxonomy",version:1,id:"example-tax",examId:"example-exam",
+  title:"Example taxonomy",basis:"user-defined",asOfDate:"2026-11-24",reference:"Test fixture",
+  nodes:[
+   {id:"subject",label:"Subject A",kind:"subject"},
+   {id:"topic",label:"Topic B",kind:"topic",parentId:"subject"},
+   {id:"subtopic",label:"Subtopic C",kind:"subtopic",parentId:"topic"}
+  ]};
+ const bundle=validateExamPackage({...pkg,questions:[richQ,...pkg.questions.slice(1)],
+  taxonomy,taxonomyAssignments:{"rev-0":"subtopic"}});
+ const packet=buildStudyHandoffPacket(completed(bundle,"PRIVATE-RICH"));
+ const first=packet.questions[0];
+ assert.match(first.content?.text??"",/Candidate x squared context/);
+ assert.doesNotMatch(first.content?.text??"",/Plain fallback should not replace rich display/);
+ assert.deepEqual(first.classification,{subject:"Subject A",topic:"Topic B",subtopic:"Subtopic C"});
+
+ const fenced={...packet,questions:packet.questions.map((row,i)=>i?row:{
+  ...row,content:{kind:row.content.kind,text:row.content.text+"\n```learner marker"}
+ })};
+ const markdown=serializeStudyHandoffMarkdown(fenced);
+ const fence=markdown.split("\n")[2];
+ assert.ok(fence.startsWith("````")&&fence.endsWith("json"),
+  "Markdown fence must exceed backtick runs inside candidate/question content");
+
+ const oversized={...packet,questions:[{
+  ...first,content:{kind:first.content.kind,text:"x".repeat(STUDY_HANDOFF_MAX_OUTPUT_CHARS)}
+ }]};
+ assert.throws(()=>serializeStudyHandoffJson(oversized),/output limit/);
+ assert.throws(()=>serializeStudyHandoffMarkdown(oversized),/output limit/);
 });
 
 test("Study Handoff cannot reveal expected answers when the frozen paper withholds detailed review",()=>{

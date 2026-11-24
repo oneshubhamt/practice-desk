@@ -15,6 +15,7 @@ import {startGenericAttempt} from "../src/app/exam-package.ts";
 import {createSourceKeyReference,validateSourceKeyReference} from "../src/engine/source-comparison.ts";
 import {createSourceReviewReference,validateSourceReviewReference} from "../src/engine/review-source.ts";
 import {practiceDeskBuildTarget,practiceDeskCsp,practiceDeskHeadAdditions} from "../scripts/build-target-config.mjs";
+import {buildPracticeDeskHtml} from "../scripts/build-target.mjs";
 
 const mutate=(fn)=>{const copy=structuredClone(pkg);fn(copy);return copy;};
 const authoringExample=JSON.parse(await readFile(
@@ -110,6 +111,23 @@ test("P48-1 generated offline HTML restricts execution to its exact compiled run
   "CSP must be parsed before executable bundle");
 });
 
+
+test("standalone and static builds execute the same application runtime and embedded catalog",async()=>{
+ const [offline,hosted]=await Promise.all([
+  buildPracticeDeskHtml("standalone"),buildPracticeDeskHtml("static")
+ ]);
+ const runtime=html=>html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+ const catalog=html=>html.match(/<script id="preinstalled-exams" type="application\/json">([\s\S]*?)<\/script>/)?.[1];
+ const offlineRuntime=runtime(offline.html),hostedRuntime=runtime(hosted.html);
+ const offlineCatalog=catalog(offline.html),hostedCatalog=catalog(hosted.html);
+ assert.ok(offlineRuntime&&hostedRuntime&&offlineCatalog&&hostedCatalog);
+ assert.equal(offlineRuntime,hostedRuntime,
+  "distribution-specific CSP/optimizer capability must not fork the application runtime");
+ assert.equal(offlineCatalog,hostedCatalog,
+  "standalone and static distributions must embed the same verified candidate content");
+ assert.notEqual(offline.html,hosted.html,
+  "target CSP/optimizer metadata is expected to differ even though runtime/content are identical");
+});
 
 test("Build targets share one canonical HTML/CSP contract without static post-build mutation",async()=>{
  const standalone=practiceDeskBuildTarget("standalone");
