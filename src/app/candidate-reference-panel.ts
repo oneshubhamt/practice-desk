@@ -10,7 +10,7 @@ import type {ImageViewer} from "./image-viewer.ts";
 export const CANDIDATE_REFERENCE_QUERY_MAX=120;
 
 export function candidateReferenceDocumentText(document:RichDocument):string{
- return richDocumentPlainText(document).replace(/\s+/gu," ").trim();
+ return richDocumentPlainText(document);
 }
 function normalized(value:string):string{return value.normalize("NFKC").toLowerCase().replace(/\s+/gu," ").trim();}
 export function candidateReferenceSearchText(resource:CandidateReferenceResource):string{
@@ -195,7 +195,7 @@ export function createCandidateReferencePanel(
 
   const help=document.createElement("p");
   help.id="candidate-reference-panel-help";help.className="fine candidate-reference-help";
-  help.textContent="Paper-supplied reference material. Its presence does not certify permission in an external exam. Ctrl/⌘+F searches; Escape closes.";
+  help.textContent="Paper-supplied references; not proof of external-exam permission. Ctrl/⌘+F searches; Escape closes.";
 
   const controls=document.createElement("div");controls.className="candidate-reference-controls";
   const searchLabel=document.createElement("label");searchLabel.className="picker";searchLabel.textContent="Search references";

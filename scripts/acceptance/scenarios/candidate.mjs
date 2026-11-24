@@ -723,7 +723,7 @@ export async function candidateReferencePanel(){
    "first paper-bound reference was not selected in authored binding order");
   check(!(await dialog.innerText()).includes("REVIEWER ONLY SECRET"),
    "reviewer-only explanation leaked into candidate reference panel");
-  check((await dialog.innerText()).includes("does not certify that an external examination officially permits it"),
+  check((await dialog.innerText()).includes("not proof of external-exam permission"),
    "reference panel overstated paper-supplied material as officially permitted");
 
   await search.fill("centimetres metre");
