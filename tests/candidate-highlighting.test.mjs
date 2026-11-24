@@ -5,7 +5,7 @@ import {
  addCandidateHighlights,candidateHighlightIdsOverlapping,emptyCandidateScratch,
  removeCandidateHighlights,validateCandidateScratch
 } from "../src/domain/candidate-scratch.ts";
-import {renderQuestionPrompt,stimulusHTML} from "../src/app/question-content-view.ts";
+import {renderGenericControls,renderQuestionPrompt,stimulusHTML} from "../src/app/question-content-view.ts";
 import {renderModelExam} from "../src/app/exam-view.ts";
 import {startGenericAttempt} from "../src/app/exam-package.ts";
 
@@ -89,6 +89,18 @@ test("rich prompt annotations use structural text-leaf paths while authored mark
  assert.match(html,/data-rich-path="2\.1\.0\.0"/);
  assert.match(html,/katex-mathml/);
  assert.match(html,/data-image-open/);
+});
+
+test("textual choice options use stable option-text anchors without changing answer semantics",()=>{
+ const q=questions[0];
+ const scratch=validateCandidateScratch({schema:1,eliminations:[],highlights:[{
+  id:"option-h",surface:{kind:"option-text",questionRevisionId:q.id,optionId:"b"},
+  anchor:{kind:"plain",start:0,end:4},color:"green"
+ }]},context([q],[]));
+ const html=renderGenericControls(pkg,q,{kind:"single-choice",optionId:"a"},{candidateScratch:scratch});
+ assert.match(html,/data-highlight-surface="option-text" data-highlight-mode="plain"[^>]*data-highlight-option="b"/);
+ assert.match(html,/data-highlight-color="green">Beta<\/mark>/);
+ assert.match(html,/data-choice="a" checked/,"highlighting option B must not rewrite selected option A");
 });
 
 test("eligible passage, table-cell and media-caption surfaces are independently source anchored",()=>{

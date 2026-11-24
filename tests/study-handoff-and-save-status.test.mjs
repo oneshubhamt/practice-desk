@@ -70,9 +70,12 @@ test("Study Handoff derives response, released key, score, timing, flags and sou
  assert.equal(packet.format,"practice-desk-study-handoff");
  assert.equal(packet.privacy.scope,"single-completed-attempt");
  assert.ok(packet.privacy.omitted.includes("attempt-id"));
+ assert.ok(packet.privacy.omitted.includes("other-attempts"));
+ assert.ok(packet.privacy.omitted.includes("source-urls"));
  assert.equal(packet.includedQuestions,packet.totalQuestions);
  assert.equal(packet.truncated,false);
  const first=packet.questions[0];
+ assert.equal(first.questionId,"question-0");
  assert.equal(first.selected?.text,"Alpha");
  assert.equal(first.expected?.text,"Alpha");
  assert.deepEqual(first.outcome,{verdict:"correct",marks:2});

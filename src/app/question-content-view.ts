@@ -78,7 +78,9 @@ export function renderQuestionPrompt(bundle:ExamPackage,q:QuestionRevision,scrat
 }
 export function renderGenericControls(
  bundle:ExamPackage,q:QuestionRevision,response?:CandidateResponse,
- options:Readonly<{showWordCount?:boolean;eliminatedOptionIds?:readonly OptionId[]}>={}
+ options:Readonly<{
+  showWordCount?:boolean;eliminatedOptionIds?:readonly OptionId[];candidateScratch?:CandidateScratch;
+ }>={}
 ):string{
   const c=q.content;
   if(c.kind==="single-choice"||c.kind==="multiple-select"){
@@ -91,9 +93,13 @@ export function renderGenericControls(
         const optionLabel=String.fromCharCode(65+i);
         const eliminated=Boolean(options.eliminatedOptionIds?.includes(o.id));
         const media=assetHTML(bundle,o.assetIds,"Image for option "+optionLabel);
-        const text=o.richText?'<div class="pd-rich-choice-text"><b>'+optionLabel+'.</b> '+
-           renderAuthoredTextWithoutImages(bundle,o.text,o.richText)+'</div>':
-           '<span><b>'+optionLabel+'.</b> '+escapeText(o.text)+'</span>';
+        const scratch=options.candidateScratch;
+        const surface:CandidateHighlightSurface={kind:"option-text",questionRevisionId:q.id,optionId:o.id};
+        const attrs=scratch?candidateHighlightSurfaceAttributes(surface,o.richText?"rich":"plain"):"";
+        const body=scratch?candidateAuthoredText(bundle,o.text,o.richText,scratch,surface,()=> ""):
+          renderAuthoredTextWithoutImages(bundle,o.text,o.richText);
+        const text=o.richText?'<div class="pd-rich-choice-text"><b>'+optionLabel+'.</b><div'+attrs+'>'+body+'</div></div>':
+          '<span><b>'+optionLabel+'.</b> <span'+attrs+'>'+body+'</span></span>';
         const label='<label class="generic-choice"><input type="'+kind+'" name="generic-answer" data-choice="'+escapeText(o.id)+'"'+
           (selected.includes(o.id)?" checked":"")+'>'+text+'</label>';
         const strike='<button type="button" class="btn quiet choice-elimination" data-eliminate="'+escapeText(o.id)+

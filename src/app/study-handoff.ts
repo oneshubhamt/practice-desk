@@ -22,7 +22,7 @@ export interface StudyHandoffAnnotations{
  readonly highlights:readonly {readonly color:string;readonly surface:string;readonly excerpt:string}[];
 }
 export interface StudyHandoffQuestion{
- readonly number:number;readonly questionRevisionId:string;readonly section:string;
+ readonly number:number;readonly questionRevisionId:string;readonly questionId:string;readonly section:string;
  readonly content?:{readonly kind:QuestionRevision["content"]["kind"];readonly text:string};
  readonly selected?:{readonly response:CandidateResponse;readonly text:string};
  readonly expected?:{readonly answer:CorrectAnswer;readonly text:string};
@@ -73,7 +73,7 @@ export function buildStudyHandoffPacket(
  const reviewReleased=a.frozen.paper.navigation.allowReview!==false;
  const inclusion={...selection,expectedResponses:selection.expectedResponses&&reviewReleased};
  const omitted=["identity","device-information","attempt-id","calendar-timestamps","unrestricted-history",
-  "worked-explanations","binary-media"];
+  "other-attempts","learning-history","worked-explanations","reviewer-notes","source-urls","binary-media"];
  if(!inclusion.candidateResponses)omitted.push("candidate-responses");
  if(!inclusion.expectedResponses)omitted.push("expected-responses");
  if(!inclusion.annotations)omitted.push("candidate-scratch");
@@ -93,7 +93,7 @@ export function buildStudyHandoffPacket(
   const r=rs.get(q.id),key=keys.get(q.id),score=scores.get(q.id);
   if(inclusion.expectedResponses&&!key)throw Error("Missing frozen key");
   if(inclusion.outcomes&&!score)throw Error("Missing frozen score");
-  const row:StudyHandoffQuestion={number:i+1,questionRevisionId:q.id,section:item.section.title,
+  const row:StudyHandoffQuestion={number:i+1,questionRevisionId:q.id,questionId:q.questionId,section:item.section.title,
    ...(inclusion.questionContent?{content:{kind:q.content.kind,text:questionText(a,q)}}:{}),
    ...(inclusion.candidateResponses&&r?.response?{selected:{response:structuredClone(r.response),text:readableAnswer(q,r.response)}}:{}),
    ...(inclusion.expectedResponses&&key?{expected:{answer:structuredClone(key),text:readableAnswer(q,key)}}:{}),

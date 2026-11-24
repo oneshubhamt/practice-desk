@@ -41,7 +41,7 @@ export function bindCandidateHighlighting(binding:CandidateHighlightBinding):voi
   if(!status)return;
   if(!binding.canAnnotate)status.textContent="Highlighting is unavailable while this section is locked.";
   else if(!selection.fragments.length)status.textContent=
-    "Select text in the question or an eligible stimulus.";
+    "Select text in the question, an option, or an eligible stimulus.";
   else if(overlapping.length)status.textContent=
     "Selection overlaps an existing highlight. Remove it before applying another color.";
   else status.textContent="Selected "+selection.characters+" character"+

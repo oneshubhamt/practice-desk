@@ -591,6 +591,16 @@ export async function candidateHighlighting(){
   check(await page.locator('[data-highlight-surface="stimulus-passage"] mark[data-highlight-color="green"]').count()===1,
    "eligible rich passage selection was not highlighted");
 
+  await selectBetween(
+   '[data-highlight-surface="option-text"][data-highlight-option="b"]',0,
+   '[data-highlight-surface="option-text"][data-highlight-option="b"]',4
+  );
+  await page.getByRole("button",{name:"Highlight selected text pink"}).click();
+  check((await page.locator('[data-highlight-surface="option-text"][data-highlight-option="b"] mark').innerText())==="Beta",
+   "textual choice option did not use its stable option-text surface");
+  check(await page.locator('input[data-choice]:checked').count()===0,
+   "highlighting option text changed answer selection");
+
   await page.locator("#g-next").click();
   check(await page.locator('[data-highlight-surface="question-prompt"][data-highlight-mode="plain"]').count()===1,
    "plain question prompt did not expose canonical text highlighting");
@@ -607,8 +617,9 @@ export async function candidateHighlighting(){
    "plain highlight did not survive reload");
   await page.locator('[data-q="0"]').click();
   check(await page.locator('[data-highlight-surface="question-prompt"] mark[data-highlight-color="yellow"]').count()===2&&
-    await page.locator('[data-highlight-surface="stimulus-passage"] mark[data-highlight-color="green"]').count()===1,
-   "rich prompt/stimulus highlights did not survive redraw and reload");
+    await page.locator('[data-highlight-surface="stimulus-passage"] mark[data-highlight-color="green"]').count()===1&&
+    await page.locator('[data-highlight-surface="option-text"][data-highlight-option="b"] mark[data-highlight-color="pink"]').count()===1,
+   "rich prompt/stimulus/option highlights did not survive redraw and reload");
 
   let stored=(await records(page)).find(x=>x.id===attemptId);
   const promptHighlights=stored?.candidateScratch?.highlights?.filter(x=>
@@ -632,7 +643,7 @@ export async function candidateHighlighting(){
   check(await page.locator('[data-highlight-surface="question-prompt"] mark[data-highlight-color="yellow"]').count()===1,
    "removal did not delete only the overlapping structural highlight");
   stored=(await records(page)).find(x=>x.id===attemptId);
-  check((stored?.candidateScratch?.highlights?.length??0)===3,
+  check((stored?.candidateScratch?.highlights?.length??0)===4,
    "removing one rich fragment changed unrelated candidate annotations");
 
   await page.setViewportSize({width:195,height:844});
@@ -763,3 +774,127 @@ export async function candidateReferencePanel(){
  }catch(e){await h.diagnose("candidate-reference-panel-"+engine,page,e);throw e;
  }finally{await h.finish();}
 }
+
+export async function candidateReliabilityHandoff(){
+ const {readFile}=await import("node:fs/promises");
+ const {openHarness,records,check,assertNoOverflow,route}=await import("../../browser/fixtures.mjs");
+ const {importModernPaper}=await import("../../paper-select.mjs");
+ const {pkg}=await import("../../../tests/fixtures/six-kinds.mjs");
+ const {answerKeyRevisionHash,paperRevisionHash}=await import("../../../src/domain/integrity.ts");
+ const engine=process.argv[2]??"chromium";
+ const h=await openHarness({engine,artifactDir:"artifacts/acceptance-modern"});
+ const {page,errors}=await h.open({viewport:{width:1100,height:790}});
+ const handoffPkg={...pkg,title:"Pass F Study Handoff",
+  explanations:{"rev-0":"REVIEWER SECRET MUST NOT ENTER HANDOFF"}};
+ const keyBase={...pkg.answerKey,id:"key:no-review",paperId:"paper:no-review"};
+ const answerKey={...keyBase,contentHash:answerKeyRevisionHash(keyBase)};
+ const paperBase={...pkg.paper,id:"rev-paper:no-review",paperId:"paper:no-review",
+  answerKeyRevisionId:answerKey.id,navigation:{...pkg.paper.navigation,allowReview:false}};
+ const paper={...paperBase,contentHash:paperRevisionHash(paperBase)};
+ const noReview={...pkg,examId:"example-no-review",title:"No-review Study Handoff",answerKey,paper,
+  explanations:{"rev-0":"NO-REVIEW SECRET"}};
+
+ const highlightPlain=async(selector,start,end)=>{
+  await page.evaluate(({selector,start,end})=>{
+   const root=document.querySelector(selector),node=root?.firstChild;
+   if(!root||!node||node.nodeType!==Node.TEXT_NODE)throw Error("Plain highlight target missing");
+   const range=document.createRange();range.setStart(node,start);range.setEnd(node,end);
+   const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+   root.dispatchEvent(new PointerEvent("pointerup",{bubbles:true}));
+  },{selector,start,end});
+ };
+ const downloadJson=async()=>{
+  const event=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Download JSON"}).click();
+  const file=await event;
+  return JSON.parse(await readFile(await file.path(),"utf8"));
+ };
+ try{
+  await importModernPaper(page,handoffPkg,"pass-f-handoff.json");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  const attemptId=new URL(await page.url()).searchParams.get("attempt");
+  check(Boolean(attemptId),"Pass F handoff attempt identity missing");
+  check((await page.locator("#g-save-state").innerText())==="Saved",
+   "exam did not expose the real candidate save-state projection");
+
+  await page.locator('input[data-choice="a"]').check();
+  await page.locator('[data-eliminate="b"]').click();
+  await highlightPlain('[data-highlight-surface="question-prompt"][data-highlight-mode="plain"]',0,6);
+  await page.getByRole("button",{name:"Highlight selected text yellow"}).click();
+  await page.locator("#g-flag").click();
+  await page.waitForFunction(()=>document.querySelector("#g-save-state")?.textContent==="Saved");
+  const durable=(await records(page)).find(row=>row.id===attemptId);
+  check(durable?.state.responses.some(row=>row.questionRevisionId==="rev-0"&&row.response?.optionId==="a")&&
+    durable?.candidateScratch?.eliminations?.some(row=>row.optionIds?.includes("b"))&&
+    durable?.candidateScratch?.highlights?.some(row=>row.surface?.kind==="question-prompt"),
+    "Saved indicator was shown without committed answer/annotation evidence");
+
+  await page.locator("#g-submit").click();await route(page,"result");
+  const annotationToggle=page.locator('[data-study-handoff-option="annotations"]');
+  check(await annotationToggle.isChecked()===false,"candidate annotations must be opt-in");
+  const basePacket=await downloadJson();
+  check(basePacket.format==="practice-desk-study-handoff"&&basePacket.privacy.scope==="single-completed-attempt",
+   "browser handoff did not use the bounded single-attempt contract");
+  check(basePacket.inclusion.annotations===false&&
+    basePacket.questions[0]?.questionId==="question-0"&&
+    basePacket.questions[0]?.selected?.text==="Alpha"&&
+    basePacket.questions[0]?.expected?.text==="Alpha"&&
+    basePacket.questions[0]?.outcome?.verdict==="correct"&&
+    basePacket.questions[0]?.flagged===true,
+   "default handoff lost identity/response/key/result/flag evidence");
+  const raw=JSON.stringify(basePacket);
+  check(!raw.includes(attemptId)&&!raw.includes("REVIEWER SECRET")&&!raw.includes('"annotations":{'),
+   "default handoff leaked attempt identity, reviewer content or candidate annotations");
+
+  await annotationToggle.check();
+  const annotated=await downloadJson();
+  check(annotated.questions[0]?.annotations?.eliminatedOptions?.[0]?.optionId==="b"&&
+    annotated.questions[0]?.annotations?.highlights?.[0]?.excerpt==="Choose",
+   "opt-in handoff did not export exact stable elimination/highlight evidence");
+  const mdEvent=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Download Markdown"}).click();
+  const md=await readFile(await (await mdEvent).path(),"utf8");
+  check(md.startsWith("# Practice Desk — Attempt / Study Handoff")&&md.includes("```json")&&
+    !md.includes(attemptId)&&!md.includes("REVIEWER SECRET"),
+   "Markdown handoff diverged from the privacy-bounded canonical packet");
+
+  await page.setViewportSize({width:195,height:844});
+  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1.4"));
+  await assertNoOverflow(page,"Pass F Study Handoff 195px 140%");
+  await page.setViewportSize({width:1100,height:790});
+  await page.evaluate(()=>document.documentElement.style.setProperty("--type-scale","1"));
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
+
+  await importModernPaper(page,noReview,"pass-f-no-review.json");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  await page.locator('input[data-choice="a"]').check();
+  await page.locator("#g-submit").click();await route(page,"result");
+  check(await page.locator('[data-study-handoff-option="expectedResponses"]').isDisabled(),
+   "no-review paper exposed an enabled expected-answer handoff control");
+  const withheld=await downloadJson();
+  check(withheld.inclusion.expectedResponses===false&&
+    withheld.questions.every(row=>row.expected===undefined)&&
+    withheld.privacy.omitted.includes("unreleased-answer-key"),
+   "browser handoff bypassed frozen allowReview=false");
+
+  await page.getByRole("button",{name:/^(?:← )?Library$/}).click();await route(page,"library");
+  await page.getByRole("button",{name:/^Start /}).click();await route(page,"exam");
+  await page.evaluate(()=>{
+   window.__pdOriginalPut=IDBObjectStore.prototype.put;
+   IDBObjectStore.prototype.put=function(){throw new DOMException("Injected Pass F failure","QuotaExceededError");};
+  });
+  await page.locator('input[data-choice]').first().check();
+  await page.waitForFunction(()=>document.querySelector("#g-save-state")?.textContent==="Save problem");
+  check((await page.locator(".generic-warning").innerText()).includes("SAVE FAILED"),
+   "real durable-write failure did not surface recovery guidance beside Save problem");
+  await page.evaluate(()=>{
+   if(window.__pdOriginalPut)IDBObjectStore.prototype.put=window.__pdOriginalPut;
+   delete window.__pdOriginalPut;
+  });
+  check(!errors.length,"Pass F reliability/handoff browser errors: "+errors.join("; "));
+  console.log("PASS F RELIABILITY/HANDOFF "+engine+
+   " PASS: durable save feedback, real failure state, bounded downloads, privacy, no-review gate and 195px layout");
+ }catch(e){await h.diagnose("candidate-reliability-handoff-"+engine,page,e);throw e;
+ }finally{await h.finish();}
+}
+

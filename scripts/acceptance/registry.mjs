@@ -1,5 +1,5 @@
 import {catalogLifecycle} from "./scenarios/catalog.mjs";
-import {candidateCore,candidateHighlighting,candidateMcqTools,candidateReferencePanel,statusPalette} from "./scenarios/candidate.mjs";
+import {candidateCore,candidateHighlighting,candidateMcqTools,candidateReferencePanel,candidateReliabilityHandoff,statusPalette} from "./scenarios/candidate.mjs";
 import {authoringPublication,externalBankAuthoring} from "./scenarios/authoring.mjs";
 import {storageResilience,partialRecovery} from "./scenarios/storage.mjs";
 import {fileNavigation} from "./scenarios/navigation.mjs";
@@ -15,6 +15,7 @@ export const scenarioRegistry=Object.freeze([
  scenario("candidate-mcq-tools",["smoke","candidate","navigation"],candidateMcqTools),
  scenario("candidate-highlighting",["smoke","candidate","annotation"],candidateHighlighting),
  scenario("candidate-reference-panel",["smoke","candidate","reference","cross-browser"],candidateReferencePanel),
+ scenario("candidate-reliability-handoff",["smoke","candidate","persistence","privacy"],candidateReliabilityHandoff),
  scenario("status-palette",["candidate","visual-state","deep"],statusPalette),
  scenario("authoring-publication",["smoke","authoring","publication"],authoringPublication),
  scenario("catalog-lifecycle",["smoke","catalog","removal"],catalogLifecycle),

@@ -7,7 +7,7 @@
 | Build/run the app | [root README](../README.md) |
 | Engineer/review code or binding product policy | [AGENTS](../AGENTS.md) → affected source → [architecture](architecture/CURRENT_ARCHITECTURE.md) as needed |
 | Understand schemas/invariants | [data contracts](architecture/DATA_CONTRACTS.md) |
-| Run or design QA | [QA contract](QA_CURRENT.md) + actual tests/CI |
+| Run or design QA | [QA contract](QA_CURRENT.md) + actual tests/CI; candidate-tools programme closure: [A–F audit](CANDIDATE_TOOLS_CLOSURE_AUDIT.md) |
 | Create/review question banks | [agent quickstart](AGENT_AUTHORING_QUICKSTART.md); use [advanced content pipeline](architecture/AGENT_CONTENT_PIPELINE.md) only for blind review, Source/Reviewed or PDF workflows |
 | Discover machine operations | [capability contract](contracts/practice-desk-capabilities.v1.json) |
 | See unresolved work | [backlog](../backlog.md) |
