@@ -1,28 +1,16 @@
 import type {CandidateReferenceBinding,CandidateReferenceResource} from "../domain/candidate-reference.ts";
 import {assertCandidateReferenceInventory} from "../domain/candidate-reference.ts";
 import type {ImageAsset} from "../domain/question.js";
-import type {RichBlock,RichDocument,RichInline} from "../domain/rich-document.ts";
+import type {RichDocument} from "../domain/rich-document.ts";
+import {richDocumentPlainText} from "../domain/rich-document.ts";
 import {richDocumentHTML} from "./rich-content-view.ts";
 import {escapeText} from "./html-escape.ts";
 import type {ImageViewer} from "./image-viewer.ts";
 
 export const CANDIDATE_REFERENCE_QUERY_MAX=120;
 
-function inlineSearchText(items:readonly RichInline[]):string{
- return items.map(item=>item.type==="text"?item.text:item.type==="math"?item.linearText:item.altText).join(" ");
-}
 export function candidateReferenceDocumentText(document:RichDocument):string{
- const blocks=(block:RichBlock):string=>{
-  switch(block.type){
-   case "paragraph":
-   case "heading":return inlineSearchText(block.content);
-   case "list":return block.items.map(inlineSearchText).join(" ");
-   case "table":return block.rows.flatMap(row=>row.map(inlineSearchText)).join(" ");
-   case "display-math":return block.linearText;
-   case "image":return block.altText;
-  }
- };
- return document.blocks.map(blocks).join(" ").replace(/\s+/gu," ").trim();
+ return richDocumentPlainText(document).replace(/\s+/gu," ").trim();
 }
 function normalized(value:string):string{return value.normalize("NFKC").toLowerCase().replace(/\s+/gu," ").trim();}
 export function candidateReferenceSearchText(resource:CandidateReferenceResource):string{
@@ -207,7 +195,7 @@ export function createCandidateReferencePanel(
 
   const help=document.createElement("p");
   help.id="candidate-reference-panel-help";help.className="fine candidate-reference-help";
-  help.textContent="Search and browse the reference material supplied with this paper. Its presence does not certify that an external examination officially permits it. Ctrl/⌘+F focuses search; Escape closes.";
+  help.textContent="Paper-supplied reference material. Its presence does not certify permission in an external exam. Ctrl/⌘+F searches; Escape closes.";
 
   const controls=document.createElement("div");controls.className="candidate-reference-controls";
   const searchLabel=document.createElement("label");searchLabel.className="picker";searchLabel.textContent="Search references";

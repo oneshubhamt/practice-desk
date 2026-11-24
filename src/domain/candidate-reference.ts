@@ -1,7 +1,7 @@
 import type {AssetId,ContentHash} from "./ids.js";
 import type {ImageAsset} from "./question.js";
 import type {RichDocument,RichInline} from "./rich-document.ts";
-import {validateRichDocument} from "./rich-document.ts";
+import {richDocumentAssetIds,validateRichDocument} from "./rich-document.ts";
 import {hashJson} from "./hash.ts";
 
 export interface CandidateReferenceBinding{
@@ -48,20 +48,6 @@ function strings(value:unknown,label:string,max:number,itemMax:number):string[]{
  if(new Set(out).size!==out.length)throw Error(label+": duplicate value");
  return out;
 }
-function richAssetIds(doc:RichDocument):Set<string>{
- const ids=new Set<string>();
- const inline=(items:readonly RichInline[])=>{
-  for(const item of items)if(item.type==="image")ids.add(item.assetId);
- };
- for(const block of doc.blocks){
-  if(block.type==="paragraph"||block.type==="heading")inline(block.content);
-  else if(block.type==="list")block.items.forEach(inline);
-  else if(block.type==="table")block.rows.forEach(row=>row.forEach(inline));
-  else if(block.type==="image")ids.add(block.assetId);
- }
- return ids;
-}
-
 function hasCandidateVisibleContent(doc:RichDocument):boolean{
  const inline=(items:readonly RichInline[])=>items.some(item=>
   item.type==="text"?Boolean(item.text.trim()):item.type==="math"||item.type==="image");
@@ -141,7 +127,7 @@ export function validateCandidateReferenceResources(
    throw Error(path+".document: noncanonical rich document");
   if(!hasCandidateVisibleContent(document))
    throw Error(path+".document: candidate reference must contain text, maths or an image");
-  const used=richAssetIds(document);
+  const used=richDocumentAssetIds(document);
   if(used.size!==knownAssets.size||assetIds.some(assetId=>!used.has(assetId)))
    throw Error(path+".assetIds: must exactly match images used by the reference document");
   const source:CandidateReferenceSource={

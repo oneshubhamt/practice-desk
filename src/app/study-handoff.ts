@@ -3,8 +3,8 @@ import {
  candidateHighlightSurfaceKey,candidateHighlightText,eliminatedOptionIdsForQuestion,type CandidateHighlight
 } from "../domain/candidate-scratch.ts";
 import type {CandidateResponse,QuestionRevision} from "../domain/question.ts";
-import type {RichDocument,RichInline} from "../domain/rich-document.ts";
-import {richDocumentPlainText} from "../domain/rich-document.ts";
+import type {RichDocument} from "../domain/rich-document.ts";
+import {richDocumentAssetIds,richDocumentPlainText} from "../domain/rich-document.ts";
 import {taxonomyPathNodes} from "../domain/taxonomy.ts";
 import type {GenericAttempt} from "../engine/generic-attempt.ts";
 import type {Verdict} from "../engine/scoring.ts";
@@ -25,7 +25,7 @@ export interface StudyHandoffAnnotations{
  readonly highlights:readonly {readonly color:string;readonly surface:string;readonly excerpt:string}[];
 }
 export interface StudyHandoffClassification{
- readonly subject?:string;readonly topic?:string;readonly subtopic?:string;readonly topicIds?:readonly string[];
+ readonly subject?:string;readonly topic?:string;readonly subtopic?:string;
 }
 export interface StudyHandoffQuestion{
  readonly number:number;readonly questionRevisionId:string;readonly questionId:string;readonly section:string;
@@ -46,25 +46,13 @@ export interface StudyHandoffPacket{
  readonly questions:readonly StudyHandoffQuestion[];
 }
 
-function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
- const ids=new Set<string>();
- if(!doc)return ids;
- const inline=(items:readonly RichInline[])=>{for(const item of items)if(item.type==="image")ids.add(item.assetId);};
- for(const block of doc.blocks){
-  if(block.type==="paragraph"||block.type==="heading")inline(block.content);
-  else if(block.type==="list")block.items.forEach(inline);
-  else if(block.type==="table")block.rows.forEach(row=>row.forEach(inline));
-  else if(block.type==="image")ids.add(block.assetId);
- }
- return ids;
-}
 function visibleText(plain:string,rich:RichDocument|undefined):string{
  return rich?richDocumentPlainText(rich):plain;
 }
 function supplementalAssetText(
  attempt:GenericAttempt,ids:readonly string[]|undefined,rich:RichDocument|undefined
 ):readonly string[]{
- const embedded=richAssetIds(rich);
+ const embedded=richDocumentAssetIds(rich);
  return (ids??[]).filter(id=>!embedded.has(id)).map(id=>{
   const asset=attempt.frozen.assets.find(item=>item.id===id);
   if(!asset)throw Error("Study Handoff question image is missing from frozen assets");
@@ -96,17 +84,12 @@ function questionText(attempt:GenericAttempt,question:QuestionRevision):string{
  return p.filter(Boolean).join("\n");
 }
 function classification(a:GenericAttempt,q:QuestionRevision):StudyHandoffClassification|undefined{
- const topicIds=q.content.topicIds?.map(String)??[];
  const assigned=a.frozen.taxonomyAssignments?.[q.id];
- if(a.frozen.taxonomy&&assigned){
-  const nodes=taxonomyPathNodes(a.frozen.taxonomy,assigned);
-  const subject=nodes.find(node=>node.kind==="subject")?.label;
-  const topic=nodes.find(node=>node.kind==="topic")?.label;
-  const subtopic=nodes.find(node=>node.kind==="subtopic")?.label;
-  return {...(subject?{subject}:{}),...(topic?{topic}:{}),...(subtopic?{subtopic}:{}),
-   ...(topicIds.length?{topicIds}:{})};
- }
- return topicIds.length?{topicIds}:undefined;
+ if(!a.frozen.taxonomy||!assigned)return;
+ const nodes=taxonomyPathNodes(a.frozen.taxonomy,assigned);
+ const subject=nodes.find(n=>n.kind==="subject")?.label,topic=nodes.find(n=>n.kind==="topic")?.label,
+  subtopic=nodes.find(n=>n.kind==="subtopic")?.label;
+ return {...(subject?{subject}:{}),...(topic?{topic}:{}),...(subtopic?{subtopic}:{})};
 }
 function belongs(h:CandidateHighlight,q:QuestionRevision):boolean{
  return "questionRevisionId" in h.surface?h.surface.questionRevisionId===q.id:

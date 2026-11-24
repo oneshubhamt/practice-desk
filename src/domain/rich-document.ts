@@ -115,6 +115,17 @@ export function validateRichDocument(input:unknown,opts:RichValidationOptions={}
   }) as RichBlock[];
   return freezeDeep({format:"practice-desk-rich",version:1,blocks});
 }
+export function richDocumentAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
+ const ids=new Set<string>();if(!doc)return ids;
+ const row=(items:readonly RichInline[])=>{for(const item of items)if(item.type==="image")ids.add(item.assetId);};
+ for(const block of doc.blocks){
+  if(block.type==="paragraph"||block.type==="heading")row(block.content);
+  else if(block.type==="list")block.items.forEach(row);
+  else if(block.type==="table")block.rows.forEach(cells=>cells.forEach(row));
+  else if(block.type==="image")ids.add(block.assetId);
+ }
+ return ids;
+}
 export function richDocumentPlainText(doc:RichDocument):string{
  const inline=(item:RichInline):string=>{
   if(item.type==="text")return item.text;

@@ -10,8 +10,8 @@ import type {CorrectAnswer,AnswerKeyEntry,AnswerKeyRevision} from "../domain/ans
 import type {PaperRevision,SectionDefinition,TimingPolicy} from "../domain/exam.ts";
 import {attributedTopicPath,topicAncestors} from "../learning/syllabus-taxonomy.ts";
 import type {QuestionContent,QuestionRevision,StimulusDefinition,ImageAsset} from "../domain/question.ts";
-import type {RichDocument,RichInline} from "../domain/rich-document.ts";
-import {validateRichDocument} from "../domain/rich-document.ts";
+import type {RichDocument} from "../domain/rich-document.ts";
+import {richDocumentAssetIds,validateRichDocument} from "../domain/rich-document.ts";
 import {publicationPlainText} from "./plain-rich-text.ts";
 import {inspectCandidateIntegrity} from "./candidate-integrity.ts";
 export {publicationPlainText} from "./plain-rich-text.ts";
@@ -41,20 +41,9 @@ const optionIndex=(label:string,count:number):number=>{
 };
 const id=(label:string,value:string)=>label+":"+sha256(value).slice(0,24);
 const shell=(doc:RichDocument):RichDocument=>validateRichDocument(doc,{
- knownAssets:new Set([...collectAssets(doc)])
+ knownAssets:richDocumentAssetIds(doc)
 });
-function collectAssets(doc:RichDocument):Set<string>{
- const ids=new Set<string>();
- const row=(items:readonly RichInline[])=>{for(const item of items)if(item.type==="image")ids.add(item.assetId);};
- for(const block of doc.blocks){
-  if(block.type==="paragraph"||block.type==="heading")row(block.content);
-  else if(block.type==="list")block.items.forEach(row);
-  else if(block.type==="table")block.rows.forEach(cells=>cells.forEach(row));
-  else if(block.type==="image")ids.add(block.assetId);
- }
- return ids;
-}
-const resources=(doc:RichDocument):AssetId[]=>[...collectAssets(doc)] as AssetId[];
+const resources=(doc:RichDocument):AssetId[]=>[...richDocumentAssetIds(doc)] as AssetId[];
 const hasContent=(doc:RichDocument):boolean=>publicationPlainText(doc).length>0;
 const name=(n:number)=>"Question "+n;
 const answerText=(raw:string,q:AuthoringQuestion):CorrectAnswer=>{

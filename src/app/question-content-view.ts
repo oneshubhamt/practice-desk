@@ -2,7 +2,8 @@
 import type {ExamPackage} from "../domain/exam-package.ts";
 import type {QuestionRevision,CandidateResponse} from "../domain/question.js";
 import type {OptionId} from "../domain/ids.js";
-import type {RichDocument,RichInline} from "../domain/rich-document.ts";
+import type {RichDocument} from "../domain/rich-document.ts";
+import {richDocumentAssetIds} from "../domain/rich-document.ts";
 import type {CandidateHighlightSurface,CandidateScratch} from "../domain/candidate-scratch.ts";
 import {authoredTextHTML} from "./rich-content-view.ts";
 import {
@@ -10,20 +11,6 @@ import {
 } from "./candidate-highlight-view.ts";
 import {escapeText} from "./html-escape.ts";
 import {countWords,wordCountBand} from "../domain/word-count.ts";
-function richAssetIds(doc:RichDocument|undefined):ReadonlySet<string>{
- const ids=new Set<string>();
- if(!doc)return ids;
- const inline=(items:readonly RichInline[])=>{
-  for(const item of items)if(item.type==="image")ids.add(item.assetId);
- };
- for(const block of doc.blocks){
-  if(block.type==="paragraph"||block.type==="heading")inline(block.content);
-  else if(block.type==="list")block.items.forEach(inline);
-  else if(block.type==="table")block.rows.forEach(row=>row.forEach(inline));
-  else if(block.type==="image")ids.add(block.assetId);
- }
- return ids;
-}
 export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fallbackAlt="Question figure"):string{
   return (ids??[]).map(id=>{
     const a=bundle.assets?.find(x=>x.id===id);
@@ -42,7 +29,7 @@ export function assetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,fal
 }
 export function supplementalAssetHTML(bundle:ExamPackage,ids:readonly string[]|undefined,
  rich:RichDocument|undefined,fallbackAlt="Question figure"):string{
- const embedded=richAssetIds(rich);
+ const embedded=richDocumentAssetIds(rich);
  return assetHTML(bundle,(ids??[]).filter(id=>!embedded.has(id)),fallbackAlt);
 }
 /** Only explicit normalized rich content is interpreted; plain strings remain inert. */

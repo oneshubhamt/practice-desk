@@ -16,11 +16,14 @@ import {
 function completed(bundle=validateExamPackage(pkg),id="PRIVATE-ATTEMPT-ID"){
  const lookup=new Map(bundle.questions.map(question=>[question.id,question]));
  let attempt=startGenericAttempt(bundle,id,1000);
+ const first=attempt.frozen.questions.find(q=>q.id==="rev-0");
+ const anchor=first?.content.richPrompt?
+  {kind:"rich",path:[0,0],start:0,end:6}:{kind:"plain",start:0,end:6};
  attempt={...attempt,candidateScratch:validateCandidateScratch({
   schema:1,
   eliminations:[{questionRevisionId:"rev-0",optionIds:["b"]}],
   highlights:[{id:"handoff-highlight",surface:{kind:"question-prompt",questionRevisionId:"rev-0"},
-   anchor:{kind:"plain",start:0,end:6},color:"yellow"}]
+   anchor,color:"yellow"}]
  },{questions:attempt.frozen.questions,stimuli:attempt.frozen.stimuli})};
  attempt=transitionGenericAttempt(attempt,{type:"ANSWER",nowMs:1100,
   response:{kind:"single-choice",optionId:"a"}},lookup);
